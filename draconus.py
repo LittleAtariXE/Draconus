@@ -1,4 +1,5 @@
 import socket
+from hive import Queen
 
 SERVER = '192.168.100.16'
 PORT = 5050
@@ -61,6 +62,7 @@ class Draconus:
 
     def __init__(self):
         print('[SYSTEM] Draconus starting ...')
+        
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # prevent "error 98: adress already in use"
@@ -73,6 +75,10 @@ class Draconus:
 
         # synergy represent type of connected worm
         self.synergy = None
+
+        self.QUEEN = Queen()
+        print(self.QUEEN)
+        
 
     
     # START DRACONUS
