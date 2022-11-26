@@ -124,7 +124,6 @@ class Draconus:
             return 0
         if rec:
             rec = rec.decode(FORMAT).rstrip(' ')
-            print('REC: ', rec)
             output = rec
 
             try:
