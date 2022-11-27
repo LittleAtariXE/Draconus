@@ -1,7 +1,7 @@
 import os
 
 # file names of worms
-FILE_WORM = 'worm.py'
+FILE_WORM = 'worm-win7.exe'
 FILE_RAT = 'rat-win7.exe'
 
 # types of tools (viruses, rats, worms, etc.)

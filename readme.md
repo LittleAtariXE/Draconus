@@ -24,13 +24,13 @@ I STRONGLY RECOMMENDED USES RATs and other WORMs only in Virtual Machine. YOU CA
 
 
  HOW IT WORK:
-    Compile both rat.py and worm-win7.py "rat.exe". Move "rat.exe" to hive directory
+    Compile rat.py and worm-win7.py. Rename "rat.exe" to "rat-win7.exe" or change value FILE_RAT in "queen.py". Move "rat-win7.exe" to hive directory.
 
     Run draconus.py
     Draconus is a server will handle victim and worm calls
 
     On Client machine run "worm-win7.exe"
-    Worm will connect to Draconus, recive RAT, save RAT on disk and add to registry autostart. So after reboot client machine, RAT will be start and will automatically connect to Draconus. Draconus show menu option.
+    Worm will connect to Draconus, recive RAT, save RAT on disk and add to registry autostart. So after reboot client machine, The RAT will be launched and will automatically connect to Draconus. Draconus show menu option.
     
     NOW only work:
     - Reverse Shell (CMD) TCP   ("cd" change directory command is simple making by me. Work only "cd <path>" !!! "cd .." etc. Not Working !!!)
