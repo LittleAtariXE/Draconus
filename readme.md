@@ -6,6 +6,8 @@ This code DOES NOT promote or encourage any illegal activities! The content in t
 
  This is beta version and will be upgrade. So sometimes something gonna wrong. 
 
+ !!!!! Propably works only in a local network !!!!!!!
+
 I STRONGLY RECOMMENDED USES RATs and other WORMs only in Virtual Machine. YOU CAN DAMAGE YOUR SYSTEM !!!!!
 
 
