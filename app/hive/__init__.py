@@ -1,0 +1,1 @@
+from .queen import Queen
