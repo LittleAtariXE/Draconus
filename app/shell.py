@@ -124,6 +124,10 @@ class ShellConstructor:
             print("start        - Start Server Listening")
             print("stop         - Stop Server Listening")
             print("show         - Show connected clients")
+            print("msg <cli_id> <message>   - Send message to cli_ID")
+            print('  ex: msg 4 "Hello World"    - Send Hello World to client no 4')
+            print('  ex: msg all "You are Hacked"   -Send message to all clients')
+            print('  [!!] if you want a send longer message use brackets "" [!!]')
             self.CoCe.sendCMD("next", name, "help")
         
         @server_shell.command()

@@ -131,25 +131,7 @@ class CommandCenter:
             print("EXIT PROGRAM")
             sys.exit()
         self.findSockets(True)       
-        # sleep(2)
-        # test = {"NAME" : "iza", "SERV_TYPE" : "Basic"}
-        # self.sendCMD("make", test)
-        # sleep(1)
-        # self.findSockets()
-
-        # print(self.API)
-        # print(self.SOCKETS)
-
-        # sleep(2)
-        # self.API["iza"].sendCMD("conf")
-        # sleep(0.2)
-        # print(self.API["iza"].reciveData())
-
-        # test = {"NAME" : "ania", "SERV_TYPE" : "Basic"}
-        # self.sendCMD("make", test)
-        # sleep(3)
-        # self.findSockets()
-        # input()
+        
 
 
 

@@ -24,7 +24,7 @@ class Messenger:
         self.vanila_print = conf.get("MSG_VANILA_PRINT", False)
         self.no_important = conf.get("MSG_NO_IMPORTANT", False)
         self.log_json = conf.get("MSG_JSON", True)
-        self._unpack_space = 45
+        self._unpack_space = 60
         self.lock = Lock()
         self.ID = None
         self.jsonLogs = None
