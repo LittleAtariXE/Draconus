@@ -117,6 +117,7 @@ class BasicWorm:
                 self.closeSocket()
                 continue
             self.getSysInfo()
+            sleep(0.2)
             if self.Work():
                 continue
             sleep(1)

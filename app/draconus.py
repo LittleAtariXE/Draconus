@@ -8,7 +8,7 @@ from threading import Thread
 from typing import Union
 from time import sleep
 
-from .meine_server import Basic
+from .meine_server import Basic, Echo
 from .meine_server import Messenger
 from .draco_tools import Configurator, ServerHandler
 from .hive import Queen
@@ -17,11 +17,13 @@ from .hive import Queen
 class Draconus:
     def __init__(self):
         self.config = Configurator()
-        self.baseServers = {Basic.SERV_TYPE : Basic}
         self.socketsDir = self.config.CONF["UNIX_SOCKETS_DIR"]
         self._socketFile = os.path.join(self.socketsDir, "_draco_sock")
         self.SERVERS = {}
         self._pauseClean = False
+        self.baseServers = {
+            Basic.SERV_TYPE : Basic,
+            Echo.SERV_TYPE : Echo}
 
 
     

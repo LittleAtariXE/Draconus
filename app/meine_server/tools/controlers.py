@@ -128,6 +128,7 @@ class BasicControler:
             case "i":
                 handler.updateInfo(cmd[1:])
             case "e":
+                self.server.Msg(msg=cmd[1], sender=f"({handler.ID}){handler.Addr}")
                 handler.sendMsg(cmd[1])
             case _:
                 self.sysCMD(cmd, handler)
