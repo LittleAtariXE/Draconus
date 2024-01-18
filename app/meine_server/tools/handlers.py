@@ -30,7 +30,10 @@ class MrHandler:
     def reciveMsg(self) -> str:
         msg = b""
         while True:
-            recv = self.conn.recv(self.central.server.raw_len)
+            try:
+                recv = self.conn.recv(self.central.server.raw_len)
+            except (ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError):
+                return None
             if not recv:
                 return None
             else:
@@ -49,6 +52,8 @@ class MrHandler:
                 msg = self.reciveMsg()
             except socket.timeout:
                 continue
+            except (BrokenPipeError, ConnectionRefusedError, ConnectionAbortedError):
+                break
             if not msg:
                 break
             else:

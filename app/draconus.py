@@ -8,7 +8,7 @@ from threading import Thread
 from typing import Union
 from time import sleep
 
-from .meine_server import Basic, Echo
+from .meine_server import Basic, Echo, BasicRat
 from .meine_server import Messenger
 from .draco_tools import Configurator, ServerHandler
 from .hive import Queen
@@ -23,7 +23,8 @@ class Draconus:
         self._pauseClean = False
         self.baseServers = {
             Basic.SERV_TYPE : Basic,
-            Echo.SERV_TYPE : Echo}
+            Echo.SERV_TYPE : Echo,
+            BasicRat.SERV_TYPE : BasicRat}
 
 
     
@@ -151,10 +152,14 @@ class Draconus:
         del self.SERVERS[name]
     
     def showServerTypes(self) -> None:
-        info = {}
-        for st in self.baseServers.keys():
-            info[st] = self.baseServers[st].SERV_INFO
-        self.Msg(info, dictFormat=True, dictName="Avaible Server Types")
+        info = ""
+        for st in self.baseServers.values():
+            intro = f"{st.SERV_TYPE}"
+            _si = {"Server Info" : st.SERV_INFO, "Worm Info" : st.WORM_INFO}
+            info += self.Msg.unpackDict(_si, intro) + "\n"
+        self.Msg(info)
+        #     info[st] = self.baseServers[st].SERV_INFO
+        # self.Msg(info, dictFormat=True, dictName="Avaible Server Types")
     
     def showServers(self) -> None:
         if len(self.SERVERS) < 1:

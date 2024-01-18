@@ -23,6 +23,7 @@ from .tools.localapi import LocalAPI
 class BasicTemplate(Process):
     SERV_TYPE = None
     SERV_INFO = None
+    WORM_INFO = None
     def __init__(self, ctrl_pipe: Pipe, conf: dict = {}, messenger: object = Messenger, controlers: object = BasicControler, localApi=LocalAPI):
         super().__init__(daemon=True)
         self._oldConf = conf
@@ -56,6 +57,7 @@ class BasicTemplate(Process):
         self.Ctrl = None
         self.Tasker = None
         self.ready2rebuild = False
+        self._killMe = False
     
     @property
     def config(self) -> dict :
@@ -72,7 +74,8 @@ class BasicTemplate(Process):
             "SYS_MSG_HEADERS" : self.sysHeadears,
             "HTTP_ADDR" : str(self.httpAddr),
             "SERV_TYPE" : self.SERV_TYPE,
-            "SERV_INFO" : self.SERV_INFO
+            "SERV_INFO" : self.SERV_INFO,
+            "WORM_INFO" : self.WORM_INFO
         }
         tmp = self._oldConf.copy()
         tmp.update(conf)      
@@ -163,7 +166,8 @@ class BasicTemplate(Process):
                 continue
         self.Msg("Server stop listening")
         self.server.close()
-        self.ready2rebuild = True
+        if not self._killMe:
+            self.ready2rebuild = True
         self.Central = None
         return
     
@@ -204,7 +208,11 @@ class BasicTemplate(Process):
 
         
     def turnOFF(self) -> None:
+        self.is_listening = False
+        self._killMe = True
+        self.Msg("Signal to stop")
         self.working = False
+        sleep(self._accConnTO)
         self.Msg("[!!] Stoping Server [!!]")
         sleep(1)
 
