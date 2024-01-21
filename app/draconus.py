@@ -8,7 +8,7 @@ from threading import Thread
 from typing import Union
 from time import sleep
 
-from .meine_server import Basic, Echo, BasicRat
+from .meine_server import Basic, Echo, BasicRat, BasicBot
 from .meine_server import Messenger
 from .draco_tools import Configurator, ServerHandler
 from .hive import Queen
@@ -24,7 +24,8 @@ class Draconus:
         self.baseServers = {
             Basic.SERV_TYPE : Basic,
             Echo.SERV_TYPE : Echo,
-            BasicRat.SERV_TYPE : BasicRat}
+            BasicRat.SERV_TYPE : BasicRat,
+            BasicBot.SERV_TYPE : BasicBot}
 
 
     
@@ -54,7 +55,7 @@ class Draconus:
             self.server.listen(1)
             self.raw_len = self.conf.get("UNIX_RAW_LEN", 2048)
             self.format = self.conf.get("UNIX_SOCKET_FORMAT", "utf-8")
-            self.Msg("Socket Server build successfull")
+            self.Msg("Socket Server build successfull", dev=True)
             return True
         except Exception as e:
             self.Msg(f"[!!] ERROR: Cant build socket server: {e}")
@@ -155,7 +156,7 @@ class Draconus:
         info = ""
         for st in self.baseServers.values():
             intro = f"{st.SERV_TYPE}"
-            _si = {"Server Info" : st.SERV_INFO, "Worm Info" : st.WORM_INFO}
+            _si = {"Server Type": st.SERV_TYPE, "Server Info" : st.SERV_INFO, "Worm Info" : st.WORM_INFO}
             info += self.Msg.unpackDict(_si, intro) + "\n"
         self.Msg(info)
         #     info[st] = self.baseServers[st].SERV_INFO
@@ -210,7 +211,7 @@ class Draconus:
         for serv in self.SERVERS.values():
             serv.sendCmd(["serv", "end"])
         sleep(2)
-        self.Msg("[SYSTEM] DRACONUS STOPPED")
+        self.Msg("DRACONUS STOPPED")
         self.cleaner()
         sys.exit()
 #################################################################    

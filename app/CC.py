@@ -41,7 +41,7 @@ class CommandCenter:
             print("[SYSTEM] Propapbly Draconus was not started")
             return None
     
-    def connSocket(self, name: str):
+    def connSocket(self, name: str) -> bool:
         spath = os.path.join(self.socksDir, name)
         lsock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
@@ -52,7 +52,7 @@ class CommandCenter:
         except:
             return None
     
-    def connApi(self, name: str):
+    def connApi(self, name: str) -> bool:
         spath = os.path.join(self.socksDir, name)
         lsock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
@@ -62,7 +62,7 @@ class CommandCenter:
         except:
             return None
     
-    def findSockets(self, first_time=False):
+    def findSockets(self, first_time=False) -> None:
         print("\n[SYSTEM] Finding servers ....")
         count = 0
         for fs in os.listdir(self.socksDir):

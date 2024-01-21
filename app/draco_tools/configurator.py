@@ -35,6 +35,7 @@ class Configurator:
     def linkingDirs(self) -> None:
         if self.CONF["MAIN_DIR"] == "main":
             self.CONF["MAIN_DIR"] = os.path.join(Path(self.pwd).parent.parent, "DRACO_FILES")
+        self.CONF["APP_DIR"] = str(Path(self.pwd).parent)
         self.CONF["OUTPUT_DIR"] = os.path.join(self.CONF["MAIN_DIR"], self.config.get("DIRS", "OUTPUT_DIR"))
         self.CONF["UNIX_SOCKETS_DIR"] = os.path.join(self.CONF["MAIN_DIR"], self.config.get("DIRS", "SOCKET_DIR"))
 

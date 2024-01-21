@@ -1,2 +1,2 @@
 from .tools.messenger import Messenger
-from .servers import Basic, Echo, BasicRat
+from .servers import Basic, Echo, BasicRat, BasicBot
