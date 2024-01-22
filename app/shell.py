@@ -111,6 +111,21 @@ class ShellConstructor:
             self.CoCe.sendCMD("hive", conf)
         
         @draco_shell.command()
+        @click.option("--save", "-s", required=False, help="Save Server Config. ex: post -s my_server")
+        @click.option("--imp", "-i", required=False, help="Import Server from file. Put only server name. ex: post -l my_server")
+        @click.option("--list", "-l", "list_option", required=False, is_flag=True, help="Show saved server files")
+        def post(save, imp, list_option) -> None:
+            if save:
+                self.CoCe.sendCMD("save", save)
+            elif list_option:
+                self.CoCe.sendCMD("listF")
+            elif imp:
+                self.CoCe.sendCMD("load", imp)
+                sleep(1)
+                self.CoCe.findSockets()
+
+        
+        @draco_shell.command()
         @click.argument("name")
         def kill(name) -> None:
             self.CoCe.sendCMD("kill", name)

@@ -18,7 +18,9 @@ class ServerHandler:
             self.draco.Msg(f"[!!] ERROR: send command to server [!!] : {e}")
     
     def reciveData(self) -> list:
-        check = self.pipe.poll
+        check = self.pipe.poll(timeout=3)
+        if not check:
+            return None
         if check:
             recv = self.pipe.recv()
             return recv
@@ -27,7 +29,14 @@ class ServerHandler:
         self.draco.Msg(f"Server <{self.name}> install successfull ... try starting...")
         self.server.start()
         sleep(0.5)
-        if self.reciveData()[0] == "OK":
+        resp = self.reciveData()
+        print("RESP PIPE: ", resp)
+        if not resp:
+            self.draco.Msg(f"Server <{self.name}> not working. Check log files")
+        elif resp == ["OK"]:
             self.working = True
-        else:
-            self.draco.Msg(f"Server <{self.name}> not working")
+        # sleep(2)
+        # self.sendCmd(["draco", "conf"])
+        # resp2 = self.reciveData()
+        # print("DRACO RESP: ", resp2)
+        

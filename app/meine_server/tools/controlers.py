@@ -1,5 +1,6 @@
 from multiprocessing import Pipe
-from typing import Callable
+from typing import Callable, Union
+from time import sleep
 
 
 class BasicControler:
@@ -8,14 +9,22 @@ class BasicControler:
         self.pipe = pipe
         self.server = server_callback
         self.headers = self.server.sysHeadears
+        self.pauseOverflow = self.server.config["PAUSE_OVERFLOW"]
     
-    def check_signal(self):
-        check = self.pipe.poll
+    def check_signal(self) -> Union[list, bool]:
+        sleep(self.pauseOverflow)
+        check = self.pipe.poll()
         if check:
             recv = self.pipe.recv()
             return recv
         else:
             return None
+    
+    def sendPipeData(self, data: list):
+        try:
+            self.pipe.send(data)
+        except Exception as e:
+            self.server.Msg(f"[!!] ERROR: Try Pipe send data [!!] : {e}")
     
     def sendMsg2Client(self, cliID: str, message: str):
         if cliID.lower() == "all":
@@ -107,6 +116,14 @@ class BasicControler:
             case _:
                 self.server.Msg("Unknown Command")
     
+    def dracoCMD(self, cmd: list) -> None:
+        match cmd[1]:
+            case "conf":
+                conf = self.server.config
+                self.sendPipeData([conf])
+            case _:
+                self.server.Msg("[!!] Unknown command (server - draconus) [!!]")
+    
     def unpackSysMsg(self, msg: str) -> list:
         msg = msg.split(self.headers)
         cmd = []
@@ -146,6 +163,8 @@ class BasicControler:
                 self._cliCMD(cmd)
             case "help":
                 self.server.Msg(self.help())
+            case "draco":
+                self.dracoCMD(cmd)
             case _:
                 self.execCMD(cmd)
     
@@ -186,6 +205,7 @@ class BasicControler:
                 continue
             self.server.Msg(f"CMD: {cmd}", dev=True)
             self.checkCMD(cmd)
+            
             
 
 

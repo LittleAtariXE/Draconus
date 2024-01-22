@@ -38,6 +38,7 @@ class BasicTemplate(Process):
         self._pauseWork = conf.get("PROC_CYCLE_PAUSE", 2)
         self.sysHeadears = conf.get("MSG_SYS_HEADERS", MrHeader().generate_name())
         self._http_enable = conf.get("HTTP_ENABLE", False)
+        self._pauseOverflow = float(conf.get("PAUSE_OVERFLOW", 0.2))
         self.ctrl_pipe = ctrl_pipe
         self.__CHAM = Chameleon
         self.Cham = None
@@ -75,7 +76,8 @@ class BasicTemplate(Process):
             "HTTP_ADDR" : str(self.httpAddr),
             "SERV_TYPE" : self.SERV_TYPE,
             "SERV_INFO" : self.SERV_INFO,
-            "WORM_INFO" : self.WORM_INFO
+            "WORM_INFO" : self.WORM_INFO,
+            "PAUSE_OVERFLOW" : self._pauseOverflow
         }
         tmp = self._oldConf.copy()
         tmp.update(conf)      
@@ -131,6 +133,9 @@ class BasicTemplate(Process):
                 self.server.bind((self.ip, self.port))
             except (ValueError, TypeError):
                 self.Msg(f"[!!] ERROR: Wrong port number: {self.port}")
+                return False
+            except OSError as e:
+                self.Msg(f"[!!] ERROR bind socket !!! ... propably wrong IP address [!!] : {e}")
                 return False
         if first_time:
             self.Ctrl = self.__CTRL(self.ctrl_pipe, self)

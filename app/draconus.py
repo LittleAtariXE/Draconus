@@ -10,7 +10,7 @@ from time import sleep
 
 from .meine_server import Basic, Echo, BasicRat, BasicBot
 from .meine_server import Messenger
-from .draco_tools import Configurator, ServerHandler
+from .draco_tools import Configurator, ServerHandler, PostMan
 from .hive import Queen
 
 
@@ -19,6 +19,7 @@ class Draconus:
         self.config = Configurator()
         self.socketsDir = self.config.CONF["UNIX_SOCKETS_DIR"]
         self._socketFile = os.path.join(self.socketsDir, "_draco_sock")
+        self.extrasDir = self.config.CONF["EXTRAS_DIR"]
         self.SERVERS = {}
         self._pauseClean = False
         self.baseServers = {
@@ -40,6 +41,8 @@ class Draconus:
             os.mkdir(self.conf["OUTPUT_DIR"])
         if not os.path.exists(self.conf["UNIX_SOCKETS_DIR"]):
             os.mkdir(self.conf["UNIX_SOCKETS_DIR"])
+        if not os.path.exists(self.extrasDir):
+            os.mkdir(self.extrasDir)
     
     def cleaner(self) -> None:
         for fs in os.listdir(self.socketsDir):
@@ -136,10 +139,13 @@ class Draconus:
             self.Msg(f"[!!] ERROR: this server types: {conf['SERV_TYPE']} does not exist [!!]")
             return False
         tD, tS = Pipe()
+        print(conf["IP"])
         server = new(tS, conf)
         self.SERVERS[conf["NAME"]] = ServerHandler(conf["NAME"], tD, server, self)
         self.SERVERS[conf["NAME"]].begin()
         sleep(1)
+        if self.conf.get("AUTO_SAVE_SERVER"):
+            self.Post.saveServer(conf["NAME"], conf)
         self._pauseClean = False
 
     def killServer(self, name: str) -> None:
@@ -202,6 +208,34 @@ class Draconus:
     def stopServer(self) -> None:
         for serv in self.SERVERS.values():
             serv.sendCmd(["serv", "stop"])
+    
+    def saveServer(self, name: str) -> None:
+        serv = self.SERVERS.get(name)
+        if not serv:
+            self.Msg("[!!] ERROR: Server with this name does not exists [!!]")
+            return
+        serv.sendCmd(["draco", "conf"])
+        sleep(0.5)
+        config = serv.reciveData()
+        self.Msg(f"Recive data from server: {config}", dev=True)
+        if not config:
+            return
+        self.Post.saveServer(name, config)
+    
+    def loadServer(self, name: str) -> None:
+        conf = self.Post.loadServer(name)
+        if not conf:
+            return
+        self.makeNewServer(conf)
+    
+    def loadAllServer(self) -> None:
+        for file in os.listdir(self.extrasDir):
+            tag = file.find(".")
+            if tag == -1:
+                continue
+            if file[tag:] == ".server":
+                self.loadServer(file[0:tag])
+
         
 
 
@@ -264,6 +298,12 @@ class Draconus:
                 self.checkServer(cmd[1])
             case "hive":
                 self.hive(cmd[1])
+            case "save":
+                self.saveServer(cmd[1])
+            case "listF":
+                self.Post.listServers()
+            case "load":
+                self.loadServer(cmd[1])
 
             case _:
                 self.Msg("[!!] Unknown Command [!!]")
@@ -271,8 +311,11 @@ class Draconus:
     
     def START(self) -> None:    
         self.build()
+        self.Post = PostMan(self)
         self.Msg("[!!] DRACONUS START ... waiting for commands [!!]")
         self.Queen = Queen(self)
+        if self.conf.get("LOAD_ALL_SERVERS"):
+            self.loadAllServer()
         self.cycleCleaner()
         while True:
             self.acceptConn()

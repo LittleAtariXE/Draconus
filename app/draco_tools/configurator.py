@@ -15,6 +15,10 @@ class Configurator:
     def readConf(self) -> None:
         self.config.read(self.cPath)
         self.CONF["IP"] = self.config.get("BASIC", "IP")
+        if self.CONF["IP"] == '""':
+            self.CONF["IP"] = "127.0.0.1"
+        elif self.CONF["IP"] == "vps".lower():
+            self.CONF["IP"] = '""'
         self.CONF["FORMAT_CODE"] = self.config.get("BASIC", "FORMAT_CODE")
         self.CONF["MSG_NO_IMPORTANT"] = self.config.getboolean("BASIC", "MSG_NO_IMPORTANT")
         self.CONF["MSG_VANILA_PRINT"] = self.config.getboolean("BASIC", "MSG_VANILA_PRINT")
@@ -27,8 +31,11 @@ class Configurator:
         self.CONF["MAIN_DIR"] = self.config.get("BASIC", "MAIN_DIR")
         self.CONF["HTTP_ENABLE"] = self.config.getboolean("BASIC", "HTTP_ENABLE")
         self.CONF["HTTP_ADMIN_ENABLE"] = self.config.getboolean("ADVANCED", "HTTP_ADMIN_ENABLE")
+        self.CONF["PAUSE_OVERFLOW"] = self.config.get("ADVANCED", "PAUSE_OVERFLOW")
+        self.CONF["AUTO_SAVE_SERVER"] = self.config.getboolean("BASIC", "AUTO_SAVE_SERVER")
         self.CONF["MSG_DEV"] = self.config.getboolean("DEV", "MSG_DEV")
-        if self.config.get("HEADERS", "MSG_SYS_HEADERS") != "":
+        self.CONF["LOAD_ALL_SERVERS"] = self.config.getboolean("DEV", "LOAD_ALL_SERVERS")
+        if self.config.get("HEADERS", "MSG_SYS_HEADERS") != '""':
             self.CONF["MSG_SYS_HEADERS"] = self.config.get("HEADERS", "MSG_SYS_HEADERS").strip('"').strip("'")
         self.linkingDirs() 
 
@@ -38,6 +45,7 @@ class Configurator:
         self.CONF["APP_DIR"] = str(Path(self.pwd).parent)
         self.CONF["OUTPUT_DIR"] = os.path.join(self.CONF["MAIN_DIR"], self.config.get("DIRS", "OUTPUT_DIR"))
         self.CONF["UNIX_SOCKETS_DIR"] = os.path.join(self.CONF["MAIN_DIR"], self.config.get("DIRS", "SOCKET_DIR"))
+        self.CONF["EXTRAS_DIR"] = os.path.join(self.CONF["MAIN_DIR"], self.config.get("DIRS", "EXTRAS_DIR"))
 
     def work(self) -> None:
         self.readConf()
