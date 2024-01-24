@@ -8,7 +8,7 @@ from threading import Thread
 from typing import Union
 from time import sleep
 
-from .meine_server import Basic, Echo, BasicRat, BasicBot
+from .meine_server import Basic, Echo, BasicRat, BasicBot, GypsyKing
 from .meine_server import Messenger
 from .draco_tools import Configurator, ServerHandler, PostMan
 from .hive import Queen
@@ -26,7 +26,8 @@ class Draconus:
             Basic.SERV_TYPE : Basic,
             Echo.SERV_TYPE : Echo,
             BasicRat.SERV_TYPE : BasicRat,
-            BasicBot.SERV_TYPE : BasicBot}
+            BasicBot.SERV_TYPE : BasicBot,
+            GypsyKing.SERV_TYPE : GypsyKing}
 
 
     

