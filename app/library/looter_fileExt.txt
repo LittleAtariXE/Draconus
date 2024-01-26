@@ -1,0 +1,9 @@
+##### paste here file extension. File with this extension will be grab from client
+##### !! every extension prefix must be dot "."
+##### line with # will be ignored
+
+.jpg
+.jpeg
+#.gif
+.bmp
+.png

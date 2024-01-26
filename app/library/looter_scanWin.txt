@@ -1,0 +1,45 @@
+#### In this file, we specify the Windows environment variables.
+#### These will be the main directories from where the search for files will start.
+#### Every subdirectory will also be searched in order to find the files being sought.
+#### To add an environment variable, remove the hash # before its name (the ones written in uppercase)
+
+
+
+
+APPDATA
+######Path to the application data directory for the current user.
+
+#LOCALAPPDATA
+######Path to the local application data (data not transferred over the network).
+
+PROGRAMFILES
+######Path to the Program Files directory.
+
+PROGRAMFILES(X86)
+######Path to the Program Files directory for 32-bit applications on a 64-bit system.
+
+PROGRAMDATA
+######Path to the program data directory (data shared between users).
+
+PUBLIC
+######Path to the public user directory.
+
+#SYSTEMROOT
+#WINDIR
+######Path to the Windows system directory.
+
+#TEMP
+#TMP
+######Path to the temporary directory.
+
+#USERPROFILE
+######Path to the current user's profile.
+
+#HOMEPATH
+######Base path of the user's home directory.
+
+#HOMEDRIVE
+######Drive where the user's home directory is located.
+
+#PATH
+######System path variable containing paths to various executable files.

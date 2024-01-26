@@ -1,6 +1,8 @@
 import socket
 import os
 
+from random import randint
+
 
 
 class MicroServer:
@@ -10,7 +12,7 @@ class MicroServer:
         self.file_name = file_name
         self.work = work
         self.ip = self.server.ip
-        self.port = int(self.server.port) * 2
+        self.port = int(self.server.port) * 2 + randint(1, 200)
         self.noAttempts = 100
         self.outDir = os.path.join(self.server.config.get("OUTPUT_DIR"), self.server.name)
         self._is_working = False
@@ -66,6 +68,7 @@ class MicroServer:
             else:
                 data += recv
         self.saveFile(data)
+        self.conn.close()
     
     def working(self) -> None:
         match self.work:
@@ -78,6 +81,11 @@ class MicroServer:
         if self.buildServer():
             self.working()
         self._is_working = False
+        try:
+            self.micro.close()
+        except:
+            pass
+        
 
         
         
