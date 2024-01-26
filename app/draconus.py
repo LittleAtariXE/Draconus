@@ -140,7 +140,6 @@ class Draconus:
             self.Msg(f"[!!] ERROR: this server types: {conf['SERV_TYPE']} does not exist [!!]")
             return False
         tD, tS = Pipe()
-        print(conf["IP"])
         server = new(tS, conf)
         self.SERVERS[conf["NAME"]] = ServerHandler(conf["NAME"], tD, server, self)
         self.SERVERS[conf["NAME"]].begin()

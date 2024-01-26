@@ -32,13 +32,14 @@ class MicroServer:
         self.micro = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.micro.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if not self.portAllocation():
-            self.server.Msg("[!!] ERROR: Cant make micro server. [!!]")
+            self.server.Msg("[!!] ERROR: Cant make micro server. [!!]", noI=True)
             return False
         else:
             try:
                 self.micro.listen(1)
+                self.micro.settimeout(10)
             except:
-                self.server.Msg("[!!] ERROR: Cant make micro server. [!!]")
+                self.server.Msg("[!!] ERROR: Cant make micro server. [!!]", noI=True)
                 return False
             self.server.Msg(f"Micro Server create succcessfull: {self.ip}:{self.port}", dev=True)
             self.readyPort = self.port
@@ -49,7 +50,7 @@ class MicroServer:
         try:
             with open(name, "wb") as f:
                 f.write(data)
-            self.server.Msg(f"Save file: {self.file_name} save successfull", noI=True)
+            self.server.Msg(f"File: {self.file_name} save successfull", noI=True)
         except Exception as e:
             self.server.Msg(f"[!!] ERROR: Cant save file: {self.file_name}. {e} [!!]", noI=True)
     

