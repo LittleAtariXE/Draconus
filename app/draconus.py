@@ -44,6 +44,8 @@ class Draconus:
             os.mkdir(self.conf["UNIX_SOCKETS_DIR"])
         if not os.path.exists(self.extrasDir):
             os.mkdir(self.extrasDir)
+        if not os.path.exists(self.conf["PAYLOAD_DIR"]):
+            os.mkdir(self.conf["PAYLOAD_DIR"])
     
     def cleaner(self) -> None:
         for fs in os.listdir(self.socketsDir):

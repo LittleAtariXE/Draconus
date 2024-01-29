@@ -46,6 +46,7 @@ class Configurator:
         self.CONF["OUTPUT_DIR"] = os.path.join(self.CONF["MAIN_DIR"], self.config.get("DIRS", "OUTPUT_DIR"))
         self.CONF["UNIX_SOCKETS_DIR"] = os.path.join(self.CONF["MAIN_DIR"], self.config.get("DIRS", "SOCKET_DIR"))
         self.CONF["EXTRAS_DIR"] = os.path.join(self.CONF["MAIN_DIR"], self.config.get("DIRS", "EXTRAS_DIR"))
+        self.CONF["PAYLOAD_DIR"] = os.path.join(self.CONF["MAIN_DIR"], "PAYLOAD")
 
     def work(self) -> None:
         self.readConf()

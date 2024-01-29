@@ -15,10 +15,10 @@ APPDATA
 PROGRAMFILES
 ######Path to the Program Files directory.
 
-PROGRAMFILES(X86)
+#PROGRAMFILES(X86)
 ######Path to the Program Files directory for 32-bit applications on a 64-bit system.
 
-PROGRAMDATA
+#PROGRAMDATA
 ######Path to the program data directory (data shared between users).
 
 PUBLIC
