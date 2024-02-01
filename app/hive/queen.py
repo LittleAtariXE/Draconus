@@ -62,7 +62,6 @@ class Queen:
         _conf = self.baseConf.CONF.copy()
         _conf.update(self._emptyConf)
         _conf.update(config)
-        print(_conf)
         code = self._temp[types]
         temp = Template(code)
         rcode = temp.render(_conf)

@@ -30,13 +30,8 @@ class ServerHandler:
         self.server.start()
         sleep(0.5)
         resp = self.reciveData()
-        print("RESP PIPE: ", resp)
         if not resp:
             self.draco.Msg(f"Server <{self.name}> not working. Check log files")
         elif resp == ["OK"]:
             self.working = True
-        # sleep(2)
-        # self.sendCmd(["draco", "conf"])
-        # resp2 = self.reciveData()
-        # print("DRACO RESP: ", resp2)
         

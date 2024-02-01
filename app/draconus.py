@@ -167,8 +167,7 @@ class Draconus:
             _si = {"Server Type": st.SERV_TYPE, "Server Info" : st.SERV_INFO, "Worm Info" : st.WORM_INFO}
             info += self.Msg.unpackDict(_si, intro) + "\n"
         self.Msg(info)
-        #     info[st] = self.baseServers[st].SERV_INFO
-        # self.Msg(info, dictFormat=True, dictName="Avaible Server Types")
+        
     
     def showServers(self) -> None:
         if len(self.SERVERS) < 1:
@@ -325,7 +324,6 @@ class Draconus:
                 cmd = self.recvJson()
                 if not cmd:
                     break
-                # self.Msg(f"CMD: {cmd}")
                 self.execCmd(cmd)
         
 

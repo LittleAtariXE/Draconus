@@ -14,12 +14,21 @@ class MrHandler:
         self.Os = "Unknown"
         self.EnvVar = "Unknown"
         self.CliName = "Unknown"
+        self.procInfo = "Unknown"
+        self.platformInfo = "Unknown"
+        self.networkName = "Unknown"
     
     def updateInfo(self, info: list) -> None:
-        self.CliName = info[0]
-        self.Os = info[1]
-        self.EnvVar= info[2]
-
+        try:
+            self.CliName = info[0]
+            self.Os = info[1]
+            self.EnvVar= info[2]
+            self.platformInfo = info[3]
+            self.networkName = info[4]
+            self.procInfo = info[5]
+        except IndexError:
+            self.cantral.Msg(f"Incoplete Sys Info Data from client: [{self.ID}]{self.Addr}")
+    
     def sendMsg(self, msg : str) -> None:
         try:
             msg = self.central.Cham.encrypt(msg)

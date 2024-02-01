@@ -37,6 +37,7 @@ class Configurator:
         self.CONF["LOAD_ALL_SERVERS"] = self.config.getboolean("DEV", "LOAD_ALL_SERVERS")
         if self.config.get("HEADERS", "MSG_SYS_HEADERS") != '""':
             self.CONF["MSG_SYS_HEADERS"] = self.config.get("HEADERS", "MSG_SYS_HEADERS").strip('"').strip("'")
+        self.CONF["WORM_PAUSE_CONN"] = self.config.get("BASIC", "WORM_PAUSE_CONN")
         self.linkingDirs() 
 
     def linkingDirs(self) -> None:

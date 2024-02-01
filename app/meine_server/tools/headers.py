@@ -6,7 +6,7 @@ class MrHeader:
     def __init__(self, length=30):
         self.length = length
         self.base_char = string.ascii_letters + string.digits + string.punctuation
-        self.ban_char = ["'", '"', "\\"]
+        self.ban_char = ["'", '"', "\\", "%"]
     
     def generate_name(self):
         header = ""

