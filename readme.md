@@ -18,7 +18,7 @@
   <div align="center">
     <a href="#Intro">Intro</a> &nbsp;|&nbsp;
     <a href="#About">About</a> &nbsp;|&nbsp;
-    <a href="#section3">Sekcja 3</a>
+    <a href="#Whatis">What is Draconus</a>  &nbsp;|&nbsp;
   </div>
 </div>
 
@@ -37,3 +37,12 @@
     <h5> After many hours of testing, arranging logic, etc., I experienced a 'brain freeze' The problem turned out to be the 'selectors' module, which could hang the socket in a few strange cases. I removed it from the project, and now clients can disconnect, reconnect, and the chance of hanging is very slim. This also applies to servers, which can now enable 'listening', turn it off, and recover connections without any problems.
 The 'selectors' module has made it onto my blacklist </h5>
   </div>
+
+
+<div id="Whatis" align="center">
+    <h2 align="center"> What is "Draconus"? </h2>
+    <h5> Draconus is a background-running program. Through another program called "Command Center," we connect to Draconus. Draconus enables the creation of various types of servers. These servers run as separate processes in the background but remain dependent on Draconus. As long as Draconus is running, all servers created by us will keep running.</h5>  
+    <h5> The advantage of this setup is that you can safely disconnect from Draconus (using the Command Center), and it will continue to run alongside the servers as "Daemon Processes" in the system. </h5>  
+    <h5> Draconus allows you to create an unlimited number of servers (I mean, I didn't introduce any limitations) until your CPU explodes! 😄 Each server is capable of handling connections from multiple clients simultaneously, managing those connections, receiving and sending messages or commands. Feel free to test the endurance of the servers, i.e., how many clients they can handle simultaneously and communicate with.</h5>  
+    <h5> You're welcome to test and see how robust these servers are! </h5>
+</div>
