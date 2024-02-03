@@ -14,8 +14,16 @@
   <h2>Contents</h2>
   <ul>
     <li><a href="#Intro">Intro</a></li>
-    <li><a href="#section2">Sekcja 2</a></li>
+    <li><a href="#About">About</a></li>
     <li><a href="#section3">Sekcja 3</a></li>
     
   </ul>
 </div>
+
+
+<div id="About" align="center">
+    <h2> ABOUT </h2>
+    <h5> I created this project primarily to gain a better understanding of how network sockets work in Python, and also as a fun exploration of Processes and Threads. After many, many... hours of work and testing with network sockets, I can only say one thing: "You can get a serious brain workout!" 😄 </h5>
+    <h5> However, it seems to me that I've managed to create servers and clients that, to some extent, can work together (recover connections, avoid hanging, etc.). Nevertheless, strange "things" can still happen, and network sockets may behave in quite peculiar ways. </h5>
+    <h5> In any case, I invite you to test and improve this project, as someone else might be able to tame those "network sockets." Good luck!</h5>
+  </div>
