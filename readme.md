@@ -16,8 +16,8 @@
 <div id="toc" style="margin: 20px;">
   <h2 align="center">Contents</h2>
   <div align="center">
-    <a href="#Intro" style="margin-right: 10px;">Intro</a>
-    <a href="#About" style="margin-right: 10px;">About</a>
+    <a href="#Intro" style="margin-right: 30px;">Intro</a>
+    <a href="#About" style="margin-right: 30px;">About</a>
     <a href="#section3">Sekcja 3</a>
   </div>
 </div>
