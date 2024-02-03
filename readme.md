@@ -15,12 +15,13 @@
 
 <div id="toc">
   <h2 align="center">Contents</h2>
-  <ul style="list-style-type:none; text-align:center;">
-    <li><a href="#Intro">Intro</a></li>
-    <li><a href="#About">About</a></li>
-    <li><a href="#section3">Sekcja 3</a></li>
+  <ul style="text-align:center; padding:0;">
+    <li style="display:inline-block; margin-right: 20px;"><a href="#Intro">Intro</a></li>
+    <li style="display:inline-block; margin-right: 20px;"><a href="#About">About</a></li>
+    <li style="display:inline-block; margin-right: 20px;"><a href="#section3">Sekcja 3</a></li>
   </ul>
 </div>
+
 
 
 <br/>
