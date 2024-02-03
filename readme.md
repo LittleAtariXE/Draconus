@@ -15,11 +15,11 @@
 
 <div id="toc">
   <h2 align="center">Contents</h2>
-  <ul style="text-align:center; padding:0;">
-    <li style="display:inline-block; margin-right: 20px;"><a href="#Intro">Intro</a></li>
-    <li style="display:inline-block; margin-right: 20px;"><a href="#About">About</a></li>
-    <li style="display:inline-block; margin-right: 20px;"><a href="#section3">Sekcja 3</a></li>
-  </ul>
+  <div align="center">
+    <a href="#Intro">Intro</a>
+    <a href="#About">About</a>
+    <a href="#section3">Sekcja 3</a>
+  </div>
 </div>
 
 
