@@ -9,3 +9,13 @@
   </p>
 
 </div>
+
+<div id="toc">
+  <h2>Contents</h2>
+  <ul>
+    <li><a href="#Intro">Intro</a></li>
+    <li><a href="#section2">Sekcja 2</a></li>
+    <li><a href="#section3">Sekcja 3</a></li>
+    
+  </ul>
+</div>
