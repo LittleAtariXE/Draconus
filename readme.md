@@ -1,2 +1,4 @@
 # DRACONUS
-![Intro](img/draki.png)
+<p align="center">
+  <img src="img/draki.png" alt="Intro">
+</p>
