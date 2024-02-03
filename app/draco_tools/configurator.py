@@ -2,7 +2,7 @@ import os
 
 from pathlib import Path
 from configparser import ConfigParser, ExtendedInterpolation
-
+from typing import Union
 
 class Configurator:
     def __init__(self):
@@ -11,14 +11,26 @@ class Configurator:
         self.cPath = os.path.join(Path(self.pwd).parent.parent, "CONFIG.ini")
         self.CONF = {}
         self.work()
+    
+    def ipAddrValidate(self, conf_ip: Union[int, str]) -> str:
+        conf_ip = str(conf_ip)
+        if conf_ip == '""':
+            conf_ip = "127.0.0.1"
+        elif conf_ip == "vps" or conf_ip == "VPS":
+            conf_ip = ""
+        return conf_ip
+    
+    def msgHeadValidate(self, sys_msg: str) -> str:
+        if sys_msg == "gen" or sys_msg == "GEN" or sys_msg == '""':
+            sys_msg = "generate"
+        else:
+            sys_msg = sys_msg.strip("'").strip('"')
+        return sys_msg
 
     def readConf(self) -> None:
         self.config.read(self.cPath)
-        self.CONF["IP"] = self.config.get("BASIC", "IP")
-        if self.CONF["IP"] == '""':
-            self.CONF["IP"] = "127.0.0.1"
-        elif self.CONF["IP"] == "vps".lower():
-            self.CONF["IP"] = '""'
+        _ip = self.config.get("BASIC", "IP")
+        self.CONF["IP"] = self.ipAddrValidate(_ip)
         self.CONF["FORMAT_CODE"] = self.config.get("BASIC", "FORMAT_CODE")
         self.CONF["MSG_NO_IMPORTANT"] = self.config.getboolean("BASIC", "MSG_NO_IMPORTANT")
         self.CONF["MSG_VANILA_PRINT"] = self.config.getboolean("BASIC", "MSG_VANILA_PRINT")
@@ -35,8 +47,8 @@ class Configurator:
         self.CONF["AUTO_SAVE_SERVER"] = self.config.getboolean("BASIC", "AUTO_SAVE_SERVER")
         self.CONF["MSG_DEV"] = self.config.getboolean("DEV", "MSG_DEV")
         self.CONF["LOAD_ALL_SERVERS"] = self.config.getboolean("DEV", "LOAD_ALL_SERVERS")
-        if self.config.get("HEADERS", "MSG_SYS_HEADERS") != '""':
-            self.CONF["MSG_SYS_HEADERS"] = self.config.get("HEADERS", "MSG_SYS_HEADERS").strip('"').strip("'")
+        _head = self.config.get("HEADERS", "MSG_SYS_HEADERS")
+        self.CONF["MSG_SYS_HEADERS"] = self.msgHeadValidate(_head)
         self.CONF["WORM_PAUSE_CONN"] = self.config.get("BASIC", "WORM_PAUSE_CONN")
         self.linkingDirs() 
 

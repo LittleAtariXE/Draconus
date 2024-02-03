@@ -10,7 +10,7 @@ from time import sleep
 
 from .meine_server import Basic, Echo, BasicRat, BasicBot, GypsyKing
 from .meine_server import Messenger
-from .draco_tools import Configurator, ServerHandler, PostMan
+from .draco_tools import Configurator, ServerHandler, PostMan, MrHeader
 from .hive import Queen
 
 
@@ -34,6 +34,11 @@ class Draconus:
     @property
     def conf(self) -> dict:
         return self.config.CONF
+    
+    def completeConfig(self) -> None:
+        if self.conf["MSG_SYS_HEADERS"] == "generate":
+            head = MrHeader(self.conf["EXTRAS_DIR"])
+            self.config.CONF["MSG_SYS_HEADERS"] = head.loadHeader()
     
     def makeFile(self) -> None:
         if not os.path.exists(self.conf["MAIN_DIR"]):
@@ -128,6 +133,7 @@ class Draconus:
         self._pauseClean = True
         conf = self.conf.copy()
         conf.update(config)
+        print(conf)
         if conf["NAME"] in self.SERVERS.keys():
             self.Msg("[!!] ERROR: A server with this name already exist [!!]")
             return False
@@ -313,6 +319,7 @@ class Draconus:
     def START(self) -> None:    
         self.build()
         self.Post = PostMan(self)
+        self.completeConfig()
         self.Msg("[!!] DRACONUS START ... waiting for commands [!!]")
         self.Queen = Queen(self)
         if self.conf.get("LOAD_ALL_SERVERS"):
