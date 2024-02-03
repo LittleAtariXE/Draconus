@@ -16,7 +16,7 @@
 <div id="toc">
   <h2 align="center">Contents</h2>
   <ul>
-    <li><a href="#Intro">Intro</a></li>
+    <li align="center"><a href="#Intro">Intro</a></li>
     <li><a href="#About">About</a></li>
     <li><a href="#section3">Sekcja 3</a></li>
     
