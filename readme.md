@@ -13,14 +13,15 @@
 <br/>
 <br/>
 
-<div id="toc" style="margin: 20px;">
+<div id="toc">
   <h2 align="center">Contents</h2>
   <div align="center">
-    <a href="#Intro" style="margin-right: 30px;">Intro</a>
-    <a href="#About" style="margin-right: 30px;">About</a>
+    <a href="#Intro">Intro</a> &nbsp;|&nbsp;
+    <a href="#About">About</a> &nbsp;|&nbsp;
     <a href="#section3">Sekcja 3</a>
   </div>
 </div>
+
 
 
 
