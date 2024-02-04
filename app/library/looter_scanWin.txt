@@ -9,13 +9,13 @@
 APPDATA
 ######Path to the application data directory for the current user.
 
-#LOCALAPPDATA
+LOCALAPPDATA
 ######Path to the local application data (data not transferred over the network).
 
 PROGRAMFILES
 ######Path to the Program Files directory.
 
-#PROGRAMFILES(X86)
+PROGRAMFILES(X86)
 ######Path to the Program Files directory for 32-bit applications on a 64-bit system.
 
 #PROGRAMDATA

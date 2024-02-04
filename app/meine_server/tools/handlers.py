@@ -27,7 +27,7 @@ class MrHandler:
             self.networkName = info[4]
             self.procInfo = info[5]
         except IndexError:
-            self.cantral.Msg(f"Incoplete Sys Info Data from client: [{self.ID}]{self.Addr}")
+            self.central.Msg(f"Incoplete Sys Info Data from client: [{self.ID}]{self.Addr}")
     
     def sendMsg(self, msg : str) -> None:
         try:
@@ -77,6 +77,7 @@ class MrHandler:
     
     def START(self) -> None:
         self.wait4msg()
+        self.central.Msg("Disconnect", sender=self.Addr, noI=True)
         self.central.Msg("Close Connection", sender=self.Addr, dev=True)
         self.conn.close()
 
