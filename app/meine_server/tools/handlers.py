@@ -69,7 +69,7 @@ class MrHandler:
                 if msg.startswith(self.sysHead):
                     self.central.server.Ctrl._sysCMD(msg, self)
                 else:
-                    self.central.Msg(msg, sender=self.Addr)
+                    self.central.Msg(msg, sender=f"({self.ID}){self.Addr}")
         self.is_conn = False
   
     def __del__(self) -> None:

@@ -50,6 +50,7 @@ class Configurator:
         _head = self.config.get("HEADERS", "MSG_SYS_HEADERS")
         self.CONF["MSG_SYS_HEADERS"] = self.msgHeadValidate(_head)
         self.CONF["WORM_PAUSE_CONN"] = self.config.get("BASIC", "WORM_PAUSE_CONN")
+        self.CONF["MICRO_SERVER_LIMIT"] = self.config.get("ADVANCED", "MICRO_SERVER_LIMIT")
         self.linkingDirs() 
 
     def linkingDirs(self) -> None:

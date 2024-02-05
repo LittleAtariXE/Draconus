@@ -62,7 +62,10 @@ class MicroServer:
     
     
     def downloadFile(self) -> None:
-        self.conn, self.port = self.micro.accept()
+        try:
+            self.conn, self.port = self.micro.accept()
+        except TimeoutError:
+            return None
         self.server.Msg(f"Start download file: {self.file_name}. Length: {self.file_len}", noI=True)
         data = b""
         try:

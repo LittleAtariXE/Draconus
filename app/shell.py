@@ -154,15 +154,18 @@ class ShellConstructor:
         @server_shell.command()
         def help():
             print("\n******************** Basic Server Command ***********************************")
-            print("clr          - Clear Screen")
-            print("start        - Start Server Listening")
-            print("stop         - Stop Server Listening")
-            print("show         - Show connected clients")
-            print("msg <cli_id> <message>           - Send message to cli_ID")
+            print("  clr          - Clear Screen")
+            print("  start        - Start Server Listening")
+            print("  stop         - Stop Server Listening")
+            print("  show         - Show connected clients")
+            print("  task         - Show active threads")
+            print("  conf         - Show server config")
+            print("  msg <cli_id> <message>           - Send message to cli_ID")
             print('  ex: msg 4 "Hello World"        - Send Hello World to client no 4')
             print('  ex: msg all "You are Hacked"   - Send message to all clients')
             print('  [!!] if you want a send longer message use brackets "" [!!]')
             self.CoCe.sendCMD("next", name, "help")
+            sleep(0.3)
         
         @server_shell.command()
         def clr():
@@ -179,6 +182,14 @@ class ShellConstructor:
         @server_shell.command()
         def show():
             self.CoCe.sendCMD("next", name, "cli", "show")
+        
+        @server_shell.command()
+        def task():
+            self.CoCe.sendCMD("next", name, "task", "show")
+        
+        @server_shell.command()
+        def conf():
+            self.CoCe.sendCMD("next", name, "serv", "conf")
         
         @server_shell.command()
         @click.argument("cli_id")

