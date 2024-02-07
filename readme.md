@@ -115,7 +115,7 @@ The 'selectors' module has made it onto my blacklist </h5>
    
 1. Navigate to the "Draconus" directory using the command:
   ```sh
-  cd Draconus2
+  cd Draconus
   ```
 
 2. If you wish to change the default IP address of the servers you create, you must edit the CONFIG.ini file.
@@ -137,4 +137,11 @@ The 'selectors' module has made it onto my blacklist </h5>
   ```sh
   nohup python3 Draconus.py &
   ```
+
+<p>When you launch Draconus, a directory named 'DRACO_FILES' will be created in the main directory. It contains the following directories:
+<b>_sockets</b> - Draconus and Servers keep their files here (it's better not to touch anything here)
+<b>OUTPUT</b> - This is where the log files of Draconus and the Servers are located. It is also the place for files downloaded from clients.
+<b>HIVE</b> - Clients created to work with the server will appear here. As the 'Queen' hatches 'Worms', they will be placed here.
+<b>EXTRAS</b> - a place where saved servers are located
+<b>PAYLOAD</b> - we place files, scripts, etc. here that we will want to send to clients.</p>
 </div>
