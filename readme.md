@@ -22,6 +22,8 @@
     <a href="#How_works">How Works</a>  &nbsp;|&nbsp;
     <br/>
     <h3><a href="#LetsPlay">Let's Play</a></h3>
+    <a href="#before">Before Start</a>  &nbsp;|&nbsp;
+    <a href="#install">instalation</a>  &nbsp;|&nbsp;
   </div>
 </div>
 
@@ -70,7 +72,7 @@ The 'selectors' module has made it onto my blacklist </h5>
 </div>
 
 <div id="LetsPlay">
-  <h2> Let's Play</h2>
+  <h2 align="center"> Let's Play</h2>
 </div>
 
 <div id="before" align="center">
@@ -79,3 +81,26 @@ The 'selectors' module has made it onto my blacklist </h5>
   <p>Some Clients can perform unauthorized port scan, "http_flood" and other attack. YOU ARE RESPONSIBLE FOR USING THIS TOOL CORRECTLY !!!</p>
   <p>Don't attack other users' sites or infect their systems !!!!</p>
 </div>
+
+<div id="install">
+  <h3 align="center">Installation</h3>
+
+  **Basic Requirements:**
+
+- Linux Operating System (tested on Parrot and Kali)
+- Python 3.9
+
+1. Clone the repo
+   ```sh
+   git clone https://github.com/LittleAtariXE/Draconus
+   ```
+2. Change directory
+   ```sh
+   cd Draconus
+   ```
+3. Install requirements
+   ```sh
+   pip install -r requirements.txt
+   ```
+</div>
+<br/>
