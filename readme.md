@@ -106,3 +106,23 @@ The 'selectors' module has made it onto my blacklist </h5>
    ```
 </div>
 <br/>
+
+
+<div id="firstrun">
+  <h2 align="center">First Run</h2>
+
+   **First steps:**
+   
+1. Navigate to the "Draconus" directory using the command:
+  ```sh
+  cd Draconus2
+  ```
+
+2. If you wish to change the default IP address of the servers you create, you must edit the CONFIG.ini file.
+   <br/>
+   In the CONFIG.py file, you will find numerous parameters such as code formatting, length of received packets, etc. If you wish, you can experiment with different settings. If something doesn't work as expected, you can adjust them. However, the only parameter you really need to concern yourself with is "DEFAULT_IP." You don't need to worry about the rest.
+
+
+  ```sh
+  nano app/CONFIG.ini
+  ```
