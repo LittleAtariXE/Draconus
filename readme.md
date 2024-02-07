@@ -20,6 +20,8 @@
     <a href="#About">About</a> &nbsp;|&nbsp;
     <a href="#Whatis">What is Draconus</a>  &nbsp;|&nbsp;
     <a href="#How_works">How Works</a>  &nbsp;|&nbsp;
+    <br/>
+    <a href="#LetsPlay">Let's Play</a>
   </div>
 </div>
 
