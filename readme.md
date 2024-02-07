@@ -120,7 +120,9 @@ The 'selectors' module has made it onto my blacklist </h5>
 
 2. If you wish to change the default IP address of the servers you create, you must edit the CONFIG.ini file.
    <br/>
-   In the CONFIG.py file, you will find numerous parameters such as code formatting, length of received packets, etc. If you wish, you can experiment with different settings. If something doesn't work as expected, you can adjust them. However, the only parameter you really need to concern yourself with is "DEFAULT_IP." You don't need to worry about the rest.
+   In the CONFIG.py file, you will find numerous parameters such as code formatting, length of received packets, etc. If you wish, you can experiment with different settings. If something doesn't work as expected, you can adjust them. However, the only parameter you really need to concern yourself with is "DEFAULT_IP."
+   The second important parameter in the configuration file is MSG_NO_IMPORTANT, which is responsible for displaying additional messages from servers and clients. If you set this parameter to 'yes', you will not receive many messages such as connection termination, disconnection, start of each downloaded file, etc. At the beginning of your adventure, I recommend setting this parameter to 'no' to know exactly what is happening in the program. When you operate on many servers with many connected parameters, work can be complicated by an excessive amount of information.
+    You don't need to worry about the rest.
 
 
   ```sh
