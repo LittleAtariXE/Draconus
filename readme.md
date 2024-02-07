@@ -73,6 +73,9 @@ The 'selectors' module has made it onto my blacklist </h5>
 
 <div id="LetsPlay">
   <h2 align="center"> Let's Play</h2>
+  <p align="center">
+    <img src="img/d3.png" alt="Draconus">
+  </p>
 </div>
 
 <div id="before" align="center">
