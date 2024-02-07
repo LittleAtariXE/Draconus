@@ -82,13 +82,15 @@ The 'selectors' module has made it onto my blacklist </h5>
   <p>Don't attack other users' sites or infect their systems !!!!</p>
 </div>
 
+<br/>
+
 <div id="install">
-  <h3 align="center">Installation</h3>
+  <h2 align="center">Installation</h2>
 
   **Basic Requirements:**
 
 - Linux Operating System (tested on Parrot and Kali)
-- Python 3.9
+- Python 3.11.2
 
 1. Clone the repo
    ```sh
