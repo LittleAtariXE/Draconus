@@ -75,7 +75,7 @@ The 'selectors' module has made it onto my blacklist </h5>
 
 <div id="before" align="center">
   <h2>Before Start</h2>
-  <p>I STRONGLY RECOMMENDED: Uses Draconus and clients only in Virtual Machine. You can serious DAMAGE your System</p>
+  <p><b>I STRONGLY RECOMMENDED: Uses Draconus and clients only in Virtual Machine. You can serious DAMAGE your System</b></p>
   <p>Some Clients can perform unauthorized port scan, "http_flood" and other attack. YOU ARE RESPONSIBLE FOR USING THIS TOOL CORRECTLY !!!</p>
   <p>Don't attack other users' sites or infect their systems !!!!</p>
 </div>
