@@ -132,4 +132,9 @@ The 'selectors' module has made it onto my blacklist </h5>
 <p align="center">
     <img src="img/nconf.png" alt="Config_File">
   </p>
-
+  
+3. Use the `nohup` command to run programs in the background. Execute the command:
+  ```sh
+  nohup python3 Draconus.py &
+  ```
+</div>
