@@ -5,6 +5,7 @@ import subprocess
 class BasicRat(BasicWorm):
     def __init__(self):
         super().__init__()
+        self.name = "Basic_Rat"
     
     def getPwd(self) -> str:
         return str(os.getcwd())
