@@ -139,9 +139,10 @@ The 'selectors' module has made it onto my blacklist </h5>
   ```
 
 <p>When you launch Draconus, a directory named 'DRACO_FILES' will be created in the main directory. It contains the following directories:
-<b>_sockets</b> - Draconus and Servers keep their files here (it's better not to touch anything here)
-<b>OUTPUT</b> - This is where the log files of Draconus and the Servers are located. It is also the place for files downloaded from clients.
-<b>HIVE</b> - Clients created to work with the server will appear here. As the 'Queen' hatches 'Worms', they will be placed here.
-<b>EXTRAS</b> - a place where saved servers are located
-<b>PAYLOAD</b> - we place files, scripts, etc. here that we will want to send to clients.</p>
+  <br>
+<b>_sockets</b> - Draconus and Servers keep their files here (it's better not to touch anything here)<br>
+<b>OUTPUT</b> - This is where the log files of Draconus and the Servers are located. It is also the place for files downloaded from clients.<br>
+<b>HIVE</b> - Clients created to work with the server will appear here. As the 'Queen' hatches 'Worms', they will be placed here.<br>
+<b>EXTRAS</b> - a place where saved servers are located<br>
+<b>PAYLOAD</b> - we place files, scripts, etc. here that we will want to send to clients.</p><br>
 </div>
