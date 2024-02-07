@@ -21,7 +21,7 @@
     <a href="#Whatis">What is Draconus</a>  &nbsp;|&nbsp;
     <a href="#How_works">How Works</a>  &nbsp;|&nbsp;
     <br/>
-    <a href="#LetsPlay"><h3>Let's Play</h3></a>
+    <h3><a href="#LetsPlay">Let's Play</a></h3>
   </div>
 </div>
 
