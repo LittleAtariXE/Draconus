@@ -67,6 +67,15 @@ The 'selectors' module has made it onto my blacklist </h5>
 <p>Draconus generates ready-to-use clients for each server; all you need to do is start them. Messages sent between clients and the server are not yet fully encrypted (I'm working on it), and they currently undergo a simple message format transformation to "Base64." Special messages are additionally padded with randomly generated character strings (similar to headers) to confuse potential eavesdroppers. Of course, everything is configurable, but if you don't want to delve into the details, you don't have to. Draconus is designed to work very well with default settings. The only thing you need to set in the configuration is your IP address, which can be found in the "CONFIG.ini" file.</p>
 <p>Draconus can also be started as a regular program using the command "python3 Draconus.py." In this case, you'll need to open a second terminal to run the "Command Center."</p>
 
+</div>
 
+<div id="LetsPlay">
+  <h2> Let's Play</h2>
+</div>
 
+<div id="before" align="center">
+  <h2>Before Start</h2>
+  <p>I STRONGLY RECOMMENDED: Uses Draconus and clients only in Virtual Machine. You can serious DAMAGE your System</p>
+  <p>Some Clients can perform unauthorized port scan, "http_flood" and other attack. YOU ARE RESPONSIBLE FOR USING THIS TOOL CORRECTLY !!!</p>
+  <p>Don't attack other users' sites or infect their systems !!!!</p>
 </div>
