@@ -145,4 +145,11 @@ The 'selectors' module has made it onto my blacklist </h5>
 <b>HIVE</b> - Clients created to work with the server will appear here. As the 'Queen' hatches 'Worms', they will be placed here.<br>
 <b>EXTRAS</b> - a place where saved servers are located<br>
 <b>PAYLOAD</b> - we place files, scripts, etc. here that we will want to send to clients.</p><br>
+<p>When you run the command `ps aux | grep python3`, you should see the "Draconus" process in the list of active processes, indicating that it is running in the background. If you wish, you can explore the "DRACO_FILES/OUTPUT" directory where log files are located, allowing you to review them in real-time.</p>
+<br>
+<p align="center">
+    <img src="img/dracoPS.png" alt="Draco_Process">
+  </p>
 </div>
+
+
