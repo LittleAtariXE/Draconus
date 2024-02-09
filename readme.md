@@ -156,12 +156,12 @@ The 'selectors' module has made it onto my blacklist </h5>
 4. So, Draconus operates in the background until you kill the process or send a command to shut it down. To connect to Draconus, we'll be using the so-called "Command Center." This program is written using the "Click" library, so it mimics a console. The HELP command is always available, and many commands have additional help accessible via "--help." The operation principles resemble a system console: there are commands and parameters, and by using the "UP" and "DOWN" keys, you can access the command history.
 <br>
 5. When you exit the "Command Center," Draconus and all the created servers will continue running in the background. Therefore, you can easily run Draconus even on a VPS and connect via SSH, launching the Command Center.
-
-   To start the Command Center, use the command:
-   <br>
-     ```sh
-     python3 CC_Start.py
-     ```
+  To start the Command Center, use the command:
+  <br>
+   
+  ```sh
+  python3 CC_Start.py
+  ```
 
 </div>
 
