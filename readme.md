@@ -191,12 +191,16 @@ The 'selectors' module has made it onto my blacklist </h5>
   </p>
 
 <p>When the server is created, we will see the appropriate messages. If the server has the "http" option enabled, you can view its brief description through a web browser, such as configuration, number of connected clients, etc.
-The "http" option can be set in the CONFIG.ini file.
-The next step will be to call the "hive" command, which will create a ready-to-use client for us. Each server creates clients ready to operate and configured for a specific server. You just need to run or compile it.</p>
+The "http" option can be set in the CONFIG.ini file.</p>
+<p>The next step will be to call the "hive" command, which will create a ready-to-use client for us. Each server creates clients ready to operate and configured for a specific server. You just need to run or compile it.</p>
 <br>
 <p align="center">
     <img src="img/queen.png" alt="make client">
   </p>
+<p>Run the ready client on a different system (preferably Windows), if you want, some of the "clients" can be run on the same machine.
+After launching, the client will not connect but will continuously attempt to establish a connection.
+To start accepting connections on the server, you need to set it to "listen" mode. This can be done in two ways: by issuing a command from the "draconus" console, this command is "<b>start</b>". The second method is to connect directly to the server console through the "conn" command. In our example, it would be "<b>conn myServ</b>". You will gain access to the server console, issue the "<b>start</b>" command there, which will put the server in listen mode and start accepting connections.
+If you want to stop listening, issue the "<b>stop</b>" command. The server will disconnect the clients and rebuild the "socket". You can repeatedly turn "listen" mode on and off. Clients and Servers are designed to re-establish connection.</p>
 </div>
 
 
