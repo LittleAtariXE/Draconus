@@ -185,6 +185,18 @@ The 'selectors' module has made it onto my blacklist </h5>
 <p><b>SERVER_TYPE</b> - Here, we need to choose the type of server we will be creating. To get a list of available types, type the command "show -t".</p>
 <p><b>PORT_NUMBER</b> - The port on which the server will listen. The recommended choice of ports is: 1000 - 9999.</p>
 <p>To the "make" command, you can also add various parameters, their list can be obtained with the command "make --help".</p>
+<br>
+<p align="center">
+    <img src="img/frat.png" alt="make Server">
+  </p>
+
+<p>When the server is created, we will see the appropriate messages. If the server has the "http" option enabled, you can view its brief description through a web browser, such as configuration, number of connected clients, etc.
+The "http" option can be set in the CONFIG.ini file.
+The next step will be to call the "hive" command, which will create a ready-to-use client for us. Each server creates clients ready to operate and configured for a specific server. You just need to run or compile it.</p>
+<br>
+<p align="center">
+    <img src="img/queen.png" alt="make client">
+  </p>
 </div>
 
 
