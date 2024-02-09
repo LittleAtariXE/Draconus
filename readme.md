@@ -25,6 +25,8 @@
     <a href="#before">Before Start</a>  &nbsp;|&nbsp;
     <a href="#install">instalation</a>  &nbsp;|&nbsp;
     <a href="#firstrun">First Run</a>  &nbsp;|&nbsp;
+    <br>
+    <h3><a href="#firstrat">My First RAT</a></h3>
   </div>
 </div>
 
