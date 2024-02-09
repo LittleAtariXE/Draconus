@@ -24,7 +24,7 @@
     <h3><a href="#LetsPlay">Let's Play</a></h3>
     <a href="#before">Before Start</a>  &nbsp;|&nbsp;
     <a href="#install">instalation</a>  &nbsp;|&nbsp;
-    <a href="#first_run">First Run</a>  &nbsp;|&nbsp;
+    <a href="#firstrun">First Run</a>  &nbsp;|&nbsp;
   </div>
 </div>
 
