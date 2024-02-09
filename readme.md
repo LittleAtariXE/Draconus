@@ -199,8 +199,17 @@ The "http" option can be set in the CONFIG.ini file.</p>
   </p>
 <p>Run the ready client on a different system (preferably Windows), if you want, some of the "clients" can be run on the same machine.
 After launching, the client will not connect but will continuously attempt to establish a connection.
-To start accepting connections on the server, you need to set it to "listen" mode. This can be done in two ways: by issuing a command from the "draconus" console, this command is "<b>start</b>". The second method is to connect directly to the server console through the "conn" command. In our example, it would be "<b>conn myServ</b>". You will gain access to the server console, issue the "<b>start</b>" command there, which will put the server in listen mode and start accepting connections.
+To start accepting connections on the server, you need to set it to "listen" mode. This can be done in two ways: by issuing a command from the "draconus" console, this command is "<b>start</b>". The second method is to connect directly to the server console through the "<b>conn</b>" command. In our example, it would be "<b>conn myServ</b>". You will gain access to the server console, issue the "<b>start</b>" command there, which will put the server in listen mode and start accepting connections.
 If you want to stop listening, issue the "<b>stop</b>" command. The server will disconnect the clients and rebuild the "socket". You can repeatedly turn "listen" mode on and off. Clients and Servers are designed to re-establish connection.</p>
+<br>
+<p align="center">
+    <img src="img/rcmd.png" alt="execute command">
+  </p>
+<p>When we receive a connection from a client, we can see their ID number by issuing the "show" command. Through the ID number, we will identify the clients. In this case, commands are issued according to the scheme: "msg CLIENT_ID COMMAND"</p>
+
+<p><b>CLIENT_ID</b> - the number of the connected client</p>
+<p><b>COMMAND</b> - the console command, depending on whether it is Windows or Linux</p>
+<p>If you are sending a command that contains spaces, place it in quotation marks "".</p>
 </div>
 
 
