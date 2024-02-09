@@ -176,4 +176,15 @@ The 'selectors' module has made it onto my blacklist </h5>
   </p>
 </div>
 
+<div id="firstrat">
+  <h2 align="center">My First RAT</h2>
+  <p>We will create a simple server to operate and create "RATs"</p>
+<p>Servers are created according to the scheme: "make NAME SERVER_TYPE PORT_NUMBER"</p>
+
+<p>NAME - Invent a name for the server. Do not use spaces.</p>
+<p>SERVER_TYPE - Here, we need to choose the type of server we will be creating. To get a list of available types, type the command "show -t".</p>
+<p>PORT_NUMBER - The port on which the server will listen. The recommended choice of ports is: 1000 - 9999.</p>
+<p>To the "make" command, you can also add various parameters, their list can be obtained with the command "make --help".</p>
+</div>
+
 
