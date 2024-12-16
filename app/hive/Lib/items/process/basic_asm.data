@@ -1,0 +1,9 @@
+#!name##BasicAsm
+#!types##process
+#!info##Basic process to build assembly executable
+
+
+
+[BASE]
+[SAVE_RAW]
+[COMPILER]

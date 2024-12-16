@@ -1,0 +1,11 @@
+#!name##FOOD_WinCookiesPath
+#!types##data
+#!info##Cookies in various browsers
+#!load##list-tuple
+
+Firefox#%APPDATA%\Mozilla\Firefox\Profiles
+Chrome#%LOCALAPPDATA%\Google\Chrome\User Data\Default\Network
+Edge#%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\Network
+OperaStable#%APPDATA%\Opera Software\Opera Stable\Network
+OperaSoft#%APPDATA%\Opera Software\Opera GX Stable\Network
+Brave#%LOCALAPPDATA%\BraveSoftware\Brave-Browser\User Data

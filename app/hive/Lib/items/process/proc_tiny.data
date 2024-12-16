@@ -1,0 +1,11 @@
+#!name##TinyProcess
+#!types##process
+#!info##A simple process for building a worm. Does not include a starter or code obfuscator. Ideal for assembler code construction, also works with python code.
+
+
+
+[BASE]
+[SAVE_RAW]
+[COMPILER]
+
+

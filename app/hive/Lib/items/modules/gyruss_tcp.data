@@ -1,0 +1,89 @@
+#!name##Gyruss
+#!types##module
+#!info##Performs a simple TCP scan using the socket module in the specified port range.
+
+
+import socket
+import threading
+from typing import Union
+
+class Gyruss:
+    MTYPES = "mal"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.opened_port = []
+    
+    def scan(self, socket_obj: object, ip: str, port: int) -> None:
+        try:
+            socket_obj.connect((ip, port))
+            self.opened_port.append(str(port))
+            socket_obj.close()
+        except:
+            return
+
+    def build_scanner(self, ip: str, port: int) -> Union[object, None]:
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        except OSError:
+            return None
+        scanner = threading.Thread(target=self.scan, args=(sock, ip, port))
+        return scanner
+    
+    def get_host(self) -> Union[None, str]:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.connect(("8.8.8.8", 80))
+                return sock.getsockname()[0]
+        except:
+            return None
+    
+    def _scanning(self, port_scope: str, target_ip: str = None) -> None:
+        if not target_ip or target_ip == "0":
+            target_ip = self.get_host()
+        if not target_ip:
+            target_ip = "127.0.0.1"
+        self.opened_port = []
+        port_scope = port_scope.split(":")
+        try:
+            lport = int(port_scope[0])
+            hport = int(port_scope[1]) + 1
+        except ValueError:
+            return
+
+        scanners = []
+        for port in range(lport, hport):
+            scanner = self.build_scanner(target_ip, port)
+            if scanner:
+                scanners.append(scanner)
+        self.worm.send_msg(f"Start scan: {lport} - {hport - 1}")
+        for s in scanners:
+            s.start()
+        for s in scanners:
+            s.join()
+        self.worm.send_msg(f"Scan Complete. Opened ports: {self.opened_port}")
+    
+    def scanning(self, data: str) -> None:
+        data = data.split(":")
+        if len(data) < 3:
+            return
+        self._scanning(f"{data[1]}:{data[2]}", data[0])
+    
+    def exec_cmd(self, cmd: dict) -> None:
+        com = cmd.get("cmd")
+        if not com:
+            return
+        match com:
+            case "gyrus_scan":
+                self.scanning(cmd.get("data"))
+    
+    def help(self) -> str:
+        h = "\n-------- Gyruss Module Help --------\n"
+        h += f"{'-- gyrus_scan <ip>:<port>:<port>':<40}- Starts scanning ports from the specified range.\n"
+        h += f"{'':<40}- Sheme: ip_addr:port_num:port_num   Ex: 192.168.1.1:1000:5500\n"
+        h += f"{'':<40}- Sheme: 0:port_num:port_num   Scaning Victim machine\n"
+        return h
+
+    def start(self) -> None:
+        pass
+
+

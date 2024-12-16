@@ -1,0 +1,4 @@
+#!name##HelloAsm
+#!types##payload
+#!info##An executable (binary) program compiled by 'nasm x64' for Linux. It displays 'hello world'. For testing.
+#!binary##hello_asm

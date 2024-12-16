@@ -1,0 +1,118 @@
+#!name##MrReg
+#!types##support
+#!info##Allows you to manage the windows registry. Needed for registry attack modules.
+#!system_FLAG##[W]
+
+import winreg
+from typing import Union
+
+
+class MrReg:
+    def __init__(self):
+        self.HKEY = {
+            "HKCU" : winreg.HKEY_CURRENT_USER,
+            "HKLM" : winreg.HKEY_LOCAL_MACHINE,
+            "HKCR" : winreg.HKEY_CLASSES_ROOT,
+            "HKU" : winreg.HKEY_USERS,
+            "HKCC" : winreg.HKEY_CURRENT_CONFIG,
+            "HKEY_CURRENT_USER" : winreg.HKEY_CURRENT_USER,
+            "HKEY_LOCAL_MACHINE" : winreg.HKEY_LOCAL_MACHINE
+        }
+
+        self.types = {
+            "REG_SZ" : winreg.REG_SZ,
+            "REG_MULTI_SZ" : winreg.REG_MULTI_SZ
+        }
+    
+
+    def get_value_list(self, hkey: str, sub_key: str) -> Union[list, None]:
+        hkey = self.HKEY.get(hkey)
+        if not hkey:
+            return None
+        try:
+            key = winreg.OpenKey(hkey, sub_key, 0, winreg.KEY_READ)
+        except PermissionError:
+            return None
+        except FileNotFoundError:
+            return None
+        data = []
+        index = 0
+        while True:
+            try:
+                name, value, types = winreg.EnumValue(key, index)
+                data.append((name, value, types))
+                index += 1
+            except OSError:
+                break
+        return data
+    
+    def get_value(self, hkey: str, subkey: str, value_name: str) -> Union[tuple, None]:
+        hkey = self.HKEY.get(hkey)
+        if not hkey:
+            return None
+        try:
+            key = winreg.OpenKey(hkey, subkey, 0, winreg.KEY_READ)
+        except FileNotFoundError:
+            return None
+        except PermissionError:
+            return
+        try:
+            value = winreg.QueryValueEx(key, value_name)
+            winreg.CloseKey(key)
+            return value
+        except FileNotFoundError:
+            winreg.CloseKey(key)
+            return None
+    
+    def create_new_key(self, hkey: int, subkey: str) -> bool:
+        try:
+            key = winreg.OpenKeyEx(hkey, "")
+        except:
+            return False
+        try:
+            new = winreg.CreateKey(hkey, subkey)
+            winreg.CloseKey(key)
+            return True
+        except:
+            return False
+
+        
+    def add_new_value(self, hkey: str, subkey: str, value_name: str, value: any, types: str = "REG_SZ") -> bool:
+        hkey = self.HKEY.get(hkey)
+        if not hkey:
+            return False
+        types = self.types.get(types)
+        if not types:
+            return
+        try:
+            key = winreg.OpenKey(hkey, subkey, 0, winreg.KEY_WRITE)
+        except FileNotFoundError:
+            if not self.create_new_key(hkey, subkey):
+                return False
+        except:
+            return False
+        try:
+            key = winreg.OpenKey(hkey, subkey, 0, winreg.KEY_WRITE)
+        except:
+            return False
+        try:
+            winreg.SetValueEx(key, value_name, 0, types, value)
+            return True
+        except:
+            return False
+    
+    def delete_value(self, hkey: str, subkey: str, value_name: str) -> bool:
+        hkey = self.HKEY.get(hkey)
+        if not hkey:
+            return False
+        try:
+            key = winreg.OpenKey(hkey, subkey, 0, winreg.KEY_SET_VALUE)
+            winreg.DeleteValue(key, value_name)
+            winreg.CloseKey(key)
+            return True
+        except:
+            return False
+
+
+
+

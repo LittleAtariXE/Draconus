@@ -1,0 +1,11 @@
+#!name##BasicShell
+#!types##process
+#!info##Basic process to build shellcode
+
+
+
+[BASE_SHELL]
+[SAVE_RAW]
+[COMPILER]
+[SHOW_OP_CODE]
+[BUILD_C_SCODE]

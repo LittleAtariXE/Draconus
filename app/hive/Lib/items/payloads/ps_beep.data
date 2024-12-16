@@ -1,0 +1,13 @@
+#!name##PS_Beep
+#!types##payload
+#!info##A script in powershell that creates an annoying sound.
+#!coderOpt##FORMAT##PS_SCRIPT
+#!reqVar##PSB_time##Duration of sound in seconds##int##INCREASE:1000
+#!setVar##PSB_time##2##str
+#!reqVar##PSB_hz##Frequency in hz of sound output.##str
+#!setVar##PSB_hz##500##str
+#!render_FLAG##True
+
+[System.Console]::Beep({{PSB_hz}},{{PSB_time}})
+Start-Sleep -milliseconds 700
+exit 0

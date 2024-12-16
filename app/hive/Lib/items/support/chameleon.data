@@ -1,0 +1,25 @@
+#!name##Chameleon
+#!types##support
+#!info##Chameleon encode and decode socket messages
+
+import base64
+
+class Chameleon:
+    def __init__(self, format_code: str):
+        self.format_code = format_code
+
+    
+    def encrypt(self, text: str) -> bytes:
+        try:
+            text = text.encode(self.format_code)
+            return base64.b64encode(text)
+        except:
+            return b""
+    
+    def decrypt(self, text: bytes) -> str:
+        try:
+            text = base64.b64decode(text)
+            return text.decode(self.format_code)
+        except:
+            return b""
+        

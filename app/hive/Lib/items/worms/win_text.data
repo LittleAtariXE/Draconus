@@ -1,0 +1,38 @@
+#!name##WinText
+#!types##worm
+#!info##A worm created in assembler for testing. Displays a window with text. 
+#!banned##module##starter##shadow##junk
+#!lang##asm
+#!reqVar##WText##Text to display##str
+#!setVar##WText##Helo World##str
+#!system_FLAG##[W]
+#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##OS_EXEC##win##Target system executable
+#!processWorm##BasicAsm
+
+global _main
+
+extern _MessageBoxA@16
+extern _ExitProcess@4
+
+section .text
+
+_main:
+    push 0
+    push title
+    push text
+    push 0
+    call _MessageBoxA@16
+    jmp _exit
+    
+    ; exit
+_exit:
+    push 0
+    call _ExitProcess@4
+   
+
+section .data
+    title db "{{WORM_NAME}}", 0
+    text db "{{WText}}", 0
+
+    

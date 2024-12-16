@@ -1,0 +1,6 @@
+#!name##PS_Policy
+#!types##payload
+#!info##A command that launches the ability to execute scripts in powershell.
+#!coderOpt##FORMAT##PS_SCRIPT
+
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser

@@ -1,0 +1,72 @@
+#!name##LittleMolly
+#!types##worm
+#!info##A worm written in python with no special purpose. All sorts of modules can be added.
+#!reqSMod##MOD_Wrapper
+#!processWorm##BasicProcess
+
+from time import sleep
+
+class LittleMolly:
+    def __init__(self):
+        self.name = "{{WORM_NAME}}"
+        self.__modules = {{MODULES}}
+        self.modules = ModWrap(self)
+        self.working = False
+    
+    @property
+    def is_conn(self) -> bool:
+        return self.modules.is_conn
+
+    
+    def start_modules(self) -> None:
+        self.modules.run_modules(self.__modules)
+    
+    def send_msg(self, msg: str) -> None:
+        self.modules.send_msg(msg)
+    
+    def send_data(self, data: dict) -> None:
+        self.modules.send_data(data)
+    
+    def send_file(self, fpath: str, name: str = None, types: str = None) -> None:
+        self.modules.send_file(fpath, name, types)
+    
+    def recon(self) -> None:
+        self.modules.recon()
+    
+    def execute_mods(self) -> None:
+        self.modules.execute()
+    
+
+    def exec_cmd(self, cmd: dict) -> None:
+        match cmd["cmd"]:
+            case "help":
+                self.help()
+            case _:
+                self.modules.exec_cmd(cmd)
+    
+    def help(self) -> None:
+        h = f"\n------ {self.name} Commands: ------\n"
+        for mod in self.modules.mods:
+            try:
+                h += mod.help()
+            except AttributeError:
+                continue
+        self.send_msg(h)
+
+    
+    def Run(self) -> None:
+        self.working = True
+        self.start_modules()
+        sleep(1)
+        self.execute_mods()
+        while self.working:
+            sleep(2)
+
+        
+if __name__ == "__main__":
+    lm = LittleMolly()
+    lm.Run()
+    
+
+
+        

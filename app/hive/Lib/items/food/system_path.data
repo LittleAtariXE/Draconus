@@ -1,0 +1,18 @@
+#!name##FOOD_system_path
+#!types##data
+#!info##Paths to default directories on different systems
+#!load##list
+
+HOME
+PWD
+APPDATA
+LOCALAPPDATA
+PROGRAMFILES
+PROGRAMFILES(X86)
+PROGRAMDATA
+PUBLIC
+SYSTEMROOT
+WINDIR
+TEMP
+TMP
+HOMEPATH

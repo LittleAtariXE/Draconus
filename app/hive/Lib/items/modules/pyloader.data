@@ -1,0 +1,34 @@
+#!name##PyLoader
+#!types##module
+#!subTypes##loader
+#!info##A special block of code that executes first and tries to use PIP to install the missing modules. Useful when the worm calls Python code.
+#!import_FLAG##True
+#!render_FLAG##True
+
+import sys
+import subprocess
+
+class Loader:
+    def __init__(self):
+        self.mods = {{_MODULES}}
+
+    def load_mods(self):
+        for mod in self.mods:
+            try:
+                exec(mod)
+            except ModuleNotFoundError:
+                self.download_mods(mod)
+    
+    def download_mods(self, mod_name: str) -> None:
+        if mod_name.startswith("from") or mod_name.startswith("import"):
+            mod = mod_name.split(" ")[1]
+        else:
+            mod = mod_name
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", mod])
+        except:
+            pass
+    
+
+LL = Loader()
+LL.load_mods()

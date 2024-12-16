@@ -1,0 +1,13 @@
+#!name##ShadowProcess
+#!types##process
+#!info##Crazy shadow process
+
+[BASE]
+[SHADOW]
+[STARTER]
+[SHADOW]
+[STARTER]
+[ADD_IMPORTS]
+[WRAPPER]
+[SAVE_RAW]
+[COMPILER]

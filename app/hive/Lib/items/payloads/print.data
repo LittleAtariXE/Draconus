@@ -1,0 +1,9 @@
+#!name##PPrint
+#!types##payload
+#!info##Simple payload to shellcode , displays a text. Default text is 'Hello World'
+#!render_FLAG##True
+#!reqVar##PP_text##Text to display##str
+#!setVar##PP_text##Hello World##str
+#!import_FLAG##True
+
+print("Hello")

