@@ -67,7 +67,8 @@ class Builder:
             "tcp_sock_to_recive" : int(dev.get("tcp_socket_timeout_recive")),
             "central_clean_pause" : int(dev.get("central_cleaner_time_pause")),
             "sender_socket_to" : 60,
-            "dlc_name" : conf.get("DLC_FILE_NAME")
+            "dlc_name" : conf.get("DLC_FILE_NAME"),
+            "tcp_raw_buffer_to" : int(conf.get("TCP_RAW_BUFFER_TIMEOUT"))
         }
         self.update_builder(main)
         

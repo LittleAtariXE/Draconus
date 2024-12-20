@@ -1,4 +1,5 @@
 from typing import Union
+from threading import Thread, Lock
 
 class TcpRawHandler:
     def __init__(
@@ -19,9 +20,8 @@ class TcpRawHandler:
         self.separator = separator
         self.socket_timeout = socket_timeout
         self.conn.settimeout(self.socket_timeout)
-        # self.exec_cmd_FLAG = False
-        # self.no_msg_FLAG = False
         self.conn_FLAG = ["RAW_MSG"]
+
 
     def recive_data(self) -> Union[bytes, None]:
         msg = b""
@@ -44,10 +44,11 @@ class TcpRawHandler:
             return None
         return msg
     
+
     def send_data(self, data: str) -> None:
         try:
-            self.conn.sendall(data)
+            self.conn.sendall((data + "\n").encode(self.format))
         except:
-            return
+            pass
 
         

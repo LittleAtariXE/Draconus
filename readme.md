@@ -571,6 +571,11 @@ Keep in mind that creating complex worms with multiple modules, obfuscation tech
             <h5>Draconus 1.0</h5>
             <p>Start Project</p>
         </li>
+        <li>
+            <h5>Draconus 1.0.1</h5>
+            <p>Improved reading of 'RAW' messages from network sockets.</p>
+            <p>Added payload 'reverse shell' module in python for linux and windows.</p>
+        </li>
     </ul>
 </div>
 </body>

@@ -1,5 +1,5 @@
 from time import sleep
-from threading import Lock
+from threading import Lock, Thread
 from typing import Union
 from threading import Event
 from .protocols.tcp_handler import TcpHandler
@@ -35,6 +35,9 @@ class ClientHandler:
             self.central.separator,
             self.central.socket_to
         )
+        self._raw_buff = b""
+        self._raw_FLAG = False
+        self._raw_lock = Lock()
 
     
     def recive_msg(self) -> None:
@@ -48,15 +51,48 @@ class ClientHandler:
     def send_msg(self, data: dict) -> None:
         self.handler.send_data(data)
     
+    
     def send_raw(self, data: dict) -> None:
         cmd = data.get("data")
         if not cmd:
             return
         try:
-            self.handler.conn.send(cmd.encode(self.central.format_code))
+            self.handler.conn.send((cmd + "\n").encode(self.central.format_code))
         except Exception as e:
-            print("RAW ERROR: ", e)
+            self.central.msg("error", f"[!!] ERROR Send raw message: {e} [!!]")
 
+    def add_raw_buffer(self, data: bytes) -> None:
+        if not self._raw_FLAG:
+            self._raw_FLAG = True
+            buff = Thread(target=self.raw_buff_start, daemon=True)
+            buff.start()
+        with self._raw_lock:
+            self._raw_buff += data
+    
+    def decode_raw_msg(self, msg: bytes) -> Union[bytes, str]:
+        out = None
+        _formats = ["cp852", "utf-8", "cp1250"]
+        for f in _formats:
+            try:
+                out = msg.decode(f)
+                break
+            except:
+                continue
+        if not out:
+            out = msg
+        return out
+
+    def raw_buff_start(self) -> None:
+        if self._raw_FLAG:
+            sleep(self.central.raw_buff_to)
+            with self._raw_lock:
+                _buff = self._raw_buff
+                self._raw_buff = b""
+            msg = self.decode_raw_msg(_buff)
+            self._raw_FLAG = False
+            self.central.msg("msg", f"RAW Message: {msg}", sender=self.client)
+        else:
+            return
 
 
     
@@ -102,6 +138,7 @@ class Central:
             "TcpRawDownloader" : TcpRawDownloader,
             "TcpRawSend" : TcpRawSend
         }
+        self.raw_buff_to = self.draco.config.tcp_raw_buffer_to
 
     
 
@@ -121,7 +158,10 @@ class Central:
             raw_sender.start()
             self.draco.Task.add_ready_task(f"Handler-{client_id}", raw_sender, "Send file to client")
             return
-        self.draco.Task.add_task(f"Handler-{client_id}", cli.recive_msg, info=f"Client handler no. {client_id} from server: {server_name}.")
+        elif protocol_type == "TcpRawHandler":
+            self.draco.Task.add_task(f"Handler-{client_id}", cli.recive_msg, info=f"Client handler no. {client_id} from server: {server_name}.", is_daemon=False)
+        else:
+            self.draco.Task.add_task(f"Handler-{client_id}", cli.recive_msg, info=f"Client handler no. {client_id} from server: {server_name}.")
         self.msg("msg", f"New Connection from: {cli.client}")
     
     def build_server(self, data: dict) -> None:
@@ -192,7 +232,6 @@ class Central:
         client.send_msg(data)
     
     def send_raw(self, client_id: str, data: dict) -> None:
-        print("DATA: ", data)
         client = self.get_client(client_id)
         if not client:
             return
@@ -237,16 +276,15 @@ class Central:
         elif "EXEC_CMD" in FLAG:
             self.draco.ServerCtrl.check_cmd(recv_data, client_object)
             return
+        # elif "RAW_MSG" in FLAG:
+        #     try:
+        #         msg = recv_data.decode(self.format_code)
+        #     except:
+        #         msg = recv_data
+        # self.msg("msg", f"RAW message: {msg}", sender=client_object.client)
         elif "RAW_MSG" in FLAG:
-            try:
-                msg = recv_data.decode(self.format_code)
-            except:
-                msg = recv_data
-        self.msg("msg", f"RAW message: {msg}", sender=client_object.client)
-           
-
-
-    
+            client_object.add_raw_buffer(recv_data)
+             
     
     def show_servers(self) -> None:
         cli_num = {}
