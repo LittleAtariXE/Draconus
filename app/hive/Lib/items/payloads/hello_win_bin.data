@@ -3,3 +3,5 @@
 #!info##Executable (binary) program created in 'nasm 32' on windows. Displays a window with the word “hello world”. For test.
 #!binary##hello_win.exe
 #!setVar##EXE_LEN##7151##int
+#!payStep##load_binary
+#!payStep##encode_bin_hex

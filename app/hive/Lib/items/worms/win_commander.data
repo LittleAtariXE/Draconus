@@ -1,6 +1,6 @@
 #!name##WinCommander
 #!types##worm
-#!info##A simple worm written in assembler x86. Executes a command, such as: 'cmd', 'powershell'. The code is placed on the stack, it has no '.data' section.
+#!info##A simple worm written in assembler x86 (win32). Executes a command, such as: 'cmd', 'powershell'. The code is placed on the stack, it has no '.data' section.
 #!reqVar##WC_command##Command to execute. Ex: 'cmd.exe dir', 'powershell.exe <code>' etc.##str##STACK_BUILD:True
 #!lang##asm
 #!banned##module##starter##shadow##junk

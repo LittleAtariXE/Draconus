@@ -1,8 +1,8 @@
 #!name##Empty
 #!types##worm
 #!info##Blank code template for test
-#!processWorm##BasicAsm
-#!reqPayload##Emp_pay##Payload for test
+#!processWorm##BasicProcess
+#!reqPayload##PAY##test payload
 
 
-{{Emp_pay}}
+{{PAY}}

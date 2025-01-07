@@ -1,6 +1,6 @@
 #!name##BasicSC
 #!types##worm
-#!info##Creates a small shellcode i386 32bit using the stack that runs the program. Creates an executable elf file (linux) and C file with shellcode.
+#!info##Creates a small shellcode i386 32bit (linux32) using the stack that runs the program. Creates an executable elf file (linux) and C file with shellcode.
 #!reqVar##shell_path##Path string. ex. /bin/sh##str
 #!setVar##shell_path##/bin/sh##str
 #!banned##module##payload##starter##shadow##junk

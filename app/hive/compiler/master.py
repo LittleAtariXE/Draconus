@@ -79,7 +79,7 @@ class MasterCompiler:
         else:
             comp = self.main_comp.get(name)
             if not comp:
-                self.msg("error", f"[!!] ERROR: Compiler: '{name}' does not exists [!!]")
+                self.msg("error", f"[!!] ERROR: Compiler: '{name}' does not exists [!!]", sender=self.name)
                 return
             comp.install()
             if with_mods:
@@ -89,10 +89,10 @@ class MasterCompiler:
     def install_module(self, name: str) -> None:
         master = self.main_comp.get(name)
         if not master:
-            self.msg("error", f"[!!] ERROR: Master Compiler: '{name}' does not exists [!!]")
+            self.msg("error", f"[!!] ERROR: Master Compiler: '{name}' does not exists [!!]", sender=self.name)
             return
         if not master.status:
-            self.msg("error", f"[!!] ERROR: Compiler: '{name}' is not installed. Please install neccessary module. [!!]")
+            self.msg("error", f"[!!] ERROR: Compiler: '{name}' is not installed. Please install neccessary module. [!!]", sender=self.name)
             return
         master.install_modules()
     
@@ -112,7 +112,7 @@ class MasterCompiler:
                 text += f"--- Compiler is ready ---\n"
             else:
                 text += "--- Compiler NOT INSTALLED ---\n"
-        self.msg("msg", text)
+        self.msg("msg", text, sender=self.name)
     
     def compile(self, worm_pipeline: object) -> object:
         comp_name = worm_pipeline.gvar.get("COMPILER_NAME")
@@ -126,4 +126,5 @@ class MasterCompiler:
             worm_pipeline.last_error = 1
             return worm_pipeline
         worm_pipeline = comp.compiler.compile_worm(worm_pipeline)
+        worm_pipeline._to_dev.append(worm_pipeline.exe_file_path)
         return worm_pipeline

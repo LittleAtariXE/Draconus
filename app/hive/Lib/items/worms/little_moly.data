@@ -58,7 +58,7 @@ class LittleMolly:
         self.working = True
         self.start_modules()
         sleep(1)
-        self.execute_mods()
+        # self.execute_mods()
         while self.working:
             sleep(2)
 

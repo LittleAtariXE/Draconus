@@ -1,6 +1,6 @@
 #!name##Shellcode_Exe
 #!types##worm
-#!info##A worm created in assembler. Runs a command with a parameter placed on the stack. Creates an executable elf file (linux) and a C file with shellcode.
+#!info##A worm created in assembler (linux32). Runs a command with a parameter placed on the stack. Creates an executable elf file (linux) and a C file with shellcode.
 #!reqVar##SC_exe##The path to run the program. ex '/usr/bin/ls'##str
 #!setVar##SC_exe##/usr/bin/ls
 #!reqVar##SC_arg##Argument to the program to be launched. ex '-la'##str

@@ -1,0 +1,10 @@
+#!name##BasicDLL
+#!types##process
+#!info##Basic process to build DLL file
+
+
+
+[BASE]
+[SAVE_RAW]
+[MAKE_DLL_FILE]
+[DLL_LOADER]

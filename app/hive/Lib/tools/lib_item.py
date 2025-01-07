@@ -30,6 +30,8 @@ class LibItem:
         # required variables
         # SHEME: name##info##types##option1:value##option2:value2
         # Variables starting with “_COMP_” are passed to compiler variables.
+        # Variables starting with "_" are passed to payload 'IN' options. Ex: _encode_b64_opt_exe##True
+        # Variables starting with "__" are passed to payload 'OUT' options. Ex: __encode_b64_opt_exe##True
         self.reqVar = {}
         # Food represent special variables from library
         # SHEME: code_name_var##library_var_name##info##option1:value1##option2:value2
@@ -49,6 +51,15 @@ class LibItem:
         self.reqPayload = {}
         # Payload option
         # SHEME: payloadOpt##name##option##value
+
+        # Second Payload option. Used inside 'payload' code.
+        # SHEME: payOpt##name##value
+        self.payOpt = {}
+
+        # New function 'Payload Step Pipeline'
+        # SHEME: payStep##PAYLOAD_STEP
+        # SHEME: payStep##PAYLOAD_STEP$TARGET_PAYLOAD
+        self.payStep = []
 
 
         # global variable. Use for compilation etc.
@@ -94,6 +105,10 @@ class LibItem:
 
         # Set process worm code
         self.processWorm = None
+
+        # SPECIAL TAGS:
+        ### 
+        self.tags = ""
 
         ### MAKE
         self.make()
@@ -291,3 +306,9 @@ class LibItem:
                         self.no_extract_FLAG = False
                     else:
                         self.no_extract_FLAG = True
+                case "payOpt":
+                    self.payOpt[d[1]] = d[2]
+                case "payStep":
+                    self.payStep.append(d[1])
+                case "TAGS":
+                    self.tags += d[1]

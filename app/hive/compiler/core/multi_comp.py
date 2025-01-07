@@ -57,11 +57,11 @@ class MultiCompCore:
         pull_output = self.docker.api.pull(image_name, stream=True, decode=True)
         for line in pull_output:
             if 'status' in line:
-                self.msg("msg", f"Status: {line['status']}")
+                self.msg("msg", f"Status: {line['status']}", sender=self.name)
             if 'progress' in line:
-                self.msg("msg", f"Progress: {line['progress']}")
+                self.msg("msg", f"Progress: {line['progress']}", sender=self.name)
             if 'id' in line:
-                self.msg("msg", f"ID: {line['id']} - {line['status']} {line.get('progress', '')}")
+                self.msg("msg", f"ID: {line['id']} - {line['status']} {line.get('progress', '')}", sender=self.name)
         self.msg("msg", "Downloading Complete")
     
     def get_compiler(self, check: bool = False) -> Union[None, object]:
@@ -91,13 +91,13 @@ class MultiCompCore:
         if self.status:
             self.msg("msg", f"Core: '{self.name}' is installed")
             return
-        self.msg("msg", "Start image downloads. This may take some time.")
+        self.msg("msg", "Start image downloads. This may take some time.", sender=self.name)
         sleep(1)
         self.pull_image_with_progress(self.master_system_compiler)
-        self.msg("msg", "Get image...")
+        self.msg("msg", "Get image...", sender=self.name)
         comp = self.compiler
         if not comp:
-            self.msg("error", f"[!!] ERROR '{self.name}': building compiler [!!]")
+            self.msg("error", f"[!!] ERROR '{self.name}': building compiler [!!]", sender=self.name)
             return
         self.build_lab()
     
@@ -134,7 +134,7 @@ class MultiCompCore:
         self.compiler.start()
 
         worm_dir = os.path.join(self.dir_work, worm_pipeline.worm_name)
-        self.msg("msg", f"CMD: nasm -f elf32 -o {worm_pipeline.worm_name}.o {worm_pipeline.file_name}")
+        self.msg("msg", f"CMD: nasm -f elf32 -o {worm_pipeline.worm_name}.o {worm_pipeline.file_name}", sender=self.name)
         self.exec_cmd(f"cd {worm_dir} && nasm -f elf32 -o {worm_pipeline.worm_name}.o {worm_pipeline.file_name}")
         self.exec_cmd(f"cd {worm_dir} && ld -m elf_i386 -o {worm_pipeline.worm_name} {worm_pipeline.worm_name}.o")
         if worm_pipeline.gvar.get("USE_UPX"):
@@ -152,7 +152,7 @@ class MultiCompCore:
         self.msg("msg", f"Start Compiler: {self.name}")
         self.compiler.start()
         worm_dir = os.path.join(self.dir_work, worm_pipeline.worm_name)
-        self.msg("msg", f"CMD: nasm -f win32 {worm_pipeline.file_name}")
+        self.msg("msg", f"CMD: nasm -f win32 {worm_pipeline.file_name}", sender=self.name)
         self.exec_cmd(f"cd {worm_dir} && nasm -f win32 {worm_pipeline.file_name}")
         icon = worm_pipeline.gvar.get("ICON")
         if icon:
@@ -174,9 +174,48 @@ class MultiCompCore:
         self.exec_cmd(f"cd {worm_dir} && chmod 777 *")
         self.msg("msg", f"Stoping Compiler: {self.name}.")
         self.compiler.stop()
-        worm_pipeline.exe_file_name = worm_pipeline.worm_name
+        worm_pipeline.exe_file_name = f"{worm_pipeline.worm_name}.exe"
         worm_pipeline.exe_file_path = os.path.join(worm_pipeline.work_dir, worm_pipeline.exe_file_name)
 
+        return worm_pipeline
+    
+    def compile_win32_extra(self, worm_pipeline: object) -> object:
+        worm_dir = os.path.join(self.dir_work, worm_pipeline.worm_name)
+        dll_path = os.path.join(worm_dir, worm_pipeline.dll_name)
+        self.msg("msg", f"Start Compiler: {self.name}")
+        self.compiler.start()
+        self.msg("msg", f"CMD: nasm -f win32 {worm_pipeline.file_name} -o {worm_pipeline.worm_name}.o", sender=self.name)
+        self.exec_cmd(f"cd {worm_dir} && nasm -f win32 {worm_pipeline.file_name}")
+        icon = worm_pipeline.gvar.get("ICON")
+        if icon:
+            rc_path = self.prepare_icon(worm_pipeline)
+            if rc_path:
+                self.exec_cmd(f"cd {worm_dir} && i686-w64-mingw32-windres {rc_path} -O coff -o {worm_pipeline.worm_name}.res")
+                icon = f" {worm_pipeline.worm_name}.res"
+            else:
+                icon = ""
+        else:
+            icon = ""
+        self.exec_cmd(f"cd {worm_dir} && i686-w64-mingw32-gcc -nostdlib -s -o {worm_pipeline.worm_name}.exe {worm_pipeline.worm_name}.obj{icon} {dll_path} -lkernel32 -lmsvcrt -luser32")
+        self.exec_cmd(f"cd {worm_dir} && chmod 777 *")
+        self.msg("msg", f"Stoping Compiler: {self.name}.")
+        self.compiler.stop()
+        worm_pipeline.exe_file_name = f"{worm_pipeline.worm_name}.exe"
+        worm_pipeline.exe_file_path = os.path.join(worm_pipeline.work_dir, worm_pipeline.exe_file_name)
+        return worm_pipeline
+
+    
+    def compile_dll(self, worm_pipeline: object) -> object:
+        self.msg("msg", f"Start Compiler: {self.name}")
+        self.compiler.start()
+        lib_name = worm_pipeline.dll_name.split(".")[0]
+        worm_dir = os.path.join(self.dir_work, worm_pipeline.worm_name)
+        self.exec_cmd(f"cd {worm_dir} && nasm -f win32 {worm_pipeline.file_name} -o {lib_name}.o")
+        self.exec_cmd(f"cd {worm_dir} && i686-w64-mingw32-gcc -shared {lib_name}.o {lib_name}.def -o {lib_name}.dll -nostdlib -s -lkernel32 -lmsvcrt -luser32 -lshell32 -Wl,--entry=DllMain")
+        self.exec_cmd(f"cd {worm_dir} && chmod 777 *")
+        self.msg("msg", f"Stoping Compiler: {self.name}.")
+        worm_pipeline.dll_name = f"{lib_name}.dll"
+        self.compiler.stop()
         return worm_pipeline
     
     def prepare_icon(self, worm_pipeline: object) -> Union[str, None]:
@@ -185,8 +224,8 @@ class MultiCompCore:
                 file.write(f'main ICON "{worm_pipeline.icon_name}"')
             return f"{worm_pipeline.worm_name}.rc"
         except Exception as e:
-            self.msg("error", f"[!!] ERROR: I cant make 'rc' file: {e} [!!]")
-            self.msg("msg", "Skip add icon")
+            self.msg("error", f"[!!] ERROR: I cant make 'rc' file: {e} [!!]", sender=self.name)
+            self.msg("msg", "Skip add icon", sender=self.name)
             return None
 
 

@@ -77,6 +77,9 @@ class Queen:
     def add_variable(self, name: str, value: any, types: str = None) -> None:
         self.worm.add_variable(name, value, types)
     
+    def add_food(self, src_food_name: str, target_var_name: str) -> None:
+        self.worm.add_food_as_var(src_food_name, target_var_name)
+    
     def add_global_var(self, name: str, value: str) -> None:
         self.worm.add_globalVar(name, value)
     
@@ -85,7 +88,7 @@ class Queen:
 
     def build_worm(self, options: dict = {}):
         self.worm_constructor.build_WORM(options)
-    
+     
     def Run(self) -> None:
         pass
         

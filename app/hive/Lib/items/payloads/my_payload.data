@@ -1,18 +1,17 @@
 #!name##My_Pyload
 #!types##payload
-#!info##A place for your own payload written in python. Go to the directory “OUTPUT/shortcuts” you will find there the file “my_payload.data” place the script there and then add it to the worm.
+#!info##A place for your own payload written in python. Go to directory “OUTPUT/shortcuts” you will find there file “my_payload.data” place the script there and then add it to the worm.
 #!render_FLAG##True
 #!import_FLAG##True
 #!empty##----------------------------------------------------------------------------------------------------------------------------------------------
 #!empty## ----- DONT REMOVE HEADERS --------
 #!empty## If your payload contains libraries that need to be downloaded via PIP then you can add a 'loader' to the payload.
-#!empty## Change the option: “PY_LOADER” to ‘True’.
-#!empty## Change the FLAG: "no_extract_FLAG to 'True'
 #!empty## Add code below the headers. Next save file and add to your worm
-#!options##PY_LOADER##False
-#!no_extract_FLAG##False
 #!CODE
 
-
+from time import sleep
+print("Hello World")
+sleep(1)
+print("END")
 
 

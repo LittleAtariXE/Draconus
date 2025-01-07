@@ -9,7 +9,8 @@ class Shortcuts:
         self.dir_lib = self.queen.dir_lib
         self.shortcuts = {
             "icons" : os.path.join(self.dir_lib, "icons"),
-            "my_payload" : os.path.join(self.dir_lib, "items", "payloads", "my_payload.data")
+            "my_payload" : os.path.join(self.dir_lib, "items", "payloads", "my_payload.data"),
+            "sherlock_files" : os.path.join(self.dir_lib, "items", "food", "sherlock_files.data")
         }
     
 

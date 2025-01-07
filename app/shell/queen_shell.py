@@ -6,12 +6,14 @@ from time import sleep
 from functools import wraps
 
 
+
 class QueenShell:
     def __init__(self, main_shell: object, commander: object):
         self.main = main_shell
         self.COM = commander
         self.Queen = self.COM.Queen
         self.Queen.enter()
+        self.color_help = "blue"
     
     def exit_queen_shell(self, *args, **kwargs) -> None:
         cprint("[Queen] Exit Queen Shell", "yellow")
@@ -26,17 +28,6 @@ class QueenShell:
 
 
     def build(self) -> object:
-
-        def worm_checker(func) -> None:
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                if self.Queen.MW:
-                    func(*args, **kwargs)
-                else:
-                    self.Queen.msg("error", f"[!!] ERROR: First make a new Worm. Command: 'make' [!!]")
-                    pass
-
-            return wrapper
 
         @shell(prompt=f"[Queen] >>", intro="------ Welcome To Hive ! Put help for commands list ------- ", on_finished=self.exit_queen_shell)
         def hiveShell() -> None:
@@ -107,11 +98,24 @@ class QueenShell:
 
 
         @hiveShell.command()
-        @click.argument("name")
-        @click.argument("value")
+        @click.argument("name", required=False, default="")
+        @click.argument("value", required=False, default="")
         @click.option("--types", "-t", required=False, help="Type of variable. Ex: int, str")
-        def var(name, value, types):
-            """\nEntering and changing variables. The scheme is: variable_name 'value'. Ex: PORT '4444'\nEnter values ​​in quotation marks. This will avoid errors.If you want to set the type of a variable use the '-t' option."""
+        @click.option("--food", "-f", required=False, is_flag=True, help="Set food to variable. var -f <var_name> <food_name>")
+        @click.option("--help", "show_help", is_flag=True, required=False, help="Show help")
+        def var(name, value, types, food, show_help):
+            if show_help:
+                cprint('**** Entering and changing variables. The scheme is: variable_name "value". Ex: PORT "4444" ****', self.color_help)
+                cprint('**** Enter values ​​in quotation marks "". This will avoid errors. ****', self.color_help)
+                cprint('**** If you want to set the type of a variable use the "-t" option. ****', self.color_help)
+                cprint("**** Option: '-f' assigning FOOD variables to regular variables: var -f <variable_name> <FOOD_name> ****", self.color_help)
+                cprint("**** ex: var -f data FOOD_UserAgent", self.color_help)
+                return
+            if not name or not value:
+                cprint("Error: 'name' and 'value' are required unless using --help.", "red")
+            if food:
+                self.Queen.add_food(value, name)
+                return
             if not types:
                 types = None
             if name and value:
@@ -156,12 +160,7 @@ class QueenShell:
         
         @hiveShell.command()
         def comp() -> None:
-            self.Queen.show_compilers()
-        
-        # @hiveShell.command()
-        # def pipe() -> None:
-        #     self.Queen.show_coder_sheme()
-        
+            self.Queen.show_compilers()     
        
         
         @hiveShell.command()

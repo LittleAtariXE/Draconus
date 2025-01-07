@@ -1,7 +1,9 @@
 #!name##Skunk
 #!types##module
 #!info##Execute binary payload. Add only binary payload
-#!reqPayload##SK_bin##Binary Payload##ENCODE:base64
+#!reqPayload##SK_bin##Binary Payload
+#!payStep##load_binary
+#!payStep##encode_bin64
 #!reqVar##process_name##Name for binary process##str
 #!setVar##process_name##steam_api##str
 

@@ -7,20 +7,21 @@ from .tools.payloader import Payloader
 from .tools.starter import Starter
 from .tools.shadow import Shadow
 from .tools.garbage_man_var import GarbageMan
+from .tools.pay_builder import PayloadBuilder
 
-class CoderTools:
-    def __init__(self, coder: object):
-        self.coder = coder
-        self.msg = self.coder.msg
+# class CoderTools:
+#     def __init__(self, coder: object):
+#         self.coder = coder
+#         self.msg = self.coder.msg
     
-    def powershell_script(self, code: str) -> str:
-        code = code.split("\n")
-        script = ""
-        for line in code:
-            if line.strip() == "\n" or line.strip() == "":
-                continue
-            script += f"{line}; "
-        return script
+#     def powershell_script(self, code: str) -> str:
+#         code = code.split("\n")
+#         script = ""
+#         for line in code:
+#             if line.strip() == "\n" or line.strip() == "":
+#                 continue
+#             script += f"{line}; "
+#         return script
 
 
 class Coder:
@@ -36,7 +37,7 @@ class Coder:
         self.starter = Starter(self)
         self.shadow = Shadow(self)
         self.garbage_man = GarbageMan(self)
-        self.tools = CoderTools(self)
+        # self.tools = CoderTools(self)
         
  
     @property
@@ -58,6 +59,13 @@ class Coder:
     def icon(self) -> Union[str, None]:
         return self.WB.icon
     
+    def get_owner(self, name: str) -> object:
+        item = self.WB.get_worm_item(name)
+        if not item:
+            return self.WB.raw_worm.master_worm
+        else:
+            return item
+    
     
     def _variables(self) -> dict:
         var = {}
@@ -66,18 +74,26 @@ class Coder:
         var["_MODULES"] = self.imports
         for name, var_obj in self.WB.var.items():
             var[name] = var_obj.value
+        for name, food in self.WB.raw_worm.reqFood.items():
+            var[name] = food.value
+        for name, gar_v in self.WB.raw_worm.garbageVar.items():
+            var[name] = self.garbage_man.generate(gar_v)
         for name, pay in self.WB.raw_worm.payloads.items():
-            opt = pay.options
-            var[name] = self.payloader.prepare(pay, var, name, opt)
+            # if "@" in pay.tags:
+            #### test
+            pb = PayloadBuilder(self.queen, self)
+            payload = pb.process(pay, name, var, self.get_owner(pay.owner).payStep)
+            var[name] = payload
+            ####################
+            ##### OLD FUNCTION
+            # else:
+            #     opt = pay.options
+            #     var[name] = self.payloader.prepare(pay, var, name, opt)
         for name in self.WB.raw_worm.reqPayload.keys():
             if self.WB.raw_worm.master_worm.lang == "asm":
                 var[name] = ""
             else:
                 var[name] = "''"
-        for name, food in self.WB.raw_worm.reqFood.items():
-            var[name] = food.value
-        for name, gar_v in self.WB.raw_worm.garbageVar.items():
-            var[name] = self.garbage_man.generate(gar_v)
         return var
     
     def prepare_mod_list(self) -> str:
@@ -132,15 +148,15 @@ class Coder:
         return code
     
 
-    def format_code(self, code: str, coder_opt: dict) -> str:
-        format_code = coder_opt.get("FORMAT")
-        if format_code:
-            match format_code:
-                case "PS_SCRIPT":
-                    code = self.tools.powershell_script(code)
-                case _:
-                    self.msg("error", f"ERROR: Unknown 'code format' : '{format_code}'")
-        return code
+    # def format_code(self, code: str, coder_opt: dict) -> str:
+    #     format_code = coder_opt.get("FORMAT")
+    #     if format_code:
+    #         match format_code:
+    #             case "PS_SCRIPT":
+    #                 code = self.tools.powershell_script(code)
+    #             case _:
+    #                 self.msg("error", f"ERROR: Unknown 'code format' : '{format_code}'")
+    #     return code
 
 
     def render_single(self, mod: Union[str, object], var: dict = None) -> str:
@@ -153,9 +169,11 @@ class Coder:
         if mod.render_FLAG:
             code = Template(code)
             code = code.render(var)
-        if len(mod.coderOpt) > 0:
-            code = self.format_code(code, mod.coderOpt)
+        # if len(mod.coderOpt) > 0:
+        #     code = self.format_code(code, mod.coderOpt)
         return code 
+
+    
         
     
     def raw_code(self, var: dict = None) -> str:

@@ -1,6 +1,6 @@
 #!name##WinText
 #!types##worm
-#!info##A worm created in assembler for testing. Displays a window with text. 
+#!info##A worm created in assembler (win32) for testing. Displays a window with text. 
 #!banned##module##starter##shadow##junk
 #!lang##asm
 #!reqVar##WText##Text to display##str

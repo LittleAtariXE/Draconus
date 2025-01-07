@@ -561,21 +561,32 @@ Keep in mind that creating complex worms with multiple modules, obfuscation tech
     <li>More Python-based worms with different functionalities.</li>
     <li>Additional types of DDOS attacks.</li>
     <li>Support for building Windows shellcode.</li>
-    <li>Ability to create DLL files.</li>
+    <li>Ability to create DLL files. - DONE</li>
+    <li>More DLL files.</li>
     </ul>
 </div>
 <div id="Changelog">
-    <h3>Changelog</h3>
+    <h2>Changelog</h2>
     <ul>
         <li>
-            <h5>Draconus 1.0</h5>
+            <h3>Draconus 1.0</h3>
             <p>Start Project</p>
         </li>
         <li>
-            <h5>Draconus 1.0.1</h5>
+            <h3>Draconus 1.0.1</h3>
             <p>Improved reading of 'RAW' messages from network sockets.</p>
             <p>Added payload 'reverse shell' module in python for linux and windows.</p>
         </li>
+    </ul>
+    <h3>🛠️ Draconus 1.1</h3>
+    <ul>
+        <li><strong>New payload building system:</strong> Now it's time to come up with something... :)</li>
+        <li><strong>Added payload module:</strong> <code>PS_DeliverObf</code> - An obfuscated PowerShell payload with configurable options.</li>
+        <li><strong>Added payload module:</strong> <code>PyReverse</code> - A reverse shell written in Python for both Windows and Linux.</li>
+        <li><strong>Added main template:</strong> <code>Worm Arkanoid</code> - Enables the creation of DLL files with PowerShell payloads. Additionally, an EXE file is generated to call the payload function. The DLL libraries can be used in any other code.</li>
+        <li><strong>Improved raw message handling from sockets:</strong> A message buffer was introduced to prevent the screen from being flooded with hundreds of single-character messages. See <code>CONFIG.INI</code> for more details.</li>
+        <li><strong>New functionality:</strong> Automatically prepares a directory with only the necessary files for the worm to operate. If the worm requires several files, a folder with the worm's name is created, containing only the essential files.</li>
+        <li><strong>Bug fixes:</strong> Addressed numerous small and significant issues.</li>
     </ul>
 </div>
 </body>

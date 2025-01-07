@@ -170,6 +170,8 @@ class WormBuilder:
         else:
             for name, rp in self.raw_worm.reqPayload.items():
                 item.options.update(rp.options)
+                ###update owner
+                item.owner = rp.owner
                 self.raw_worm.payloads[name] = item
                 self.msg("msg", f"Add payload: '{item.name}' successful.")
                 return
@@ -223,6 +225,12 @@ class WormBuilder:
         self.raw_worm.food[name] = food
         self.msg("msg", "Update foods variables.")
     
+    def add_food_as_var(self, src_var_name: str, dest_var_name: str) -> None:
+        food = self.get_item("food", src_var_name)
+        if not food:
+            return
+        self.add_variable(dest_var_name, str(food.value))
+    
     def add_globalVar(self, name: str, value: str) -> None:
         if value in ["None", "False"]:
             value = None
@@ -257,7 +265,6 @@ class WormBuilder:
 
     
     def remove(self, types: str, mod_name: str) -> None:
-        print("REMOVE")
         if types == "worm":
             self.msg("error", "[!!] ERROR: You cannot delete the main module. Use the command to clean the entire worm. [!!]")
             return

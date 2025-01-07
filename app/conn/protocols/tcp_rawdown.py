@@ -21,9 +21,6 @@ class TcpRawDownloader:
         self.socket_timeout = socket_timeout
         self.conn.settimeout(self.socket_timeout)
         self.conn_FLAG = ["RAW_DOWNLOAD", "NO_MSG"]
-        # self.exec_cmd_FLAG = False
-        # self.no_msg_FLAG = False
-        # self.download_FLAG = True
         self.head_separator = head_separator
 
     
@@ -31,22 +28,23 @@ class TcpRawDownloader:
         msg = b""
         while self.working_FLAG.is_set() and self.handler_FLAG.is_set():
             try:
-                recv = self.conn.recv(self.raw_len)
+                recv = self.conn.recv(int(self.raw_len / 8))
             except TimeoutError:
                 continue
             except (OSError, ConnectionError, ConnectionAbortedError, ConnectionResetError, ConnectionRefusedError):
                 return None
             if recv:
-                if len(recv) < self.raw_len:
+                if len(recv) < int(self.raw_len / 8):
                     msg += recv
                     break
                 else:
                     msg += recv
             else:
-                return None
+                break
         if msg == b"":
             return None
         return msg
+
     
     def send_data(self, data: str) -> None:
         try:

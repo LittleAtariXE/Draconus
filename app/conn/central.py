@@ -241,7 +241,7 @@ class Central:
         cli = self.get_client(client_id)
         if not cli:
             return
-        self.msg("no-imp", f"start send file: {fname}")
+        self.msg("no_imp", f"start send file: {fname}")
         send = Sender(self.draco, cli)
         send.set_params(fname)
         send.start()

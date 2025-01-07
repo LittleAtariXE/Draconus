@@ -68,7 +68,8 @@ class Builder:
             "central_clean_pause" : int(dev.get("central_cleaner_time_pause")),
             "sender_socket_to" : 60,
             "dlc_name" : conf.get("DLC_FILE_NAME"),
-            "tcp_raw_buffer_to" : int(conf.get("TCP_RAW_BUFFER_TIMEOUT"))
+            "tcp_raw_buffer_to" : int(conf.get("TCP_RAW_BUFFER_TIMEOUT")),
+            "payload_default_encode" : conf.get("PAYLOAD_DEFAULT_ENCODE")
         }
         self.update_builder(main)
         
