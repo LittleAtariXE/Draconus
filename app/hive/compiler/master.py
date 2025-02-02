@@ -41,8 +41,9 @@ class MasterCompiler:
             "WinePyInst" : CompilerObject("WinePyInst", "Compiler using PyInstaller along with python 3.12. Uses wine emulator and Pyinstaller module to build EXE.", "windows", self, self.wine_py),
             "WinePyNuitka" : CompilerObject("WinePyNuitka", "A compiler using Nuitka and Python 3.12. Builds an executable file using the Wine emulator and Nuitka module.", "windows", self, self.wine_py),
             "MC_elf32" : CompilerObject("MC_elf32", "Assembler Compiler. Builds the executable file elf32 32bit", "linux", self, self.multi),
-            "MC_win32" : CompilerObject("MC_win32", "Assembler Compiler. Builds a win32 32bit exe executable file", "windows", self, self.multi),
+            "MC_win32" : CompilerObject("MC_win32", "MinGW (Asm, C, C++) Compiler. Builds a win32 32bit exe executable file", "windows", self, self.multi),
             "LinPyIn"   : CompilerObject("LinPyIn", "Python3.11 compiler and 'Pyinstaller' on linux. Builds Linux executables using python 3.11 and the 'PyInstaller' module.", "linux", self, self.linux_py),
+            "MC_win64" : CompilerObject("MC_win64", "MinGW (Asm, C, C++) Compiler. Builds a win 64bit exe executable file", "windows", self, self.multi),
             # "CyApp" : CompilerObject("CyApp", "Kros compiler 'cython' with python 3.12. Builds small exe file with additional libraries. Does not build single file exe.", "windows", self, self.cross_c)
         }
         return comp

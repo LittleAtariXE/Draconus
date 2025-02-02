@@ -1,4 +1,4 @@
-
+import codecs
 from typing import Union
 
 class FoodItem:
@@ -58,6 +58,30 @@ class FoodItem:
             out.append((d[0], d[1].rstrip("\n")))
         return out
     
+    def _correct_shellcode(self, line: str) -> str:
+        line = line.replace('"', '')
+        line = line.replace(';', '')
+        line = line.strip()
+        return line
+    
+    def load_shellcode(self, data: list) -> str:
+        skip = ["\n", " ", ""]
+        raw_shell = ""
+        is_raw = True
+        for d in data:
+            if d in skip:
+                continue
+            d = self._correct_shellcode(d)
+            if d.startswith("0x"):
+                is_raw = False
+            raw_shell += d
+        if is_raw:
+            raw_shell = codecs.decode(raw_shell, "unicode_escape")
+            shellcode = ", ".join(f"0x{byte:02x}" for byte in raw_shell.encode("latin1"))
+        else:
+            shellcode = raw_shell
+        return shellcode
+    
     def load_data(self) -> any:
         if not self.load:
             return None
@@ -72,6 +96,8 @@ class FoodItem:
                 return self.load_list(raw)
             case "list-tuple":
                 return self.load_list_tuple(raw)
+            case "shellcode":
+                return self.load_shellcode(raw)
             case _:
                 return None
 

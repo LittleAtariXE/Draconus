@@ -88,7 +88,7 @@ class Queen:
 
     def build_worm(self, options: dict = {}):
         self.worm_constructor.build_WORM(options)
-     
+
     def Run(self) -> None:
         pass
         

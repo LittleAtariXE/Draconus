@@ -1,0 +1,86 @@
+#!name##FOOD_random_text
+#!types##data
+#!info##Random text to fill in the code.
+#!load##list
+
+
+MP does not start if the player states differ
+Ubi.com error message does not appear after a win in a rating game
+Random cities use name and description from map
+Profile screen fixes (experience, alignment)
+Haven: stables message is back, other messages fixed
+Profile screen: random race games now shown correctly
+Camera glitches in Rebellion' campaign map cutscene removed
+Item selection in lobby screen fixed
+Ghost mode 'guard' command fixed
+Ghost mode after disconnection turn transfer fixed
+Profile info for other players now accessible
+Map info for MP games is localized
+The spells added by the library are given to the hero immediately
+MP game preferences panel fixed
+Resisted combat text fixed
+Training games results are not reported to Ubi.com now
+Hero perk rolls fixed
+Elemental creatures not affecting by Wasp Swarm spell now
+Druid Elder's Mana Feed ability fixed
+Temptress hero specialization fixed
+Some points of Combat AI fixed
+The Promise campaign map 3-th cutscene sound fixed
+ATBBar refresh fixed
+Separate stacks displayed in Combat Results
+Heroes planned paths searching at turn start after whirlpool fixed
+Invalid level ups (double skill increases) blocked
+Representation of heroes on boats in ghost mode now is correct
+After all players disconnected from Ghost mode game ending correctly 
+Combat pathfinder does not ignore the moat
+Artifact Merchant submenu can not be called by hotkey without the building
+Reconnected players can't see themselves on Ubi.com now
+Dark Raider retaliation strike fixed
+Creatures under Berserk spell effect always attack now
+Refined Mana perk fixed
+Hut of Magi still shows areas after pressing Esc key
+Castle gates are closed immediately
+Zero-count monsters on low difficulty levels fixed
+Water shaders fixed
+Startup videos playback fixed
+Grail map called from underground fixed
+Ghost mode phase message fixed
+Sound glitches fixed
+MP game name length is restricted
+Interface sounds are not 3d fixed
+Fixed prerequisites for Urgash's Call, it was impossible to take it.
+Campaign map 'The Conquest' Main Sylvan hero Gilraen weakened, his script fixed
+Maeve added as haven random hero
+double hero portraits prevented
+Now after 'The Attack' campaign map loading right 'Invasion' map instead 'The Regicide' map
+The Defence campaign map scripts fixed
+Shadow Witches have new model
+The Cultists campaign map garrison fixed
+Credits fixed
+The March campaign map keymaster blocked for AI
+Demon character fixed
+Zehirs flag color changed
+Map tags fixed for MP maps
+AI-geometry for Pyramid and shipwrecks fixed
+Dungeon town: Grim Enclosure and lightmaps fixed
+Random heroes on MP maps fixed
+Hero Jhora gets Magic Missile spell due to her specialization description
+Inferno and Necropolis lightmaps recalculated
+Maeve hero Tactics removed
+954 YSD: Hot Pursuit some map objects fixed
+Dragon Pass object fixed, rebalanced
+fixed instant travel holes
+Duel presets rebalanced
+The Betrayal  campaign map message for garrison approach added
+The Expansion campaigm map multiple fixes added (hero skills, messages, added guards)
+Raelag's Offer campaign map: texture near Inferno Military Post fixed
+The game works with onboard video and some of the older video cards now
+LAN games can now be played in different segment configurations
+
+
+Game may crash after a continuous gameplay (near 2 hours or more) and while using several times the Alt+Tab function in this time.
+
+Switching off V-Sync option in your video driver options may cause twitched animation in Town if you rotate camera manually.
+
+
+

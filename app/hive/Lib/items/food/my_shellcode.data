@@ -1,0 +1,19 @@
+#!name##MyShellcode
+#!types##data
+#!info##Paste the finished shellcode here. The file is located in the directory 'OUTPUT/shortcuts/MyShellcode'.
+#!load##shellcode
+#!###-- Supported shellcode formats:
+#!###   0x89, 0xe5, 0x81, 0xc4, 0xf0,
+#!##################################################################################
+#!###   "\x89\xe5\x81\xc4\xf0"
+#!###   "\x20\x8b\x36\x66\x39"
+#!##################################################################################
+#!###   \x33\xc9\x64\x8b\x49\x30\x8b\x49\x0c\x8b\x49
+#!##################################################################################
+#!###   ;"\x89\xe5\x81\xc4\xf0"
+#!###   ;"\x20\x8b\x36\x66\x39";
+#!##################################################################################
+#!###  DO NOT REMOVE HEADERS
+#!###       PASTE YOUR SHELLCODE BELOW
+
+

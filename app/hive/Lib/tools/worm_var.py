@@ -1,5 +1,6 @@
 import base64
 import ast
+import codecs
 from typing import Union
 
 class VarTools:
@@ -39,6 +40,13 @@ class VarTools:
         except ValueError:
             return 0
         return value * count
+
+    def load_shellcode(raw_shell: str) -> str:
+        if raw_shell.startswith("0x"):
+            return raw_shell
+        raw_shell = codecs.decode(raw_shell, "unicode_escape")
+        shellcode = ", ".join(f"0x{byte:02x}" for byte in raw_shell.encode("latin1"))
+        return shellcode
 
 class WormVar:
     def __init__(self,
@@ -104,6 +112,8 @@ class WormVar:
             bytes_num = self.options.get("STACK_BYTES", 4)
             command = self.options.get("STACK_COMMAND")
             return VarTools.stack_builder(value, bytes_num, command)
+        if self.options.get("LOAD_SHELLCODE"):
+            return VarTools.load_shellcode(value)
         else:
             return value
     

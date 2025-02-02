@@ -8,20 +8,27 @@ from .tools.starter import Starter
 from .tools.shadow import Shadow
 from .tools.garbage_man_var import GarbageMan
 from .tools.pay_builder import PayloadBuilder
+from .tools.coder_template_tools.template_tools import TT_MOD_Generator
 
-# class CoderTools:
-#     def __init__(self, coder: object):
-#         self.coder = coder
-#         self.msg = self.coder.msg
+class TempTools:
+    def __init__(self, coder: object):
+        self.coder = coder
+        self.generator = TT_MOD_Generator(self)
     
-#     def powershell_script(self, code: str) -> str:
-#         code = code.split("\n")
-#         script = ""
-#         for line in code:
-#             if line.strip() == "\n" or line.strip() == "":
-#                 continue
-#             script += f"{line}; "
-#         return script
+    def var_len(self, variable: object) -> int:
+        return len(variable)
+    
+    def shellcode_len(self, variable: object) -> int:
+        scode = variable.split(", ")
+        return len(scode)
+    
+    def generate_text(self, src_data: list) -> str:
+        return self.generator.generate_text(src_data)
+    
+    def build_asm_scvar(self, src_data: list, shellcode: str, var_name: str, table_name: str) -> str:
+        return self.generator.build_asm_var_shellcode(src_data, shellcode, var_name, table_name)
+    
+
 
 
 class Coder:
@@ -37,7 +44,7 @@ class Coder:
         self.starter = Starter(self)
         self.shadow = Shadow(self)
         self.garbage_man = GarbageMan(self)
-        # self.tools = CoderTools(self)
+        self.temp_tools = TempTools(self)
         
  
     @property
@@ -223,8 +230,7 @@ class Coder:
         else:
             code = self.raw_code(var)
         rcode = Template(code)
-        rcode = rcode.render(var)
+        rcode = rcode.render(**var, TOOL=self.temp_tools)
         return rcode
-        
         
 

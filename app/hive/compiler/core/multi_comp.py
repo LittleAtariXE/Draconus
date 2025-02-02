@@ -121,6 +121,7 @@ class MultiCompCore:
         self.exec_cmd("apt install python3 -y")
         self.exec_cmd("apt install -y gcc-mingw-w64-i686")
         self.exec_cmd("apt install -y upx-ucl")
+        self.exec_cmd("apt install -y mingw-w64")
         self.msg("msg", "Building laboratory complete. Stoping container ....")
         self.compiler.stop()
         self.msg("msg", f"[{self.name}] is ready.")
@@ -130,6 +131,7 @@ class MultiCompCore:
     
     
     def compile_elf32(self, worm_pipeline: object) -> object:
+        self.msg("msg", "Use MC_elf32", sender=self.name)
         self.msg("msg", f"Start Compiler: {self.name}")
         self.compiler.start()
 
@@ -149,6 +151,7 @@ class MultiCompCore:
         return worm_pipeline
     
     def compile_win32(self, worm_pipeline: object) -> object:
+        self.msg("msg", "Use MC_win32", sender=self.name)
         self.msg("msg", f"Start Compiler: {self.name}")
         self.compiler.start()
         worm_dir = os.path.join(self.dir_work, worm_pipeline.worm_name)
@@ -180,6 +183,7 @@ class MultiCompCore:
         return worm_pipeline
     
     def compile_win32_extra(self, worm_pipeline: object) -> object:
+        self.msg("msg", "Use MC_win32", sender=self.name)
         worm_dir = os.path.join(self.dir_work, worm_pipeline.worm_name)
         dll_path = os.path.join(worm_dir, worm_pipeline.dll_name)
         self.msg("msg", f"Start Compiler: {self.name}")
@@ -206,6 +210,7 @@ class MultiCompCore:
 
     
     def compile_dll(self, worm_pipeline: object) -> object:
+        self.msg("msg", "Use MC_win32", sender=self.name)
         self.msg("msg", f"Start Compiler: {self.name}")
         self.compiler.start()
         lib_name = worm_pipeline.dll_name.split(".")[0]
@@ -217,6 +222,68 @@ class MultiCompCore:
         worm_pipeline.dll_name = f"{lib_name}.dll"
         self.compiler.stop()
         return worm_pipeline
+    
+    def build_dll_lib(self, worm_pipeline: object) -> object:
+        self.msg("msg", "Use MC_win32", sender=self.name)
+        self.msg("msg", f"Start Compiler: {self.name}")
+        self.compiler.start()
+        dll = worm_pipeline.DLL
+        worm_dir = os.path.join(self.dir_work, worm_pipeline.worm_name)
+        self.exec_cmd(f"cd {worm_dir} && nasm -f win32 {dll.raw_file_name} -o {dll.lib_name}.o")
+        self.exec_cmd(f"cd {worm_dir} && i686-w64-mingw32-gcc -shared {dll.lib_name}.o {dll.lib_name}.def -o {dll.file_name} -nostdlib -s -lkernel32 -lmsvcrt -luser32 -lshell32 -Wl,--entry=DllMain")
+        self.exec_cmd(f"cd {worm_dir} && chmod 777 *")
+        self.msg("msg", f"Stoping Compiler: {self.name}.")
+        self.compiler.stop()
+        return worm_pipeline
+    
+    def build_exe_win32(self, worm_pipeline: object) -> object:
+        self.msg("msg", "Use MC_win32", sender=self.name)
+        worm_dir = os.path.join(self.dir_work, worm_pipeline.worm_name)
+        dll_path = worm_pipeline.DLL.file_name
+        if not dll_path:
+            dll_path = ""
+        else:
+            dll_path += " "
+        self.msg("msg", f"Start Compiler: {self.name}")
+        self.compiler.start()
+        self.exec_cmd(f"cd {worm_dir} && nasm -f win32 {worm_pipeline.file_name}")
+        icon = worm_pipeline.gvar.get("ICON")
+        if icon:
+            rc_path = self.prepare_icon(worm_pipeline)
+            if rc_path:
+                self.exec_cmd(f"cd {worm_dir} && i686-w64-mingw32-windres {rc_path} -O coff -o {worm_pipeline.worm_name}.res")
+                icon = f" {worm_pipeline.worm_name}.res"
+            else:
+                icon = ""
+        else:
+            icon = ""
+        self.exec_cmd(f"cd {worm_dir} && i686-w64-mingw32-gcc -nostdlib -s -o {worm_pipeline.worm_name}.exe {worm_pipeline.worm_name}.obj{icon} {dll_path}-lkernel32 -lmsvcrt -luser32 -lshell32")
+        self.exec_cmd(f"cd {worm_dir} && chmod 777 *")
+        self.msg("msg", f"Stoping Compiler: {self.name}.")
+        self.compiler.stop()
+        worm_pipeline.exe_file_name = f"{worm_pipeline.worm_name}.exe"
+        worm_pipeline.exe_file_path = os.path.join(worm_pipeline.work_dir, worm_pipeline.exe_file_name)
+        return worm_pipeline
+
+    def build_exe_winx64(self, worm_pipeline: object) -> object:
+        self.msg("msg", "Use MC_win64", sender=self.name)
+        worm_dir = os.path.join(self.dir_work, worm_pipeline.worm_name)
+        self.msg("msg", f"Start Compiler: {self.name}")
+        self.compiler.start()
+        self.exec_cmd(f"cd {worm_dir} && nasm -f win64 {worm_pipeline.file_name}")
+        if worm_pipeline.gvar.get("COMPILER_NO_DLL"):
+            no_dll = " -nostdlib -s"
+        else:
+            no_dll = ""
+        self.exec_cmd(f"cd {worm_dir} && x86_64-w64-mingw32-gcc -m64{no_dll} -o {worm_pipeline.worm_name}.exe {worm_pipeline.worm_name}.obj -lkernel32 -lmsvcrt -luser32 -lshell32")
+        self.exec_cmd(f"cd {worm_dir} && chmod 777 *")
+        self.msg("msg", f"Stoping Compiler: {self.name}.")
+        self.compiler.stop()
+        worm_pipeline.exe_file_name = f"{worm_pipeline.worm_name}.exe"
+        worm_pipeline.exe_file_path = os.path.join(worm_pipeline.work_dir, worm_pipeline.exe_file_name)
+        return worm_pipeline
+
+
     
     def prepare_icon(self, worm_pipeline: object) -> Union[str, None]:
         try:
@@ -242,6 +309,8 @@ class MultiCompCore:
                 worm_pipeline = self.compile_elf32(worm_pipeline)
             case "MC_win32":
                 worm_pipeline = self.compile_win32(worm_pipeline)
+            case "MC_win64":
+                worm_pipeline = self.build_exe_winx64(worm_pipeline)
             case _:
                 self.msg("error", f"[!!] ERROR: Unknown Compiler name: '{option.get('COMPILER_NAME')}' [!!]")
         return worm_pipeline

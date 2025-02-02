@@ -9,9 +9,6 @@
 #!empty## Add code below the headers. Next save file and add to your worm
 #!CODE
 
-from time import sleep
-print("Hello World")
-sleep(1)
-print("END")
+
 
 

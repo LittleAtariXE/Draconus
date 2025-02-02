@@ -1,0 +1,14 @@
+#!name##BinaryWrap
+#!types##process
+#!info##A special process that prepares the worm for double compilation.
+
+[BASE]
+[SHADOW]
+[STARTER]
+[ADD_IMPORTS]
+[CODE_LOADER]
+[SAVE_RAW]
+[COMPILER]
+[WRAPPER]
+[SAVE_RAW]
+[COMPILER]

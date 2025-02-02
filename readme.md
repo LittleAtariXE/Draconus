@@ -588,6 +588,24 @@ Keep in mind that creating complex worms with multiple modules, obfuscation tech
         <li><strong>New functionality:</strong> Automatically prepares a directory with only the necessary files for the worm to operate. If the worm requires several files, a folder with the worm's name is created, containing only the essential files.</li>
         <li><strong>Bug fixes:</strong> Addressed numerous small and significant issues.</li>
     </ul>
+    <h2>🛠️ Changelog for Version 1.1.1</h2>
+    <ul>
+        <li><strong>Added support for special "food" variables:</strong> These contain predefined data such as shellcodes and various worm-related data.</li>
+        <li><strong>New worm: <code>WinShell</code> (x86)</strong> - A Windows 32-bit worm designed for testing shellcodes.</li>
+        <li><strong>New worm: <code>WinShell64</code> (x64)</strong> - A Windows 64-bit worm designed for testing shellcodes.</li>
+        <li><strong>New worm: <code>RiverRaid</code> (x86)</strong> - Hides shellcode among multiple text variables. 
+            Generates both an EXE file and a separate DLL with injection functions, making detection more difficult.</li>
+        <li><strong>New worm: <code>BrutePID</code> (x86)</strong> - Scans every process PID within a given range and attempts to inject shellcode into one of the processes.</li>
+        <li><strong>New cross-compiler: <code>MC_win64</code></strong> - A 64-bit cross-compiler supporting C, C++, and assembler.</li>
+        <li><strong>Added text display customization:</strong> In <code>CONFIG.ini</code>, a new option allows adjusting text display for different screen sizes.</li>
+        <li><strong>More information added to the "Queen" console commands.</strong></li>
+        <li><strong>New DLL building system.</strong></li>
+        <li><strong>New wrapper: <code>DropZone</code> (not fully functional)</strong> - An experimental "worm-in-a-worm" system. 
+            It embeds a compiled worm inside a "wrapper worm" and attempts to execute it as a separate process. 
+            However, it struggles to handle large binary files (several MB). Work is ongoing to resolve this issue.</li>
+        <li><strong>Added several new tools</strong> to assist in building different types of worms.</li>
+        <li><strong>Bug fixes:</strong> Many small fixes, and probably some new bugs as well! 😄</li>
+    </ul>
 </div>
 </body>
 </html>

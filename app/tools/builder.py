@@ -49,7 +49,7 @@ class Builder:
             extra_dev = extra["DEV"]
             conf.update(extra_conf)
             dev.update(extra_dev)
-        
+        console_scr = self.console_screen(conf.get("CONSOLE_SCREEN"))
         main = {
             "ip" : conf.get("ip"),
             "unix_socket_raw_len" : int(conf.get("unix_socket_raw_len")),
@@ -69,10 +69,31 @@ class Builder:
             "sender_socket_to" : 60,
             "dlc_name" : conf.get("DLC_FILE_NAME"),
             "tcp_raw_buffer_to" : int(conf.get("TCP_RAW_BUFFER_TIMEOUT")),
-            "payload_default_encode" : conf.get("PAYLOAD_DEFAULT_ENCODE")
+            "payload_default_encode" : conf.get("PAYLOAD_DEFAULT_ENCODE"),
+            "console_screen" : console_scr
         }
         self.update_builder(main)
-        
+    
+    def console_screen(self, option: str) -> dict:
+        # 220 180 140
+        match option:
+            case "big":
+                scr = {"4c": (25, 25, 30, 140),
+                    "3c": (25, 30, 165),
+                    "2c": (25, 195),
+                    "slen" : 220}
+            case "small":
+                scr = {"4c": (25, 25, 25, 65),
+                    "3c": (25,30, 85),
+                    "2c": (25, 115),
+                    "slen": 140}
+            case _:
+                scr = {"4c": (25, 25, 30, 100),
+                    "3c": (25,30, 125),
+                    "2c": (25, 145),
+                    "slen": 180}
+        return scr
+
     
     def update_builder(self, config: object) -> None:
         for k, i in config.items():

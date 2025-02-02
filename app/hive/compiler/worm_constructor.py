@@ -7,6 +7,7 @@ from .tools.external_script import ExternalModules
 from .tools.master_wrapper import MasterWrapper
 from .lib.comp_library import CompLibrary
 from .mr_comp import MrComp
+from .tools.wc_struct import DLL_Struct
 
 class WormPipeObject:
     def __init__(self, worm_pipeline: object, var: dict, options: dict = None):
@@ -23,6 +24,7 @@ class WormPipeObject:
         self.shellcode = None
         self.icon_name = None
         ### DLL
+        self.DLL = DLL_Struct(self)
         self.dll_name = None
         self.dll_export = None
         self.dll_func = []
@@ -233,6 +235,85 @@ class WormPipeLine:
             worm_pipe._to_dev.append(worm_pipe.exe_file_path)
         return worm_pipe
     
+    ##### NEW BUILD DLL LIBRARY SYSTEM ###########
+
+    
+    def pipe_build_dll_struct(self, worm_pipe: object) -> object:
+        worm_pipe.last_error = 0
+        options = self.worm.raw_worm.master_worm.options
+        worm_pipe.DLL = DLL_Struct(self)
+        worm_pipe.DLL.update(worm_pipe.var, "DLL_")
+        worm_pipe.DLL.update(options, "DLLS_")
+        tdll = worm_pipe.DLL.src_temp_dll
+        tdll = self.get_item("support", tdll)
+        if not tdll:
+            self.msg("error", "[!!] ERROR: Missing DLL Library module [!!]", sender=self.name)
+            worm_pipe.last_error = 1
+            return worm_pipe
+        worm_pipe.DLL.src_temp_dll = tdll
+        dll_var = {}
+        for k, i in tdll.setVar.items():
+            dll_var[k] = str(i)
+        worm_pipe.DLL.update(dll_var, "DLL_")
+        worm_pipe.var.update(dll_var)
+        rdll_name = worm_pipe.DLL.file_name
+        if not rdll_name[-4:] == ".dll":
+            worm_pipe.DLL.file_name = f"{rdll_name}.dll"
+        else:
+            rdll_name = rdll_name[0:-4]
+        worm_pipe.DLL.lib_name = rdll_name
+
+        code = self.coder.render_single(tdll.raw_code, worm_pipe.var)
+        worm_pipe.DLL.code = code
+        worm_pipe.DLL.def_file_path = os.path.join(worm_pipe.work_dir, f"{worm_pipe.DLL.lib_name}.def")
+        worm_pipe.DLL.file_path = os.path.join(worm_pipe.work_dir, worm_pipe.DLL.file_name)
+        worm_pipe.DLL.raw_file_name = f"{worm_pipe.DLL.lib_name}.asm"
+        worm_pipe.DLL.raw_file_path = os.path.join(worm_pipe.work_dir, worm_pipe.DLL.raw_file_name)
+        #print(worm_pipe.DLL.code)
+
+        return worm_pipe
+    
+    def pipe_build_def_file(self, worm_pipe: object) -> object:
+        exp_fun = "\n\t".join(worm_pipe.DLL.export_func)
+        template = f"LIBRARY {worm_pipe.DLL.lib_name.upper()}\nEXPORTS\n\t{exp_fun}"
+        with open(worm_pipe.DLL.def_file_path, "w") as file:
+            file.write(template)
+        self.msg("msg", "Build DEF file successfull", sender=self.name)
+        return worm_pipe
+    
+    def pipe_build_raw_dll_file(self, worm_pipe: object) -> object:
+        with open(worm_pipe.DLL.raw_file_path, "w") as file:
+            file.write(worm_pipe.DLL.code)
+        self.msg("msg", f"Create raw library file: '{worm_pipe.DLL.raw_file_name}'", sender=self.name)
+        return worm_pipe
+
+    def pipe_build_dll_library(self, worm_pipe: object) -> object:
+        self.msg("msg", "Build DLL Library", sender=self.name)
+        worm_pipe = self.pipe_build_dll_struct(worm_pipe)
+        if worm_pipe.last_error > 0:
+            self.msg("error", "[!!] ERROR: build dll library ABORT [!!]", sender=self.name)
+            return worm_pipe
+        worm_pipe = self.pipe_build_def_file(worm_pipe)
+        worm_pipe = self.pipe_build_raw_dll_file(worm_pipe)
+        self.msg("msg", "DLL library building....", sender=self.name)
+        worm_pipe = self.constructor.master.multi.build_dll_lib(worm_pipe)
+        worm_pipe._to_dev.append(worm_pipe.DLL.file_path)
+        self.msg("msg", f"Build '{worm_pipe.DLL.file_name}' complete.", sender=self.name)
+        return worm_pipe
+    
+    def pipe_build_win32_exe(self, worm_pipe: object) -> object:
+        if worm_pipe.gvar.get("NO_COMPILE"):
+            self.msg("msg", "NO_COMPILE FLAG. Skip compilation.", sender=self.name)
+            return worm_pipe
+        self.msg("msg", "Worm builidng started....", sender=self.name)
+        worm_pipe = self.constructor.master.multi.build_exe_win32(worm_pipe)
+        self.msg("msg", f"Build exe file complete: '{worm_pipe.exe_file_name}'", sender=self.name)
+        worm_pipe._to_dev.append(worm_pipe.exe_file_path)
+        return worm_pipe
+
+    #######################################################################################
+
+
     def pipe_sort_app(self, worm_pipe: object) -> object:
         if len(worm_pipe._to_dev) > 1:
             self.msg("msg", "Prepare a directory with all the necessary files.", sender=self.name)
@@ -277,6 +358,10 @@ class WormPipeLine:
                 self.pipeline.append(self.pipe_make_dll_file)
             case "DLL_LOADER":
                 self.pipeline.append(self.pipe_make_dll_loader)
+            case "BUILD_DLL_LIBRARY":
+                self.pipeline.append(self.pipe_build_dll_library)
+            case "BUILD_WIN32":
+                self.pipeline.append(self.pipe_build_win32_exe)
             case _:
                 self.msg("error", f"ERROR: Unknown Pipe Process: '{name}'", sender=self.name)
     
@@ -305,7 +390,6 @@ class WormPipeLine:
         self.prepare_pipe()
         worm_pipe = WormPipeObject(self, var, gvar)
         self.msg("msg", "Start build worm....", sender=self.name)
-        out = ""
         for proc in self.pipeline:
             worm_pipe = proc(worm_pipe)
         self.msg("msg", "Process build worm successful.", sender=self.name)

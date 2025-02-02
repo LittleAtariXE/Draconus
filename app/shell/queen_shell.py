@@ -5,6 +5,9 @@ from termcolor import cprint
 from time import sleep
 from functools import wraps
 
+from app.tools.text_formater import Texter
+
+
 
 
 class QueenShell:
@@ -14,6 +17,7 @@ class QueenShell:
         self.Queen = self.COM.Queen
         self.Queen.enter()
         self.color_help = "blue"
+        self.texter = Texter(25, 100, add_end_line=True)
     
     def exit_queen_shell(self, *args, **kwargs) -> None:
         cprint("[Queen] Exit Queen Shell", "yellow")
@@ -39,7 +43,7 @@ class QueenShell:
             self.sorter("clr, clear", "Clear Screen")
             self.sorter("exit", "Exit Hive Shell")
             self.sorter("rebuild", "Clear Worm Constructor. Start Empty Template")
-            self.sorter("show [types]", "Display all 'types' items in Library.")
+            self.sorter("show [types]", "Display all 'types' items in Library. See 'show --help'")
             self.sorter("name [name]", f"Set Worm name. Actual: {self.Queen.worm.name}")
             self.sorter("add [types] [name]", "Add module to Worm.")
             self.sorter("remove [types] [name]", "Removes module from worm")
@@ -135,8 +139,23 @@ class QueenShell:
 
         
         @hiveShell.command()
-        @click.argument("types")
-        def show(types) -> None:
+        @click.argument("types", required=False, default="")
+        @click.option("--help", "show_help", is_flag=True, required=False, help="Show help")
+        def show(types, show_help) -> None:
+            sep = 20
+            if show_help:
+                hw = self.texter.make_2column("-- worm --", "The worm's main module. Determines what type the worm will be, what it will be used for. This is the first module to be added.")
+                cprint(hw, self.color_help)
+                hw = self.texter.make_2column("-- module --", "Various modules from which you can build your own worm. Modules that enable communication, malicious modules such as RAT, Ransomware, DDoS, etc. For now, it is only possible to build the worm in python.")
+                cprint(hw, self.color_help)
+                hw = self.texter.make_2column("-- payload --", "Various PAYLOADs. Written in python, powershell, binary data, etc. They can be added to worms that have payload space.")
+                cprint(hw, self.color_help)
+                hw = self.texter.make_2column("-- shadow --", "Code obfuscation methods. When you add 'shadow' then the worm code will be shadowed before compilation. It only works on python code.")
+                cprint(hw, self.color_help)
+                hw = self.texter.make_2column("-- starter --", "This is the final method of modifying the worm's code. You can, for example, convert it to single-line base64 code, you can put the code in a special trigger that will add an additional action. There are also starters that add junk scripts and variables to increase the size of the code or naturally slow down the execution of the main code.")
+                cprint(hw, self.color_help)
+                
+            
             if types:
                 self.Queen.Lib.show_items(types)
             

