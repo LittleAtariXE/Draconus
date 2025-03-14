@@ -1,7 +1,14 @@
 #!name##DLL_Injector
 #!types##support
+#!subTypes##dll
 #!info##DLL library
-#!setVar##DLL_export_func##Scanner##str
+#!setVar##DLL_EXFUNC##Scanner##str
+#!options##DLL_CS##BasicDll2
+#!options##DLL_COMPILER##mingw-x32
+#!options##DLL_NO_DLL##True
+#!reqFood##FOOD_company##FOOD_company_name##Company name database
+#!reqFood##FOOD_app##FOOD_app_name##Application name database
+#!reqFood##FOOD_fdesc##FOOD_file_description##Application description database
 
 ; --------- IMPORTS ---------                       
 extern _ExitProcess@4

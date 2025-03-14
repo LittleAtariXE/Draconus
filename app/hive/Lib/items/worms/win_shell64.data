@@ -3,13 +3,13 @@
 #!info##[W] [x64] Shellcode testing worm for windows 64 bit. You can paste your shellcode to test it or use a ready-made one.
 #!processWorm##BasicAsm
 #!reqVar##scode##Raw Shellcode. Ex: \x23\x4c\x56 ##str
-#!globalVar##COMPILER_NAME##MC_win64##Compiler name
+#!globalVar##COMPILER##mingw-x64##Compiler name
 #!globalVar##OS_EXEC##win##Target system executable
 #!lang##asm
 #!system_FLAG##[W]
 #!banned##module##starter##shadow##junk
-#!reqVar##GLOBAL_COMPILER_NO_DLL##Whether the compiler should include libraries in the executable. Without the included DLLs, the resulting file takes up very little space.##str
-#!setVar##GLOBAL_COMPILER_NO_DLL##False##str
+#!reqVar##GLOBAL_NO_DLL##Whether the compiler should include libraries in the executable. Without the included DLLs, the resulting file takes up very little space.##bool
+#!setVar##GLOBAL_NO_DLL##True##bool
 
 extern VirtualAlloc
 extern ExitProcess

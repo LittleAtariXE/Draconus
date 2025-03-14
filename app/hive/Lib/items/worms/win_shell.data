@@ -3,7 +3,9 @@
 #!info##[W] [x86] Shellcode testing worm for windows. You can paste your shellcode to test it or use a ready-made one.
 #!processWorm##BasicAsm
 #!reqVar##scode##Raw Shellcode. Ex: \x23\x4c\x56 ##str
-#!globalVar##COMPILER_NO_DLL##Not include DLLs
+#!globalVar##NO_DLL##Not include DLLs
+#!globalVar##COMPILER##mingw-x32##Compiler name
+#!globalVar##OS_EXEC##win##Target system executable
 #!lang##asm
 #!system_FLAG##[W]
 #!banned##module##starter##shadow##junk

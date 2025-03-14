@@ -6,8 +6,9 @@
 #!reqVar##WText##Text to display##str
 #!setVar##WText##Helo World##str
 #!system_FLAG##[W]
-#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##COMPILER##mingw-x32##Compiler name
 #!globalVar##OS_EXEC##win##Target system executable
+#!globalVar##NO_DLL##True##Not include DLL
 #!processWorm##BasicAsm
 
 global _main

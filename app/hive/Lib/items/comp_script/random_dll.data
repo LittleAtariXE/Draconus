@@ -1,0 +1,55 @@
+#!name##RandomDll
+#!types##cscript
+#!info##Compiler script. Script file '.rc'. Generates lots of random information about DLL files. You can set your own.
+#!CC##mingw-x32
+#!CC##mingw-x64
+#!reqFood##FOOD_company##FOOD_company_name##Company name database
+#!reqFood##FOOD_app##FOOD_app_name##Application name database
+#!reqFood##FOOD_fdesc##FOOD_file_description##Application description database
+#!reqVar##RanDLL_CN##[CS] Company Name. '$random' - get random name from food database##str
+#!setVar##RanDLL_CN##$random##str
+#!reqVar##RanDLL_FD##[CS] File Description. '$random' - get random name from food database##str
+#!setVar##RanDLL_FD##$random##str
+
+
+
+
+
+
+#!CODE
+
+{% set company_name = TOOL.random_text(FOOD_company, RanDLL_CN) %}
+{% set version = TOOL.gen_app_version() %}
+{% set original_fn = DLL_NAME.rstrip(".dll")%}
+{% set file_desc = TOOL.random_text(FOOD_fdesc, RanDLL_FD)%}
+{% set file_ver = TOOL.gen_app_version(",")%}
+
+
+
+1 VERSIONINFO
+FILEVERSION {{file_ver}}
+PRODUCTVERSION {{file_ver}}
+FILEOS 0x4                // VOS__WINDOWS32
+FILETYPE 0x2
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",      "{{company_name}}"
+            VALUE "FileDescription",  "{{file_desc}}"
+            VALUE "FileVersion",      "{{version}}"
+            VALUE "InternalName",     "{{original_fn}}-{{version}}"
+            VALUE "LegalCopyright",   "Copyright 2024 {{company_name}}"
+            VALUE "OriginalFilename", "{{original_fn}}.dll"
+            VALUE "ProductName",      "{{original_fn}}"
+            VALUE "ProductVersion",   "{{version}}"
+            VALUE "Comments",         ""
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 0x04B0 // US English (Unicode)
+    END
+END

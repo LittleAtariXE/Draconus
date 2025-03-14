@@ -5,11 +5,11 @@
 #!lang##asm
 #!banned##module##starter##shadow##junk
 #!system_FLAG##[W]
-#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##COMPILER##mingw-x32##Compiler name
 #!globalVar##OS_EXEC##win##Target system executable
 #!processWorm##BasicAsm
-#!reqVar##GLOBAL_COMPILER_NO_DLL##Whether the compiler should include libraries in the executable. Without the included DLLs, the resulting file takes up very little space.##str
-#!setVar##GLOBAL_COMPILER_NO_DLL##True##str
+#!reqVar##GLOBAL_NO_DLL##Whether the compiler should include libraries in the executable. Without the included DLLs, the resulting file takes up very little space.##str
+#!setVar##GLOBAL_NO_DLL##True##str
 
 
 global _main

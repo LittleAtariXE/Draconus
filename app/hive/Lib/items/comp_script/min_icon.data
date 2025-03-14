@@ -1,0 +1,8 @@
+#!name##minimal_icon
+#!types##cscript
+#!info##Necessary to add an icon.
+#!CC##mingw-x32
+#!CC##mingw-x64
+
+
+IDI_MAIN_ICON ICON "{{RES_icon}}"

@@ -33,6 +33,7 @@ class Library:
             "wrapper" : {},
             "food" : {},
             "process": {},
+            "cscript": {}
         }
         self.shadow = {}
         self.find_items()
@@ -63,6 +64,11 @@ class Library:
         for item in os.listdir(self.dir_process):
             proc = ProcessItem(os.path.join(self.dir_process, item))
             self.lib["process"][proc.name] = proc
+        ### Compiler Script ###
+        for item in os.listdir(self.dir_comp_script):
+            cs = LibraryItem(os.path.join(self.dir_comp_script, item))
+            self.lib["cscript"][cs.name] = cs
+            
         
 
     
@@ -106,6 +112,7 @@ class Library:
         for item in items.values():
             text += self.texter.make_2column(item.name, item.info)
             text += "\n"
+            text += "- " * 70 + "\n"
         self.msg("msg", text)
     
     def show_process_worm(self) -> None:

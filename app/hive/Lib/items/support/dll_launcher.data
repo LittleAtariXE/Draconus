@@ -1,9 +1,10 @@
-#!name##SDLL_Loader
+#!name##DllLoader_x32
 #!types##support
 #!info##The startup program, imports functions from the DLL file which causes it to execute.
+#!reqCS##BasicExe
 
 extern _ExitProcess@4
-{% for func in DLL_EXPORT%}
+{% for func in DLL_DLL_EXFUNC%}
 extern _{{func}}
 {% endfor%}
 
@@ -11,7 +12,7 @@ section .text
     global _main
     
 _main:
-    call _{{DLL_EXPORT[0]}}
+    call _{{DLL_DLL_EXFUNC[0]}}
     
     push 0
     call _ExitProcess@4

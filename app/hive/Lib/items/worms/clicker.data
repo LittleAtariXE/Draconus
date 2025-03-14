@@ -6,6 +6,7 @@
 #!payStep##encode_b64_loop
 #!reqVar##__encode_b64_loop_count##number encode##int
 #!setVar##__encode_b64_loop_count##6##int
+#!globalVar##COMPILER##PyInstaller##Compiler name
 
 
 import base64

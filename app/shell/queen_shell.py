@@ -204,7 +204,7 @@ Remember not to use compilers that are not designed for worm language. Nothing g
             elif ext_mod:
                 self.Queen.master.install_module(ext_mod)
             else:
-                print("[QUEEN] List of compilers. To install a compiler add the parameter '-i <compiler_master_name>'. 'Master Compilers' has different compilers.\nBelow is the list of Master Compilers and the compilers installed in them. To install all of them at once type 'install -i all'.\nex: install -i WinePy")
+                print("[QUEEN] List of compilers. To install a compiler add the parameter '-i <compiler_master_name>'. 'Master Compilers' has different compilers.\nBelow is the list of Master Compilers and the compilers installed in them. To install all of them at once type 'install -i all'.\nex: install -i CrossComp")
                 self.Queen.master.show_compilers()
         
         @hiveShell.command()

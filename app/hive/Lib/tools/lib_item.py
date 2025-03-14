@@ -26,12 +26,21 @@ class LibItem:
         self.source = None
         
         # Special 'tag' for marking modules
+        # 'loader' - 
+        # 'dll' - DLL code is not included with the main code.
         self.subTypes = None
-        # required variables
+
+        # Accepted modules. Subtype of modules that can be added.
+        # 'dll' - only dll is accepted
+        self.acceptMods = []
+
+        ########### required variables ##########
         # SHEME: name##info##types##option1:value##option2:value2
         # Variables starting with “_COMP_” are passed to compiler variables.
         # Variables starting with "_" are passed to payload 'IN' options. Ex: _encode_b64_opt_exe##True
         # Variables starting with "__" are passed to payload 'OUT' options. Ex: __encode_b64_opt_exe##True
+        # Variables starting with "DLL_" are passed to DLL Struct
+        # Variables starting with "GLOBAL_" are passed to globalVar
         self.reqVar = {}
         # Food represent special variables from library
         # SHEME: code_name_var##library_var_name##info##option1:value1##option2:value2
@@ -98,6 +107,8 @@ class LibItem:
         self.system_FLAG = "[LW]"
 
         # Object options. Additional options for the object.
+        # Options startswith "DLL_" are passed to DLL Struct
+        # Options startswith "WORM_" are passed to WormConstructor RawWorm object
         self.options = {}
 
         # special tag for payload
@@ -105,6 +116,13 @@ class LibItem:
 
         # Set process worm code
         self.processWorm = None
+
+        # Compiler compatibility (for CScript)
+        self.compiler_compatibility = []
+
+        # required Compiler Script
+        # reqCS##<name>
+        self.reqCS = None
 
         # SPECIAL TAGS:
         ### 
@@ -312,3 +330,9 @@ class LibItem:
                     self.payStep.append(d[1])
                 case "TAGS":
                     self.tags += d[1]
+                case "CC":
+                    self.compiler_compatibility.append(d[1])
+                case "reqCS":
+                    self.reqCS = d[1]
+                case "acceptMods":
+                    self.acceptMods.extend(d[1:])

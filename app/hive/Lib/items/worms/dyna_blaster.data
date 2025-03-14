@@ -4,7 +4,7 @@
 #!lang##asm
 #!banned##module##starter##shadow##junk
 #!globalVar##OS_EXEC##win##Target system executable
-#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##COMPILER##mingw-x32##Compiler name
 #!system_FLAG##[W]
 #!processWorm##BasicAsm
 #!reqPayload##DB_script##Python payload script.

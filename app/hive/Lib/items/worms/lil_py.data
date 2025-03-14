@@ -9,13 +9,17 @@
 #!lang##asm
 #!banned##module##starter##shadow##junk
 #!system_FLAG##[W]
-#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##COMPILER##mingw-x32##Compiler name
 #!globalVar##OS_EXEC##win##Target system executable
 #!processWorm##BasicAsm
-#!globalVar##COMPILER_NO_DLL##Not include DLLs
+#!globalVar##NO_DLL##Not include DLLs
 
 extern _ExitProcess@4
 extern _system
+
+section .text
+global main
+main:
 
     push dword 0x00000000
     {{LIL_script}}

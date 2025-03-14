@@ -28,7 +28,7 @@ class Queen:
         self.Lib = Library(self)
         self.worm = WormBuilder(self)
         self.master = MasterCompiler(self)
-        self.master.work()
+        # self.master.work()
         self.coder = Coder(self, self.worm)
         self.worm_constructor = WormConstructor(self.coder, self.master)
         self.short = Shortcuts(self)
@@ -87,9 +87,20 @@ class Queen:
         self.worm.show_global_var(True)   
 
     def build_worm(self, options: dict = {}):
+        # Adding an icon requires an 'rc' file.
+        if self.worm.icon:
+            if not self.worm.raw_worm.cscript:
+                self.msg("msg", "Adding an icon requires an 'rc' file. A minimal rc file will be used.")
+                self.add_worm_item("cscript", "minimal_icon")
         self.worm_constructor.build_WORM(options)
 
+    def test(self):
+        self.enter()
+        opt = {}
+        opt["NO_COMPILE"] = True
+
     def Run(self) -> None:
+        # self.test()
         pass
         
         

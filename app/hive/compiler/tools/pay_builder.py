@@ -4,6 +4,16 @@ from typing import Union, Tuple
 
 from .payload_tools.pay_encoder import PayEncoder
 from .payload_tools.pay_tools import PayloadTools
+from .coder_template_tools.master_tool import MasterTempTool
+
+# class TempToolsPayload:
+#     def __init__(self, payload_builder: object):
+#         self.paybuilder = payload_builder
+#         self.counjer = PT_MOD_Template(self)
+    
+#     def morph_gar_char(self, code: str, num_chars: int = 1) -> str:
+#         return self.counjer.morph_code_garbage_char(code, num_chars)
+
 
 class PayloadObject:
     def __init__(self, payload_mod: object, var_name_payload: str, var: dict, worm_step_payload: list = [], global_opt: dict = {}):
@@ -80,6 +90,7 @@ class PayloadBuilder:
         self.default_encode = self.queen.conf.payload_default_encode
         self.PE = PayEncoder(self)
         self.PT = PayloadTools(self)
+        self.TempTool = MasterTempTool(self)
 
     
     def prepare(self, mod: object, var_payload_name: str, var: dict, worm_step_payload: list = [], global_opt: dict = {}) -> object:
@@ -129,7 +140,7 @@ class PayloadBuilder:
         if pay_obj.module.render_FLAG:
             try:
                 code = Template(pay_obj.code)
-                code = code.render(pay_obj.var)
+                code = code.render(**pay_obj.var, TOOL=self.TempTool)
                 pay_obj._code = code
             except Exception as e:
                 pass

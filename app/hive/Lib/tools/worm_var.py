@@ -128,7 +128,7 @@ class WormVar:
             out = ast.literal_eval(value)
             return out
         except Exception as e:
-            print("E: ", e)
+            # print("E: ", e)
             return value
 
     def set_value(self, value: any) -> None:

@@ -236,6 +236,21 @@ class MultiCompCore:
         self.compiler.stop()
         return worm_pipeline
     
+    def build_dll_lib64(self, worm_pipeline: object) -> object:
+        print("64 bit")
+        self.msg("msg", "Use MC_win64", sender=self.name)
+        self.msg("msg", f"Start Compiler: {self.name}")
+        self.compiler.start()
+        dll = worm_pipeline.DLL
+        worm_dir = os.path.join(self.dir_work, worm_pipeline.worm_name)
+        self.exec_cmd(f"cd {worm_dir} && nasm -f win64 {dll.raw_file_name} -o {dll.lib_name}.o")
+        self.exec_cmd(f"cd {worm_dir} && x86_64-w64-mingw32-gcc -shared -o {dll.file_name} {dll.lib_name}.o {dll.lib_name}.def -nostdlib -s -lkernel32 -lmsvcrt -luser32 -lshell32 -Wl,--entry=DllMain")
+        self.exec_cmd(f"cd {worm_dir} && chmod 777 *")
+        self.msg("msg", f"Stoping Compiler: {self.name}.")
+        self.compiler.stop()
+        return worm_pipeline
+
+
     def build_exe_win32(self, worm_pipeline: object) -> object:
         self.msg("msg", "Use MC_win32", sender=self.name)
         worm_dir = os.path.join(self.dir_work, worm_pipeline.worm_name)
@@ -268,6 +283,12 @@ class MultiCompCore:
     def build_exe_winx64(self, worm_pipeline: object) -> object:
         self.msg("msg", "Use MC_win64", sender=self.name)
         worm_dir = os.path.join(self.dir_work, worm_pipeline.worm_name)
+        dll_path = worm_pipeline.DLL.file_name
+        if not dll_path:
+            dll_path = ""
+        else:
+            dll_path += " "
+        print(dll_path)
         self.msg("msg", f"Start Compiler: {self.name}")
         self.compiler.start()
         self.exec_cmd(f"cd {worm_dir} && nasm -f win64 {worm_pipeline.file_name}")
@@ -275,7 +296,7 @@ class MultiCompCore:
             no_dll = " -nostdlib -s"
         else:
             no_dll = ""
-        self.exec_cmd(f"cd {worm_dir} && x86_64-w64-mingw32-gcc -m64{no_dll} -o {worm_pipeline.worm_name}.exe {worm_pipeline.worm_name}.obj -lkernel32 -lmsvcrt -luser32 -lshell32")
+        self.exec_cmd(f"cd {worm_dir} && x86_64-w64-mingw32-gcc -m64{no_dll} -o {worm_pipeline.worm_name}.exe {worm_pipeline.worm_name}.obj -nostdlib -s {dll_path}-lkernel32 -lmsvcrt -luser32 -lshell32")
         self.exec_cmd(f"cd {worm_dir} && chmod 777 *")
         self.msg("msg", f"Stoping Compiler: {self.name}.")
         self.compiler.stop()

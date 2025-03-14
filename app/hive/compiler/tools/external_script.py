@@ -16,7 +16,7 @@ class ShellCoder:
     def __init__(self, external_modules_object: object):
         self.em = external_modules_object
         self.msg = self.em.msg
-        self.compiler = self.em.master.multi
+        self.compiler = self.em.master.cc
 
     
     def check_compiler(self) -> bool:
@@ -46,7 +46,7 @@ class PyShell:
     def __init__(self, external_modules_object: object):
         self.em = external_modules_object
         self.msg = self.em.msg
-        self.compiler = self.em.master.multi
+        self.compiler = self.em.master.cc
 
     def check_compiler(self) -> bool:
         if self.compiler.status:
@@ -77,7 +77,7 @@ class PyShell:
 class Shellcoder_EXE:
     def __init__(self, external_modules_object: object):
         self.em = external_modules_object
-        self.compiler = self.em.master.multi
+        self.compiler = self.em.master.cc
 
     def check_compiler(self) -> bool:
         if self.compiler.status:

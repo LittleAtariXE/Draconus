@@ -6,7 +6,7 @@
 #!lang##asm
 #!processWorm##BasicShell
 #!globalVar##EXTERNAL_SCRIPT##PyShell##Compilation using external modules.
-#!globalVar##COMPILER_NAME##MC_elf32##The name of the compiler to build the executable file.
+#!globalVar##COMPILER##LD-x32##The name of the compiler to build the executable file.
 #!globalVar##OS_EXEC##linux##Target system executable
 #!system_FLAG##[L]
 

@@ -3,6 +3,7 @@
 #!info##A worm written in python with no special purpose. All sorts of modules can be added.
 #!reqSMod##MOD_Wrapper
 #!processWorm##BasicProcess
+#!globalVar##COMPILER##PyInstaller##Compiler name
 
 from time import sleep
 

