@@ -5,490 +5,7 @@ from jinja2 import Template
 
 from .tools.external_script import ExternalModules
 from .tools.master_wrapper import MasterWrapper
-# from .lib.comp_library import CompLibrary
-# from .mr_comp import MrComp
-# from .tools.wc_struct import DLL_Struct
-
-
-# class WormPipeObject:
-#     def __init__(self, worm_pipeline: object, var: dict, options: dict = None):
-#         self.worm_pipeline = worm_pipeline
-#         self.worm = self.worm_pipeline.worm
-#         self.var = var
-#         self.gvar = options
-#         self.code_file_path = None
-#         self.exe_file_path = None
-#         self.exe_file_name = None
-#         self.file_name = None
-#         self.worm_name = self.worm.name
-#         self.work_dir = None
-#         self.shellcode = None
-#         self.icon_name = None
-#         ### DLL
-#         self.DLL = DLL_Struct(self)
-#         self.dll_name = None
-#         self.dll_export = None
-#         self.dll_func = []
-#         ### List of files for the finished application
-#         self._to_dev = []
-
-#         self.icon_path = self.gvar.get("ICON")
-#         self.pre_compile = True
-#         self.comp_script_name = None
-#         self.code = ""
-#         self.last_error = 0
-
-#         # Build error break build process
-#         self._build_error = 0
-
-
-
-# class WormPipeLine:
-#     def __init__(self, coder: object, worm: object, worm_constructor: object):
-#         self.coder = coder
-#         self.worm = worm
-#         self.get_item = self.worm.get_item
-#         self.constructor = worm_constructor
-#         self.dir_hive = self.constructor.dir_hive
-#         self.name = self.constructor.name
-#         self.msg = self.coder.msg
-#         self.pipeline = []
-    
-#     def pipe_code_base(self, worm_pipe: object) -> object:
-#         if not worm_pipe.gvar:
-#             worm_pipe.gvar = self.constructor.globalVar.copy()
-#         try:
-#             code = self.coder.code_worm_base(worm_pipe.var, worm_pipe.gvar)
-#             worm_pipe.code = code
-#         except Exception as e:
-#             self.msg("error", f"[!!] ERROR: render worm code. [!!]", sender=self.name)
-#             self.msg("error", f"[!!] {e} [!!]", sender=self.name)
-#             worm_pipe._build_error = 1
-#             worm_pipe.code = ""
-        
-#         return worm_pipe
-    
-#     def pipe_code_external(self, worm_pipe: object) -> object:
-#         worm_pipe.code = self.coder.raw_code(worm_pipe.var)
-#         self.constructor.ExtMods.use(worm_pipe)
-#         return worm_pipe
-    
-#     def pipe_add_imports(self, worm_pipe: object) -> object:
-#         imp = "\n".join(self.coder.imports)
-#         worm_pipe.code = imp + "\n" + worm_pipe.code
-#         return worm_pipe
-
-#     def pipe_save_raw_worm(self, worm_pipe: object) -> object:
-#         fext = worm_pipe.gvar.get("FEXT")
-#         if not fext:
-#             fext = ".py"
-#         name = worm_pipe.gvar.get("RAW_WORM_NAME")
-#         if not name:
-#             name = self.worm.name
-#         work_dir = os.path.join(self.dir_hive, name)
-#         if not os.path.exists(work_dir):
-#             os.mkdir(work_dir)
-#         fpath = os.path.join(work_dir, f"{name}{fext}")
-#         try:
-#             with open(fpath, "w") as file:
-#                 file.write(worm_pipe.code)
-#             worm_pipe.last_error = 0
-#         except Exception as e:
-#             self.msg("error", f"[!!] ERROR: Save raw worm: {e} [!!]", sender=self.name)
-#             worm_pipe.last_error = 1
-#             return worm_pipe
-#         worm_pipe.file_name = f"{name}{fext}"
-#         worm_pipe.work_dir = work_dir
-#         worm_pipe.worm_name = name
-#         worm_pipe.code_file_path = fpath
-#         return worm_pipe
-
-    
-#     def pipe_compile_worm(self, worm_pipe: object) -> object:
-#         if worm_pipe.gvar.get("NO_COMPILE"):
-#             self.msg("msg", "NO_COMPILE FLAG. Skip compilation.", sender=self.name)
-#             return worm_pipe
-#         worm_pipe = self.constructor.master.compile(worm_pipe)
-#         return worm_pipe
-    
-#     def pipe_use_starter(self, worm_pipe: object) -> object:
-#         if not self.worm.raw_worm.starter:
-#             self.msg("msg", "No Starter. Skipping step.", sender=self.name)
-#             return worm_pipe
-#         worm_pipe = self.coder.starter.use(worm_pipe, self.worm.raw_worm.starter)
-        
-#         return worm_pipe
-    
-#     def pipe_use_shadow(self, worm_pipe: object) -> object:
-#         if len(self.worm.raw_worm.shadow) > 0:
-#             self.msg("msg", f"Number obfuscated methods: {len(self.worm.raw_worm.shadow)}", sender=self.name)
-#         for shadow in self.worm.raw_worm.shadow.values():
-#             worm_pipe = self.coder.shadow.use(worm_pipe, shadow)
-#         return worm_pipe
-    
-#     def pipe_show_op_code(self, worm_pipe: object) -> object:
-#         try:
-#             worm_pipe.shellcode = self.constructor.ExtMods.show_opcode(worm_pipe.exe_file_path)
-#         except Exception as e:
-#             self.msg("error", f"ERROR: Show OP Code: {e}", sender=self.name)
-#         return worm_pipe
-    
-#     def pipe_build_C_shellcode(self, worm_pipe: object) -> object:
-#         if not worm_pipe.shellcode:
-#             self.msg("error", "ERROR: No Shellcode. Skipping step.", sender=self.name)
-#             return worm_pipe
-#         data = {"SHELL_CODE" : worm_pipe.shellcode}
-#         self.constructor.ExtMods.pattern.render(worm_pipe.worm_name, data, "shellcode_C")
-#         return worm_pipe
-        
-#     def pipe_add_wrapper(self, worm_pipe: object) -> object:
-#         wrapper = self.worm.raw_worm.wrapper
-#         if not wrapper:
-#             self.msg("msg", "No Wrapper. Skipping step.", sender=self.name)
-#             return worm_pipe
-#         self.msg("msg", f"Use wrapper: '{wrapper.name}'", sender=self.name)
-#         worm_pipe = self.constructor.Wrapper.wrap_worm(worm_pipe, wrapper)
-#         return worm_pipe
-    
-#     def pipe_add_code_loader(self, worm_pipe: object) -> object:
-#         loader = ""
-#         for load in worm_pipe.worm.code_loaders:
-#             code = self.coder.render_single(load, worm_pipe.var)
-#             loader += code + "\n"
-#         worm_pipe.code = loader + worm_pipe.code
-#         worm_pipe = self.pipe_correct_code(worm_pipe)
-#         return worm_pipe
-
-#     def pipe_correct_code(self, worm_pipe: object) -> object:
-#         codes = worm_pipe.code.split("\n")
-#         code = ""
-#         for line in codes:
-#             if line.strip() == "\n" or line.strip() == "":
-#                 continue
-#             code += line + "\n"
-#         worm_pipe.code = code
-#         return worm_pipe
-    
-#     def pipe_copy_icon(self, worm_pipe: object) -> object:
-#         if not worm_pipe.icon_path:
-#             return worm_pipe
-#         worm_pipe.icon_name = os.path.basename(worm_pipe.icon_path)
-#         tpath = os.path.join(self.dir_hive, worm_pipe.worm_name, worm_pipe.icon_name)
-#         try:
-#             shutil.copy2(worm_pipe.icon_path, tpath)
-#         except Exception as e:
-#             self.msg("error", f"ERROR: Copying icon: '{e}'", sender=self.name)
-#             return worm_pipe
-#         worm_pipe.icon_path = tpath
-#         return worm_pipe
-    
-#     def pipe_prepare_out_dir(self, worm_pipe: object) -> object:
-#         if not os.path.exists(os.path.join(self.dir_hive, worm_pipe.worm_name)):
-#             os.mkdir(os.path.join(self.dir_hive, worm_pipe.worm_name))
-#         worm_pipe.work_dir = os.path.join(self.dir_hive, worm_pipe.worm_name)
-#         return worm_pipe
-    
-#     def pipe_prepare_compiler(self, worm_pipe: object) -> object:
-#         self.msg("msg", "Prepare compilation script", sender=self.name)
-#         if not worm_pipe.gvar.get("PRE_COMPILE"):
-#             self.msg("msg", "No compilation script. Standard used.")
-#             worm_pipe.pre_compile = False
-#             return worm_pipe
-#         mr_comp = MrComp(self.constructor.CompLib, self.constructor.master, worm_pipe.var, worm_pipe.gvar)
-#         worm_pipe = mr_comp.make_script(worm_pipe)
-#         return worm_pipe
-    
-#     def pipe_prepare_def_file(self, worm_pipe: object) -> object:
-#         worm_pipe.dll_name = worm_pipe.var.get("_DLL_NAME")
-#         lib_name = worm_pipe.dll_name.split(".")[0] if "." in worm_pipe.dll_name else worm_pipe.dll_name
-        
-#         def_path = os.path.join(worm_pipe.work_dir, f"{lib_name}.def")
-#         export_fun = []
-#         for k,i in worm_pipe.var.items():
-#             if k.startswith("_DLL_FUNC_"):
-#                 export_fun.append(i)
-#         exp_fun = "\n\t".join(export_fun)
-#         worm_pipe.dll_export = exp_fun
-#         worm_pipe.dll_func = export_fun
-#         template = f"LIBRARY {lib_name}\nEXPORTS\n\t{exp_fun}"
-#         with open(def_path, "w") as file:
-#             file.write(template)
-#         self.msg("msg", f"Create 'def' file successfull", sender=self.name)
-#         return worm_pipe
-    
-#     def pipe_make_dll_file(self, worm_pipe: object) -> object:
-#         if worm_pipe.gvar.get("NO_COMPILE"):
-#             self.msg("msg", "NO_COMPILE FLAG. Skip making DLL file.", sender=self.name)
-#             return worm_pipe
-#         self.msg("msg", "Prepare DLL file", sender=self.name)
-#         worm_pipe = self.pipe_prepare_def_file(worm_pipe)
-#         self.msg("msg", "Making DLL file", sender=self.name)
-#         worm_pipe = self.constructor.master.multi.compile_dll(worm_pipe)
-#         worm_pipe._to_dev.append(os.path.join(worm_pipe.work_dir, worm_pipe.dll_name))
-#         return worm_pipe
-    
-#     def pipe_make_dll_loader(self, worm_pipe: object) -> object:
-#         # worm_pipe.var["_DLL_EXPORT"] = worm_pipe.dll_export
-#         if worm_pipe.gvar.get("NO_COMPILE"):
-#             self.msg("msg", "NO_COMPILE FLAG. Skip builiding DLL Loader.", sender=self.name)
-#             return worm_pipe
-#         executor = worm_pipe.var.get("_DLL_EXEC", "SDLL_Loader")
-#         executor = self.get_item("support", executor)
-#         if not executor:
-#             self.msg("error", f"[!!] ERROR: Can't find module: '{executor}' [!!]", sender=self.name)
-#             return worm_pipe
-#         loader = Template(executor.raw_code)
-#         loader = loader.render(worm_pipe.var, DLL_EXPORT=worm_pipe.dll_func)
-#         self.msg("msg", f"Making executable DLL loader '{executor.name}'", sender=self.name)
-#         worm_pipe.code = loader
-#         worm_pipe = self.pipe_save_raw_worm(worm_pipe)
-#         worm_pipe = self.constructor.master.multi.compile_win32_extra(worm_pipe)
-#         if not worm_pipe.exe_file_path in worm_pipe._to_dev:
-#             worm_pipe._to_dev.append(worm_pipe.exe_file_path)
-#         return worm_pipe
-    
-#     ##### NEW BUILD DLL LIBRARY SYSTEM ###########
-
-    
-#     def pipe_build_dll_struct(self, worm_pipe: object) -> object:
-#         worm_pipe.last_error = 0
-#         options = self.worm.raw_worm.master_worm.options
-#         worm_pipe.DLL = DLL_Struct(self)
-#         worm_pipe.DLL.update(worm_pipe.var, "DLL_")
-#         worm_pipe.DLL.update(options, "DLLS_")
-#         tdll = worm_pipe.DLL.src_temp_dll
-#         tdll = self.get_item("support", tdll)
-#         if not tdll:
-#             self.msg("error", "[!!] ERROR: Missing DLL Library module [!!]", sender=self.name)
-#             worm_pipe.last_error = 1
-#             return worm_pipe
-#         worm_pipe.DLL.src_temp_dll = tdll
-#         dll_var = {}
-#         for k, i in tdll.setVar.items():
-#             dll_var[k] = str(i)
-#         worm_pipe.DLL.update(dll_var, "DLL_")
-#         worm_pipe.var.update(dll_var)
-#         rdll_name = worm_pipe.DLL.file_name
-#         if not rdll_name[-4:] == ".dll":
-#             worm_pipe.DLL.file_name = f"{rdll_name}.dll"
-#         else:
-#             rdll_name = rdll_name[0:-4]
-#         worm_pipe.DLL.lib_name = rdll_name
-
-#         code = self.coder.render_single(tdll.raw_code, worm_pipe.var)
-#         worm_pipe.DLL.code = code
-#         worm_pipe.DLL.def_file_path = os.path.join(worm_pipe.work_dir, f"{worm_pipe.DLL.lib_name}.def")
-#         worm_pipe.DLL.file_path = os.path.join(worm_pipe.work_dir, worm_pipe.DLL.file_name)
-#         worm_pipe.DLL.raw_file_name = f"{worm_pipe.DLL.lib_name}.asm"
-#         worm_pipe.DLL.raw_file_path = os.path.join(worm_pipe.work_dir, worm_pipe.DLL.raw_file_name)
-#         #print(worm_pipe.DLL.code)
-
-#         return worm_pipe
-    
-#     def pipe_build_def_file(self, worm_pipe: object) -> object:
-#         exp_fun = "\n\t".join(worm_pipe.DLL.export_func)
-#         template = f"LIBRARY {worm_pipe.DLL.lib_name.upper()}\nEXPORTS\n\t{exp_fun}"
-#         with open(worm_pipe.DLL.def_file_path, "w") as file:
-#             file.write(template)
-#         self.msg("msg", "Build DEF file successfull", sender=self.name)
-#         return worm_pipe
-    
-#     def pipe_build_raw_dll_file(self, worm_pipe: object) -> object:
-#         with open(worm_pipe.DLL.raw_file_path, "w") as file:
-#             file.write(worm_pipe.DLL.code)
-#         self.msg("msg", f"Create raw library file: '{worm_pipe.DLL.raw_file_name}'", sender=self.name)
-#         return worm_pipe
-
-#     def pipe_build_dll_library(self, worm_pipe: object) -> object:
-#         self.msg("msg", "Build DLL Library", sender=self.name)
-#         worm_pipe = self.pipe_build_dll_struct(worm_pipe)
-#         if worm_pipe.last_error > 0:
-#             self.msg("error", "[!!] ERROR: build dll library ABORT [!!]", sender=self.name)
-#             return worm_pipe
-#         worm_pipe = self.pipe_build_def_file(worm_pipe)
-#         worm_pipe = self.pipe_build_raw_dll_file(worm_pipe)
-#         self.msg("msg", "DLL library building....", sender=self.name)
-#         if worm_pipe.DLL.arch == "x64":
-#             worm_pipe = self.constructor.master.multi.build_dll_lib64(worm_pipe)
-#         else:
-#             worm_pipe = self.constructor.master.multi.build_dll_lib(worm_pipe)
-#         worm_pipe._to_dev.append(worm_pipe.DLL.file_path)
-#         self.msg("msg", f"Build '{worm_pipe.DLL.file_name}' complete.", sender=self.name)
-#         return worm_pipe
-    
-#     def pipe_build_win32_exe(self, worm_pipe: object) -> object:
-#         if worm_pipe.gvar.get("NO_COMPILE"):
-#             self.msg("msg", "NO_COMPILE FLAG. Skip compilation.", sender=self.name)
-#             return worm_pipe
-#         self.msg("msg", "Worm builidng started....", sender=self.name)
-#         worm_pipe = self.constructor.master.multi.build_exe_win32(worm_pipe)
-#         self.msg("msg", f"Build exe file complete: '{worm_pipe.exe_file_name}'", sender=self.name)
-#         worm_pipe._to_dev.append(worm_pipe.exe_file_path)
-#         return worm_pipe
-    
-#     def pipe_build_win64_exe(self, worm_pipe: object) -> object:
-#         if worm_pipe.gvar.get("NO_COMPILE"):
-#             self.msg("msg", "NO_COMPILE FLAG. Skip compilation.", sender=self.name)
-#             return worm_pipe
-#         self.msg("msg", "Worm builidng started....", sender=self.name)
-#         worm_pipe = self.constructor.master.multi.build_exe_winx64(worm_pipe)
-#         self.msg("msg", f"Build exe file complete: '{worm_pipe.exe_file_name}'", sender=self.name)
-#         worm_pipe._to_dev.append(worm_pipe.exe_file_path)
-#         return worm_pipe
-
-#     #######################################################################################
-
-
-#     def pipe_sort_app(self, worm_pipe: object) -> object:
-#         if len(worm_pipe._to_dev) > 1:
-#             self.msg("msg", "Prepare a directory with all the necessary files.", sender=self.name)
-#             app_dir = os.path.join(worm_pipe.work_dir, worm_pipe.worm_name)
-#             if not os.path.exists(app_dir):
-#                 os.mkdir(app_dir)
-#             for file in worm_pipe._to_dev:
-#                 shutil.copy2(file, os.path.join(app_dir, os.path.basename(file)))
-#                 self.msg("no_imp", f"Copying file '{os.path.basename(file)}'", sender=self.name)
-#         return worm_pipe
-        
-    
-#     def add_step(self, name: str) -> None:
-#         match name:
-#             case "BASE":
-#                 self.pipeline.append(self.pipe_code_base)
-#             case "SAVE_RAW":
-#                 self.pipeline.append(self.pipe_save_raw_worm)
-#             case "COMPILER":
-#                 self.pipeline.append(self.pipe_compile_worm)
-#             case "STARTER":
-#                 self.pipeline.append(self.pipe_use_starter)
-#             case "SHADOW":
-#                 self.pipeline.append(self.pipe_use_shadow)
-#             case "BASE_SHELL":
-#                 self.pipeline.append(self.pipe_code_external)
-#             case "SHOW_OP_CODE":
-#                 self.pipeline.append(self.pipe_show_op_code)
-#             case "BUILD_C_SCODE":
-#                 self.pipeline.append(self.pipe_build_C_shellcode)
-#             case "ADD_IMPORTS":
-#                 self.pipeline.append(self.pipe_add_imports)
-#             case "WRAPPER":
-#                 self.pipeline.append(self.pipe_add_wrapper)
-#             case "CODE_LOADER":
-#                 self.pipeline.append(self.pipe_add_code_loader)
-#             case "PRE_COMPILER":
-#                 self.pipeline.append(self.pipe_prepare_compiler)
-#             case "MAKE_DEF_FILE":
-#                 self.pipeline.append(self.pipe_prepare_def_file)
-#             case "MAKE_DLL_FILE":
-#                 self.pipeline.append(self.pipe_make_dll_file)
-#             case "DLL_LOADER":
-#                 self.pipeline.append(self.pipe_make_dll_loader)
-#             case "BUILD_DLL_LIBRARY":
-#                 self.pipeline.append(self.pipe_build_dll_library)
-#             case "BUILD_WIN32":
-#                 self.pipeline.append(self.pipe_build_win32_exe)
-#             case _:
-#                 self.msg("error", f"ERROR: Unknown Pipe Process: '{name}'", sender=self.name)
-    
-#     def prepare_pipe(self) -> None:
-#         self.pipeline = []
-#         self.pipeline.append(self.pipe_prepare_out_dir)
-#         self.pipeline.append(self.pipe_copy_icon)
-#         for proc in self.worm.pipe_process:
-#             if proc == "COMPILER":
-#                 self.add_step("PRE_COMPILER")
-#             self.add_step(proc)
-#         self.pipeline.append(self.pipe_sort_app)
-    
-#     def update_global_var(self, var: dict, gvar: dict) -> dict:
-#         for name, value in var.items():
-#             if name.startswith("GLOBAL_"):
-#                 if value == "False" or value == "None":
-#                     value = None
-#                 gvar[name[7:]] = value
-#         return gvar
-
-    
-#     def process_worm(self, var: dict, gvar: dict) -> None:
-#         gvar = self.update_global_var(var, gvar)
-#         self.msg("msg", "Prepare variables and process pipes", sender=self.name)
-#         self.prepare_pipe()
-#         worm_pipe = WormPipeObject(self, var, gvar)
-#         self.msg("msg", "Start build worm....", sender=self.name)
-#         for proc in self.pipeline:
-#             worm_pipe = proc(worm_pipe)
-#             if worm_pipe._build_error != 0:
-#                 self.msg("error", "Worm building process has been interrupted", sender=self.name)
-#                 return
-#         self.msg("msg", "Process build worm successful.", sender=self.name)
-    
-
-
-    
-
-
-
-
-
-# class WormConstructor:
-#     def __init__(self, coder: object, master_compiler: object):
-#         self.coder = coder
-#         self.name = "WormConstructor"
-#         self.master = master_compiler
-#         self.msg = self.coder.msg
-#         self.dir_hive = self.coder.dir_out
-#         self.dir_hive_worm = None
-#         self.raw_worm_file_path = None
-#         self.Pipeline = WormPipeLine(self.coder, self.coder.WB, self)
-#         self.ExtMods = ExternalModules(self.coder, self.master, self)
-#         self.Wrapper = MasterWrapper(self.coder)
-#         self.CompLib = CompLibrary(self)
-
-
-#     def save_raw_worm(self, code: str, name: str = None, file_ext: str = ".py") -> Union[str, None]:
-#         if not name:
-#             name = self.coder.WB.name
-#         self.dir_hive_worm = os.path.join(self.dir_hive, name)
-#         if not os.path.exists(self.dir_hive_worm):
-#             os.mkdir(self.dir_hive_worm)
-#         self.raw_worm_file_path = os.path.join(self.dir_hive_worm, f"{name}{file_ext}")
-#         try:
-#             with open(self.raw_worm_file_path, "w") as file:
-#                 file.write(code)
-#             self.msg("msg", f"Save raw worm: '{name}{file_ext}' successful.", sender=self.name)
-#             return f"{name}{file_ext}"
-#         except Exception as e:
-#             self.msg("error", f"[!!] ERROR: Save raw worm: {e} [!!]", sender=self.name)
-#             return None
-    
-#     def build_WORM(self, options: dict = {}) -> None:
-#         # options.update(self.globalVar)
-#         opt = self._globalVar()
-#         opt.update(options)
-#         var = self.coder.var.copy()
-#         self.Pipeline.process_worm(var, opt)
-
-
-#     def _globalVar(self) -> dict:
-#         conf = self._default_options()
-#         conf.update(self.coder.globalVar.copy())
-#         return conf
-    
-#     def _default_options(self) -> dict:
-#         conf = {}
-#         conf["COMP_LANG"] = self.coder.WB.lang
-#         # default set to hide console and output
-#         conf["PROGRAM_TYPE"] = "window"
-#         conf["ICON"] = self.coder.icon
-#         # OS binary
-#         conf["OS_EXEC"] = "win"
-#         if conf["COMP_LANG"] == "asm":
-#             conf["FEXT"] = ".asm"
-#             conf["COMPILER_NAME"] = "MC_win32"
-#         else:
-#             conf["FEXT"] = ".py"
-#             conf["COMPILER_NAME"] = "WinePyInst"
-#         return conf
+from .tools.wc_tools.template_payload import WORM_CONSTRUCTOR_TEMPLATE_PAYLOAD
 
 
 class RawWorm:
@@ -519,6 +36,18 @@ class RawWorm:
         self.exe_file_path = None
         # shellcode
         self.shellcode = None
+        # program 'gui' or 'console'
+        self.exe_show = self.gvar.get("SHOW")
+        if self.var.get("SHOW"):
+            self.exe_show = self.var.get("SHOW")
+        _gui = self.var.get("GUI")
+        if _gui:
+            if _gui == False or _gui == "False":
+                self.exe_show = False
+                self.var["TO_TEMPLATE_GUI"] = False
+            else:
+                self.exe_show = 'gui'
+                self.var["TO_TEMPLATE_GUI"] = True
 
         #COMPILER SCRIPT
         self.cs_path = None
@@ -537,6 +66,8 @@ class RawWorm:
         self.launcher = None
         # DLLs
         self.dlls = []
+        # library
+        self.libs = []
 
         #Ready app directory
         self.ready_app = []
@@ -743,6 +274,33 @@ class DLL_data:
                     opt[k] = i
         self.raw.var.update(opt)
 
+class LibData:
+    def __init__(self, modules: object, variables: dict = {}):
+        self.mod = modules
+        self.var = variables
+        # get var from mod
+        for k, i in self.mod.setVar.items():
+            self.var[k] = i.value
+        for k, i in self.mod.options.items():
+            if k.startswith("LIB_"):
+                self.var[k] = i
+        
+        # Library name
+        self.raw_name = self.mod.name
+        self.name = f"{self.raw_name}.lib"
+
+        # Work dir
+        self.work_dir = None
+        self.work_dir_name = None
+
+        # compiler name
+        self.compiler = self.var.get("LIB_COMPILER")
+
+        # raw code
+        self.raw_code = self.mod.raw_code
+
+        # file path
+        self.fpath = None
 
 
 class WormConstructor:
@@ -756,12 +314,18 @@ class WormConstructor:
         self.dir_hive = self.coder.dir_out
         self.ExtMods = ExternalModules(self.coder, self.master, self)
         self.Wrapper = MasterWrapper(self.coder)
+
+        # library
+        self.Lib = self.coder.queen.Lib
+        self.DIR_PAYLOAD = self.Lib.DIR_PAYLOAD
     
     def _default_options(self) -> dict:
         conf = {}
         conf["LANG"] = self.coder.WB.lang
         #default set to window (hide console)
-        conf["PROGRAM_TYPE"] = "window"
+        # conf["PROGRAM_TYPE"] = "window"
+        # 'gui' - window/background , 'console' - console
+        conf["SHOW"] = "console"
         conf["ICON"] = self.coder.icon
         conf["ONE_FILE"] = True
         conf["COMPILER"] = None
@@ -881,6 +445,8 @@ class WormConstructor:
                 return self.step_build_launcher
             case "BUILD_DLL_FILE":
                 return self.step_build_dll_library
+            case "BUILD_LIB_FILE":
+                return self.step_build_library
             case _:
                 return self.step_empty
     
@@ -924,10 +490,16 @@ class WormConstructor:
     def step_compile(self, raw: RawWorm) -> RawWorm:
         if raw.cs:
             raw = self.step_build_res_file(raw)
+        # Only raw code can be add to Payload
+        if raw.gvar.get("PAYLOAD"):
+            self.msg("msg", "Build Worm as Payload......", sender=self.name)
+            raw = self.step_build_payload(raw)
+            return raw
         if raw.gvar.get("NO_COMPILE"):
             self.msg("msg", "NO_COMPILE FLAG. Skip step.", sender=self.name)
-            return raw
-        raw = self.master.compile(raw)
+        else:
+            raw = self.master.compile(raw)
+        
         return raw
         
     def step_base_shell(self, raw: RawWorm) -> RawWorm:
@@ -1145,9 +717,99 @@ class WormConstructor:
 
         return raw
     
- 
+##########################################################################################################
+############################ Build Library "lib" ########################################################
 
+
+    def step_build_library(self, raw: RawWorm) -> RawWorm:
+        self.msg("msg", "Searching LIBs....", sender=self.name)
+        for mod in self.worm_builder.raw_worm.all_modules:
+            if mod.subTypes == "lib":
+                raw = self._build_library(raw, mod)
+                if raw.last_error == 1:
+                    self.msg("error", "[!!] ERROR: builiding library. Abort process. [!!]")
+                    return
+        # compile library
+        if raw.gvar.get("NO_COMPILE"):
+            self.msg("msg", "NO_COMPILE FLAG. Skip step.", sender=self.name)
+            raw.last_error = 2
+        else:
+            self.master.compile_library_lib(raw)
+        # self.master.compile_library_lib(raw)
+        return raw
+
+    def _build_library(self, raw: RawWorm, module_lib: object) -> RawWorm:
+        # copy variables from worm
+        ex_var = raw.var.copy()
+        library = LibData(module_lib, ex_var)
+        code = self.coder.render_single_template(library.raw_code, library.var)
+        library.fpath = os.path.join(raw.work_dir, library.raw_name)
+        self._save_raw_code(library.fpath, code)
+
+        # add lib to raw worm
+        raw.libs.append(library)
+
+        return raw
+
+################################################## BUILD PAYLOAD ######################################################
+
+    def step_build_payload(self, raw: RawWorm) -> RawWorm:
+        raw = self._bp_raw_build(raw)
+        return raw
+
+    def _bp_set_name(self, raw: RawWorm) -> str:
+        wname = f"{raw.name}.data"
+        count = 0
+        while wname in os.listdir(self.DIR_PAYLOAD):
+            count += 1
+            wname = f"{raw.name}{count}.data"
+        self.msg("msg", f"Set payload name: '{raw.name}{count}'", sender=self.name)
+        return f"{raw.name}{count}"
     
+    def _bp_get_info(self, raw: RawWorm, code_len: int) -> str:
+        umod = ", ".join(self.worm_builder.modules_name)
+        info = f"Payload created by you. Master worm: '{self.worm_builder.raw_worm.master_worm.name}', used modules: {umod}. Payload length: {code_len}"
+        return info
+
+    def _bp_get_code(self, raw: RawWorm) -> Union[bytes, str, None]:
+        if raw.exe_file_name:
+            self.msg("msg", "Get binary data.....", sender=self.name)
+            try:
+                with open(raw.exe_file_path, "rb") as file:
+                    code = file.read()
+            except Exception as e:
+                self.msg("error", f"[!!] ERROR Load Binary Code: {e} [!!]", sender=self.name)
+                raw.last_error = 1
+                code = ""
+        else:
+            code = raw.code
+        return code
+            
+
+    def _bp_raw_build(self, raw: RawWorm) -> RawWorm:
+        pay_temp = {}
+        pay_temp["NAME"] = self._bp_set_name(raw)
+        fpath = os.path.join(self.DIR_PAYLOAD, f"{pay_temp['NAME']}.data")
+        pay_temp["CODE"] = self._bp_get_code(raw)
+        code_len = len(pay_temp["CODE"])
+        pay_temp["INFO"] = self._bp_get_info(raw, code_len)
+        temp = WORM_CONSTRUCTOR_TEMPLATE_PAYLOAD
+        temp = Template(temp)
+        temp = temp.render(pay_temp)
+        
+        self.msg("msg", f"Save payload '{pay_temp['NAME']}' to library ...", sender=self.name)
+        try:
+            with open(fpath, "w") as file:
+                file.write(temp)
+            self.msg("msg", "Your payload is ready", sender=self.name)
+        except Exception as e:
+            self.msg("msg", f"[!!] ERROR Save payload: {e} [!!]", sender=self.name)
+            raw.last_error = 1
+        return raw
+
+
+##############################################################################################################
+
     def step_build_launcher(self, raw: RawWorm) -> RawWorm:
         self.msg("msg", "Builiding Dll launcher....", sender=self.name)
         loader = raw.launcher

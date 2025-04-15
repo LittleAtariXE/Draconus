@@ -82,6 +82,14 @@ class FoodItem:
             shellcode = raw_shell
         return shellcode
     
+    def load_text(self, data: list) -> str:
+        return " ".join(data)
+    
+    def load_text_up(self, data: list) -> str:
+        text = " ".join(data)
+        text = text.replace("\n", " ")
+        return text.title()
+    
     def load_data(self) -> any:
         if not self.load:
             return None
@@ -98,6 +106,10 @@ class FoodItem:
                 return self.load_list_tuple(raw)
             case "shellcode":
                 return self.load_shellcode(raw)
+            case "text":
+                return self.load_text(raw)
+            case "text_up":
+                return self.load_text_up(raw)
             case _:
                 return None
 

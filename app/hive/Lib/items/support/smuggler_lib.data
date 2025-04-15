@@ -1,0 +1,423 @@
+#!name##Smuggler_LIB
+#!types##support
+#!subTypes##lib
+#!info##A special library that dynamically imports functions from kernel32 as well as other libraries. It locates the Export Table address in memory. This allows hiding imported functions and dynamically attaching them without the need for recompilation. Unlike Smuggler_DLL, this is a static library ('lib') instead of a dynamic library ('dll').
+#!options##LIB_COMPILER##mingw-x64
+#!options##DLL_NO_DLL##True
+#!lang##asm
+#!system_FLAG##[W]
+
+bits 64
+default rel
+
+global Work
+global GetPlayerScore
+global GetPlayer
+global GetEnemy
+
+extern lstrcmpA
+
+%define BUFFER_FUNC_NAME_LEN 128
+%define BUFFER_FUNC_DEC_LEN 128
+
+section .data
+    player1: db 0x4E, 0x71, 0x63, 0x66, 0x4E, 0x6B, 0x64, 0x74, 0x63, 0x74, 0x7B, 0x43, 0x00 ; LoadLibraryA
+    player2: db 0x49, 0x67, 0x76, 0x52, 0x74, 0x71, 0x65, 0x43, 0x66, 0x66, 0x74, 0x67, 0x75, 0x75, 0x00    ; GetProcAddress
+
+section .bss
+    buff_func_name_len: resb BUFFER_FUNC_NAME_LEN
+    buff_func_dec: resb BUFFER_FUNC_DEC_LEN ; buffer for decryption function name
+    karlin: resq 1    ; kernel32.dll address
+    exp_tab: resq 1     ; Export Table address
+    func_name: resq 1   ; Pointer to function name
+    enemy_lla: resq 1   ; pointer to LoadLibraryA address
+    enemy_gp: resq 1    ; pointer to GetProcAddress address
+    score_buff: resq 1  ; temp buffer
+    score_player: resq 1    ; temp for func name
+    score_enemy: resq 1 ; temp for dll name
+    hi_score: resb BUFFER_FUNC_NAME_LEN
+
+section .text
+
+GetEnemy:
+; -------- Find Out Function -------
+; REQUIRED: stack alignment to 16 before call function
+; IN rcx - digits code (function name in code)
+; IN rdx - digits code (dllname name in code)
+; IN r8 - text database
+; OUT: rax - function address
+    push rbp
+    mov rbp, rsp
+    
+    
+    lea rax, [score_buff]
+    mov [rax], r8   ; save database
+    lea rax, [score_player]
+    mov [rax], rcx  ; save func name
+    lea rax, [score_enemy]
+    mov [rax], rdx ; save dll name
+    
+    ; get dll name
+    sub rsp, 24 ;shadow space
+    lea rcx, [score_enemy]
+    mov rcx, [rcx]
+    lea rdx, [score_buff]
+    mov rdx, [rdx]
+    call GetPlayerScore
+    add rsp, 24 ; restore stack
+    
+    
+    ; copy return buffer
+    mov rcx, BUFFER_FUNC_NAME_LEN
+    mov rsi, rax
+    lea rdi, hi_score
+    rep movsb   ; copy RCX bytes from rsi to rdi
+    
+    ; get func name
+    sub rsp, 24 ;shadow space
+    lea rcx, [score_player]
+    mov rcx, [rcx]
+    lea rdx, [score_buff]
+    mov rdx, [rdx]
+    call GetPlayerScore
+    add rsp, 24 ; restore stack
+    
+    ; get function address
+    sub rsp, 16 ;shadow space
+    mov rcx, rax
+    lea rdx, [hi_score]
+    ;mov rdx, [rdx]
+    call _GetEnemy
+    add rsp, 16
+    
+    pop rbp
+    ret
+
+_GetEnemy:
+; ---------- Find Out Function --------
+; REQUIRED: stack alignment to 16 before call function
+; IN: rcx - function name
+; IN: rdx - dll name
+; OUT: rax - function address or '0' False
+    push rbp
+    mov rbp, rsp
+    push rcx    ; save function name
+    
+    ; load dll
+    sub rsp, 40 ; shadow space
+    mov rcx, rdx
+    lea rax, [enemy_lla]
+    mov rax, [rax]
+    call rax    ; execute LoadLibraryA
+    add rsp, 40
+    
+    ; get function address
+    mov rcx, rax    ; dll handle
+    pop rdx ; function name from stack
+    sub rsp, 32 ; shadow space
+    lea rax, [enemy_gp]
+    mov rax, [rax]
+    call rax    ; execute GetProcAddress
+    add rsp, 32 ; restore stack
+    
+    
+    ;return
+    pop rbp
+    ret
+    
+    
+    
+GetPlayer:
+; ------------ Find Function ---------------------
+; REQUIRED: stack alignment to 16 after call function
+; IN: rcx - digits code (function name in code)
+; IN: rdx - text database
+; OUT: rax - function address or '0' False
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8  ; allign stack
+    
+
+    sub rsp, 16 ; function space
+    call GetPlayerScore
+    mov rcx, rax
+    call _FindFunc
+    add rsp, 16 ; restore stack
+    
+    .return:
+        add rsp, 8  ; restore stack
+        pop rbp
+        ret
+    
+
+GetPlayerScore:
+; --- Finds name of function ----
+; REQUIRED: stack alignment to 16 after call function
+; IN: rcx - digits code (list in 'word' 2 bytes numbers)
+; IN: rdx - text database
+; OUT: rax - function name
+
+    push rbp
+    mov rbp, rsp
+    ; rsi - counter
+    ; rbx - pointer to text_temp
+    ; rdi - temp for code_text
+    ; r12 - temp for char
+    ; --- save registry ---
+    push rsi
+    push rbx
+    push rdi
+    push r12
+    sub rsp, 8  ; allign stack
+    
+    ; --- zeroing temp memory ---
+    lea rbx, [buff_func_name_len]
+    xor rsi, rsi    ; zeroing counter
+    .clear_loop:
+        cmp rsi, BUFFER_FUNC_NAME_LEN
+        jg .clear_end
+        mov byte [rbx + rsi], 0
+        inc rsi ; increase counter
+        
+    .clear_end:
+        xor rsi, rsi    ; zeroing counter
+
+    .main_loop:
+        xor rdi, rdi ; reset temp
+        xor r12, r12    ; reset temp
+        movzx edi, word [rcx + rsi * 2] ; get next entry from list
+        cmp rdi, 0  ; check if end of data
+        je .main_exit
+        
+        mov r12b, [rdx + rdi]
+        mov [rbx + rsi], r12
+        
+        inc rsi
+        jmp .main_loop
+
+    .main_exit:
+        ; add zero
+        inc rsi
+        mov byte [rbx + rsi], 0
+        
+        
+        mov rax, rbx    ; return pointer to buffer with func name
+        ; restore registry
+        add rsp, 8  ; restore stack
+        pop r12
+        pop rdi
+        pop rbx
+        pop rsi
+        pop rbp
+        ret
+
+
+
+
+; ------------ Work Function ------------------
+; prepare all necesary steps
+; REQUIRED: stack alignment to 16 after call function
+Work:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8  ; allign stack
+    
+    ; get LoadLibraryA
+    sub rsp, 16 ; function space
+    call FindExpTable
+    mov rcx, player1
+    call DecFName
+    mov rcx, rax
+    call _FindFunc  ; LoadLibraryA
+    lea rcx, [enemy_lla]
+    mov [rcx], rax  ; save address
+    mov rcx, player2
+    call DecFName
+    mov rcx, rax
+    call _FindFunc  ; GetProcAddress
+    lea rcx, [enemy_gp]
+    mov [rcx], rax  ; save address 
+    add rsp, 16 ;restore stack
+    
+    .return:
+        add rsp, 8  ;restore stack
+        pop rbp
+        ret
+
+; ------------ Find Function ---------------------
+; REQUIRED: stack alignment to 16 after call function
+; IN: rcx - function name
+; OUT: rax - function address or '0' FALSE
+_FindFunc:
+    push rbp
+    mov rbp, rsp
+    ; r13 - kernel32 addr
+    ; r14 - Export Table addr
+    ; rbx - Number of functions
+    ; rsi - counter
+    ; r15 - temp memory
+    push r13
+    push r14
+    push rbx
+    push rsi
+    push r15
+
+    lea rax, [func_name]
+    mov [rax], rcx  ; save function name
+    
+    ; check if Export Table address exists
+    lea rax, [exp_tab]
+    mov rax, [rax]
+    cmp rax, 0  ; if not ET address exit
+    je .load_et
+    
+    .load_var:
+    ; load variables
+    lea r13, [karlin]
+    mov r13, [r13]
+    lea r14, [exp_tab]
+    mov r14, [r14]
+    mov ebx, [r14+0x14] ; get number of function
+    
+    xor rsi, rsi    ; reset counter
+    .loop:
+        cmp rsi, rbx
+        jg .not_find
+        ; get Function name
+        mov r15d, [r14+0x20]    ; RVA function name
+        add r15, r13    ; RVA function name + kernel32 address
+        mov r15d, [r15 + 4 * rsi]   ; get next entry RVA function name in table
+        add r15, r13    ; function name + kernel32 address
+        ; compare function name
+        sub rsp, 32 ;shadow space
+        mov rcx, r15
+        lea rdx, [func_name]
+        mov rdx, [rdx]
+        call lstrcmpA
+        add rsp, 32 ; restore stack
+        cmp rax, 0
+        je .finded
+        
+        ; counter = counter + 1
+        inc rsi
+        jmp .loop
+    
+    .exit:
+        pop r15
+        pop rsi
+        pop rbp
+        pop r14
+        pop r13
+        pop rbp
+        ret
+     
+     .finded:
+        mov eax, [r14 + 0x24]   ; get AddressOfNameOrdinals RVA (dword)
+        add rax, r13    ; Name Ordinals + kernel32 address
+        xor rcx, rcx
+        mov cx, [rax + 2 * rsi] ; get function index (word) to function address
+        mov eax, [r14 + 0x1c]   ; get AddressOfFunctions RVA
+        add rax, r13    ; Address of function + kernel32 address
+        mov ecx, [rax + 4 * rcx]    ; get RVA function address
+        add rcx, r13    ; function address + kernel32 address
+        
+        mov rax, rcx    ; return function address
+        jmp .exit
+        
+    .not_find:
+        xor rax, rax    ; return False
+        jmp .exit
+    
+    .load_et:
+        sub rsp, 16
+        call FindExpTable
+        add rsp, 16
+        jmp .load_var
+
+
+; ------------- Find Export Table address ------------------
+; REQUIRED: stack alignment to 16 after call function
+; save kernel32.dll address to 'kernel32'
+; save Export Table address to 'exp_tab'
+; OUT: rax - Export Table address
+FindExpTable:
+    push rbp
+    mov rbp, rsp
+    push rbx    ; save rbx
+    push rsi    ; save rsi
+    push rdi    ; save rdi
+    ;sub rsp, 8  ; aligning stack to 16. Just to be safe.
+    
+    
+    xor rbx, rbx
+    mov rbx, gs:[0x60]  ; Get address of PEB struct
+    mov rbx, [rbx+0x18] ; Get PEB_LDR_DATA address
+    mov rbx, [rbx+0x20] ; Get InMemoryOrderModuleList
+    mov rbx, [rbx]  ; 1st entry in InMemoryOrderModuleList (ntdll.dll)
+    mov rbx, [rbx]  ; 2st entry in InMemoryOrderModuleList (kernel32.dll)
+    mov rsi, [rbx+0x20]  ; Get kernel32.dll address
+    lea rdi, [karlin]
+    mov [rdi], rsi  ; save kernel32.dll address
+    
+    xor rdi, rdi
+    mov edi, [rsi + 0x3c]   ; RVA PE file signature
+    add rdi, rsi    ; RVA PE + kernel32 addr
+    add rdi, 0x88   ; 0x88 bytes after the PE signature is the RVA for the Export Table
+    mov edi, [rdi]  ; get RVA Export Table
+    add rdi, rsi    ; RVA Export Table + kernel32 address
+    lea rbx, [exp_tab]
+    mov [rbx], rdi  ; save Export Table address
+
+    mov rax, rdi    ; return Export Table address
+    
+    ;add rsp, 8  ; restore stack
+    ; restore registry
+    pop rdi
+    pop rsi
+    pop rbx
+    pop rbp
+    ret
+ 
+
+DecFName:
+;------ Decrypt function name ----
+; REQUIRED: stack alignment to 16 after call function
+; IN: rcx - pointer to function name
+; OUT: rax - real function name
+    push rbp
+    mov rbp, rsp
+    push rsi    ; save rsi
+    push rdi    ; save rdi
+    sub rsp, 8  ; allign stack
+    
+    ; clear buffer
+    lea rax, [buff_func_dec]
+    xor rsi, rsi    ; reset counter
+    .clear_loop:
+        cmp rsi, BUFFER_FUNC_DEC_LEN
+        je .clear_end
+        mov byte [rax + rsi], 0
+        inc rsi
+        jmp .clear_loop
+        
+    .clear_end:
+        xor rsi, rsi    ; reset counter
+    
+    ; decode function name
+    xor rdi, rdi    ; buffer for char
+    .loop:
+        mov dil, [rcx + rsi]
+        cmp dil, 0
+        je .return
+        dec rdi
+        dec rdi
+        mov [rax + rsi], rdi
+        inc rsi ; counter + 1
+        jmp .loop
+        
+    .return:
+        add rsp, 8  ; restore stack
+        pop rdi
+        pop rsi
+        pop rbp
+        ret

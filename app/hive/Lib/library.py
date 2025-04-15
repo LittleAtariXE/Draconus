@@ -39,6 +39,9 @@ class Library:
         self.find_items()
 
         self.texter = Texter(25, 100)
+
+        # library directory
+        self.DIR_PAYLOAD = os.path.join(LIBRARY_ITEMS, "payloads")
         
     
     @property

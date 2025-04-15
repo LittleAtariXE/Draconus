@@ -1,0 +1,145 @@
+#!name##PayStoreAsm
+#!types##support
+#!subTypes##lib
+#!info##Assembler [x64] [W] A module that allows embedding a large payload. It accepts any data and provides the ability to hide the data by changing the hex value of each character. The module's capacity can be adjusted using a variable, allowing the addition of a large payload if needed.
+#!options##LIB_COMPILER##mingw-x64
+#!options##DLL_NO_DLL##True
+#!lang##asm
+#!system_FLAG##[W]
+#!reqPayload##PSA_payload##Any payload
+#!reqVar##PSA_bytes_inc##Increase the 'hex' value of each character in the payload. Makes payload analysis more difficult. By default the value is not changed.##int
+#!setVar##PSA_bytes_inc##2##int
+#!reqVar##PSA_storage##Payload storage capacity in kilobytes.##int
+#!setVar##PSA_storage##128##int
+
+
+bits 64
+default rel
+
+%define MEM_KB 1024
+%define STORAGE_LEN {{PSA_storage}} * MEM_KB
+%define DECRYPT_BYTE {{PSA_bytes_inc}}
+
+global UnloadStorage
+global LengthStorage
+
+section .data   
+    {{TOOL.asm_add_code_var(PSA_payload, decrypt_bytes=PSA_bytes_inc)}}
+    
+section .bss
+    storage: resb STORAGE_LEN
+    storage_index: resq 1   ; index memory storage
+
+section .text
+
+LengthStorage:
+; REQUIREMENTS: stack allign to 16
+; OUT: rax - storage length
+    push rbp
+    mov rbp, rsp
+    push rbx
+    
+    lea rax, [storage_index]
+    mov rax, [rax]
+   
+    pop rbx
+    pop rbp
+    ret
+
+UnloadStorage:
+; REQUIREMENTS: stack allign to 16
+; OUT: rax - pointer to filled storage
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    sub rsp, 40
+    call LoadStorage
+    add rsp, 40
+    
+    lea rax, [storage]
+    add rsp, 8
+    pop rbp
+    ret
+
+LoadStorage:
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    push rax
+    push rcx
+    push rdi
+    
+    ;zeroing storage
+    lea rdi, [storage]
+    mov rcx, STORAGE_LEN
+    xor rax, rax
+    rep stosb   ; save byte from 'al' to pointer 'rdx'. increments 'rdx'
+    
+    lea rax, [text_all]
+    xor rdi, rdi
+    .loop:
+        mov rcx, [rax + rdi * 8]
+        cmp rcx, 0
+        je .return
+        
+        sub rsp, 40
+        call _LoadPartStorage
+        add rsp, 40
+        inc rdi        
+        jmp .loop
+
+    .return:
+        pop rdi
+        pop rcx
+        pop rax
+        pop rbp
+        ret
+
+    
+_LoadPartStorage:
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - text pointer
+
+%macro _LPS_decrypt 1
+    %rep %1
+        dec dl
+    %endrep
+%endmacro
+
+    push rbp
+    mov rbp, rsp
+    push rcx
+    push rdx
+    push rax
+    push rsi
+    push rbx
+    
+    lea rax, [storage]
+    lea rbx, [storage_index]
+    mov rbx, [rbx]
+    xor rsi, rsi    ; zeroing counter
+    xor rdx, rdx
+    .loop:
+        mov dl, [rcx + rsi]
+        cmp dl, 0
+        je .return
+        
+        _LPS_decrypt DECRYPT_BYTE
+        mov [rax + rbx], dl
+        inc rbx ; storage index + 1
+        inc rsi ; text index + 1   
+        jmp .loop
+            
+    .return:
+        ; update storage index
+        lea rax, [storage_index]
+        mov [rax], rbx
+        
+        pop rbx
+        pop rsi
+        pop rax
+        pop rdx
+        pop rcx
+        pop rbp
+        ret

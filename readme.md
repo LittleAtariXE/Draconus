@@ -4,7 +4,6 @@
 </head>
 <body>
 
-<!-- Projekt: Nazwa i opis projektu -->
 <div id="Draconus">
     <h1 align="center">Draconus</h1>
     <p align="center">
@@ -620,6 +619,21 @@ Keep in mind that creating complex worms with multiple modules, obfuscation tech
         <li><strong>New Payload: <code>PyExeShell</code></strong> - A payload written in Python for shellcode injection.</li>
         <li><strong>New Module: <code>LodeRunner</code></strong> - A DLL library. Upon import, it starts a thread establishing a TCP connection, downloading a file, and executing it. See the program description for more details.</li>
         <li><strong>New Worm: <code>BruteDLL</code></strong> - Written in assembly. Checks each process within the specified range and attempts to inject a DLL using dynamic function import.</li>
+    </ul>
+    <h2>🛠️ Changelog for Version 1.2.1</h2>
+    <ul>
+        <li><strong>Build Worm as Payload</strong> — A new option allows building a Python-based worm and converting it into a payload instead of compiling it. The payload will appear automatically in the <code>payload</code> section of the library. Currently works only with raw Python code (support for compiled payloads is in progress).<br>
+        Usage: <code>build --payload</code> or <code>build -p</code>.</li>
+        <li><strong>New Module: <code>Smuggler_DLL</code></strong> — A special library that dynamically imports functions from <code>kernel32</code> and other DLLs. It locates the Export Table address in memory, allowing the hiding of imports and dynamic linking without recompilation.</li>
+        <li><strong>New Module: <code>Smuggler_Lib</code></strong> — Same functionality as <code>Smuggler_DLL</code>, but in the form of a static <code>lib</code> library instead of a <code>dll</code>. Designed for manual linking during compilation.</li>
+        <li><strong>New Worm: <code>Pong</code></strong> — A reverse TCP worm that launches <code>cmd</code> by default. All function names are dynamically generated and hidden, making detection very difficult. Compiled as a single-file executable using additional libraries.<br>
+        ✅ <em>Tested on updated Windows 10 (April 2025). Not detected by Windows Defender.</em></li>
+        <li><strong>New Worm: <code>Pong2</code></strong> — Same as <code>Pong</code>, but split into two files: an <code>exe</code> and a <code>dll</code> containing the worm logic. This separation allows for alternative execution methods.<br>
+        ✅ <em>Tested on updated Windows 10 (April 2025). Not detected by Windows Defender.</em></li>
+        <li><strong>New Module: <code>PayloadStorage</code></strong> — A 64-bit Assembly module for embedding large payloads. Accepts any type of binary data and supports basic obfuscation by altering the hex values of each byte. Payload capacity can be adjusted via a variable.</li>
+        <li><strong>New Module: <code>UnLoader</code></strong> — A stealth module that writes files to disk using imports loaded directly from memory, avoiding static references to common APIs.</li>
+        <li><strong>New Worm: <code>Falcon</code></strong> — A minimalistic worm written entirely in Assembly. It decodes a payload, writes it to disk, and launches it via <code>WinExec</code> or <code>OpenProcessA</code>. The execution command can be customized using a special variable. Uses memory-only dynamic imports for stealth.<br>
+        ✅ <em>Tested on updated Windows 10 (April 2025). Not detected by Windows Defender.</em></li>
     </ul>
 </div>
 </body>

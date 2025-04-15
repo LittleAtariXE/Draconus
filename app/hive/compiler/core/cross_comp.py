@@ -273,6 +273,10 @@ class CrossComp:
         cmd += f" -o {raw.name}.exe {raw.name}.o"
         if raw.cs_res_name:
             cmd += f" {raw.cs_res_name}.res"
+        # add library
+        if len(raw.libs) > 0:
+            for lib in raw.libs:
+                cmd += f" {lib.name}"
         # add dll
         if len(raw.need_lib) > 0:
             elib = ""
@@ -280,6 +284,9 @@ class CrossComp:
                 elib += f" {os.path.join(self.dir_work, raw.name, nl)}"
             cmd += elib
         cmd += f" {self._DLL}"
+        # console or gui program
+        if raw.exe_show == "gui":
+            cmd += " -mwindows"
         self.msg("msg", f"Building worm: '{raw.name}'", sender=self.name)
         self.msg("dev", cmd, sender=self.name)
         self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && {cmd}")
@@ -317,6 +324,9 @@ class CrossComp:
                 elib += f" {os.path.join(self.dir_work, raw.name, nl)}"
             cmd += elib
         cmd += f" {self._DLL}"
+        # console or gui program
+        if raw.exe_show == "gui":
+            cmd += " -mwindows"
         self.msg("msg", f"Building worm: '{raw.name}'", sender=self.name)
         self.msg("dev", cmd, sender=self.name)
         self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && {cmd}")
@@ -380,4 +390,16 @@ class CrossComp:
         raw.ready_app.append(raw.exe_file_path)
         return raw
     
-    
+    def library_lib64_compile(self, raw: object) -> object:
+        self.msg("msg", "Use mingw-x64", sender=self.name)
+        self.msg("msg", "Start Compiler: mingw-x64", sender=self.name)
+        self.compiler.start()
+        for lib in raw.libs:
+            self.msg("msg", f"Compile lib: {lib.raw_name}", sender=self.name)
+            cmd = f"nasm -f win64 {lib.raw_name} -o {lib.raw_name}.o"
+            self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && {cmd}")
+            cmd = f"x86_64-w64-mingw32-ar rcs {lib.name} {lib.raw_name}.o"
+            self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && {cmd}")
+        self.msg("msg", "Stopping Compiler ......")
+        self.compiler.stop()
+        return raw

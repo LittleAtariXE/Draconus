@@ -28,7 +28,6 @@ class Queen:
         self.Lib = Library(self)
         self.worm = WormBuilder(self)
         self.master = MasterCompiler(self)
-        # self.master.work()
         self.coder = Coder(self, self.worm)
         self.worm_constructor = WormConstructor(self.coder, self.master)
         self.short = Shortcuts(self)
@@ -98,9 +97,18 @@ class Queen:
         self.enter()
         opt = {}
         opt["NO_COMPILE"] = True
+        opt["PAYLOAD"] = True
+        self.worm.set_name("worm_pay1")
+        self.add_worm_item("worm", "LittleMolly")
+        #self.add_worm_item("payload", "paytest")
+        #self.add_variable("FAL_exe", "WinExec")
+        # self.add_variable("GUI", True)
+        # self.add_food("TEXT_database", "PONG_layer")
+        self.show_worm()
+        self.build_worm(opt)
 
     def Run(self) -> None:
-        # self.test()
+        #self.test()
         pass
         
         

