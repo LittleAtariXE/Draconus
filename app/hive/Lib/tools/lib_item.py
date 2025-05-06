@@ -128,6 +128,9 @@ class LibItem:
         ### 
         self.tags = ""
 
+        #A module marked as 'broken' will not be loaded.
+        self.broken_FLAG = False
+
         ### MAKE
         self.make()
 
@@ -336,3 +339,5 @@ class LibItem:
                     self.reqCS = d[1]
                 case "acceptMods":
                     self.acceptMods.extend(d[1:])
+                case "broken_FLAG":
+                    self.broken_FLAG = True

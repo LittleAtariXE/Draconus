@@ -1,4 +1,4 @@
-#!name##Raw_Tcp
+#!name##old_Raw_Tcp
 #!types##module
 #!info##A simple module that allows socket TCP communication. Transmits raw bytes.
 #!reqVar##IP_ADDR##Host address.##str
@@ -6,6 +6,7 @@
 #!setVar##RT_port##4444##int
 #!reqVar##RT_format_code##Message encoding format.##str
 #!setVar##RT_format_code##utf-8##str
+#!broken_FLAG##True
 
 import socket
 from threading import Thread

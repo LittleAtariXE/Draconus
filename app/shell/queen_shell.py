@@ -159,12 +159,16 @@ class QueenShell:
                 
             
             if types:
-                self.Queen.Lib.show_items(types)
+                self.Queen.show_items(types)
             
         
         @hiveShell.command()
-        def worm() -> None:
-            self.Queen.worm.show_all()
+        @click.option("--types", "-t", required=False, help="Shows all selected module types in worm. Ex: 'worm -t module'")
+        def worm(types) -> None:
+            if types:
+                self.Queen.show_worm_item(types)
+            else:
+                self.Queen.show_worm()
         
         @hiveShell.command()
         @click.argument("worm_name")

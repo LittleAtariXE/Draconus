@@ -61,7 +61,7 @@ class WormBuilder:
     def code_loaders(self) -> list:
         load = []
         for mod in self.raw_worm.modules.values():
-            if mod.subTypes == "loader":
+            if mod.subTypes == "mod_loader":
                 load.append(mod)
         return load
     
@@ -436,22 +436,73 @@ class WormBuilder:
         else:
             return text
     
+    def show_worm2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not self.raw_worm.master_worm:
+            return {}
+        banned = self.raw_worm.master_worm.banned
+        wi = {}
+        wi["data"] = [
+            ["Worm Name:", self.name],
+            ["Master Worm:", self.raw_worm.master_worm.name],
+            ["Master Info", self.raw_worm.master_worm.info],
+            ["Tags:", self.raw_worm.master_worm.system_FLAG]
+        ]
+        if banned:
+            wi["data"].append(["Banned:", ", ".join(banned)])
+
+        if len(self.raw_worm.accepted_modules) > 0:
+            acm = ""
+            for am in self.raw_worm.accepted_modules:
+                if am == "dll":
+                    acm += "[DLL_modules] "
+                else:
+                    acm += f"[{am}] "
+            wi["data"].append(["Accepted Modules:"], acm)
+        comp = self.raw_worm.globalVar.get("COMPILER")
+        wi["data"].append(["Compiler:", comp])
+        width = list(self.cscr["2c"])
+        # wi["headers"] = ["-" * width[0], " ----------------------- WORM INFO ----------------------------"]
+        wi["width"] = width
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
+
+    
     def show_modules(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         if not empty_show:
             if len(self.raw_worm.modules) < 1 and len(self.raw_worm.support) < 1:
                 return ""
         text = self.title("Modules:")
         for name, mod in self.raw_worm.modules.items():
-            mname = f"-- [{name}]{mod.system_FLAG}"
+            mname = f"-- [{name}]{mod.system_FLAG}{mod.tags}"
             text += self.texter.make_2column(mname, mod.info, width1=35, width2=80)
         for name, smod in self.raw_worm.support.items():
-            sname = f"-- [{name}][S]{smod.system_FLAG}"
+            sname = f"-- [{name}][S]{smod.system_FLAG}{smod.tags}"
             text += self.texter.make_2column(sname, smod.info, width1=35, width2=80)
         if display:
             self.msg("msg", text)
         else:
             return text
     
+    def show_modules2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not empty_show:
+            if len(self.raw_worm.modules) < 1 and len(self.raw_worm.support) < 1:
+                return {}
+        wi = {}
+        wi["headers"] = ["MODULE NAME:", "MODULE DESCRIPTION:"]
+        wi["data"] = []
+        for name, mod in self.raw_worm.modules.items():
+            wi["data"].append([f"{name}{mod.system_FLAG}{mod.tags}", mod.info])
+        for name, mod in self.raw_worm.support.items():
+            wi["data"].append([f"{name}[S]{mod.system_FLAG}{mod.tags}", mod.info])
+        wi["width"] = list(self.cscr["2c"])
+        # wi["color"] = "white"
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
+
     def show_reqPayloads(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         if not empty_show and len(self.raw_worm.reqPayload) < 1:
             return ""
@@ -463,6 +514,22 @@ class WormBuilder:
         else:
             return text
     
+    def show_reqPayloads2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not empty_show and len(self.raw_worm.reqPayload) < 1:
+            return {}
+        wi = {}
+        width = list(self.cscr["2c"])
+
+        wi["headers"] = ["REQUIRED PAYLOADS:", f"DESCRIPTION:{' ' * (width[1] - 15)}"]
+        wi["data"] = []
+        for name, rp in self.raw_worm.reqPayload.items():
+            wi["data"].append([name, str(rp.info)])
+        wi["width"] = list(self.cscr["2c"])
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
+        
     def show_payloads(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         if not empty_show and len(self.raw_worm.payloads) < 1:
             return ""
@@ -473,6 +540,21 @@ class WormBuilder:
             self.msg("msg", text)
         else:
             return text
+    
+    def show_payloads2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not empty_show and len(self.raw_worm.payloads) < 1:
+            return {}
+        wi = {}
+        wi["headers"] = ["PAYLOAD NAME:", "PAYLOAD DESCRIPTION:"]
+        wi["data"] = []
+        for name, pay in self.raw_worm.payloads.items():
+            wi["data"].append([pay.name, str(pay.info)])
+        wi["width"] = list(self.cscr["2c"])
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
+
 
     def show_var(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         if not empty_show and len(self.raw_worm.var) < 1:
@@ -486,6 +568,22 @@ class WormBuilder:
         else:
             return text
     
+    def show_var2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not empty_show and len(self.raw_worm.var) < 1:
+            return {}
+        wi = {}
+        wi["headers"] = ["VARIABLE NAME:", "OWNER:", "VALUE:", "DESCRIPTION:"]
+        wi["data"] = []
+        for name, var in self.raw_worm.var.items():
+            val = f" {var.show()} "
+            wi["data"].append([name, f"[{var.owner}]", val, str(var.info)])
+        wi["width"] = list(self.cscr["4c"])
+        # wi["color"] = "white"
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
+    
     def show_reqVar(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         if not empty_show and len(self.raw_worm.reqVar) < 1:
             return ""
@@ -498,6 +596,20 @@ class WormBuilder:
         else:
             return text
     
+    def show_reqVar2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not empty_show and len(self.raw_worm.reqVar) < 1:
+            return {}
+        wi = {}
+        wi["headers"] = ["REQUIRED VARIABLE:", "OWNER:", "DESCRIPTION:"]
+        wi["data"] = []
+        for name, rv in self.raw_worm.reqVar.items():
+            wi["data"].append([name, f"[{str(rv.owner)}]", str(rv.info)])
+        wi["width"] = list(self.cscr["3c"])
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
+
     def show_reqFood(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         if not empty_show and len(self.raw_worm.reqFood) < 1:
             return ""
@@ -508,6 +620,21 @@ class WormBuilder:
             self.msg("msg", text)
         else:
             return text
+
+    def show_reqFood2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not empty_show and len(self.raw_worm.reqFood) < 1:
+            return {}
+        wi = {}
+        wi["headers"] = ["REQUIRED FOOD:", "VALUE:", "DESCRIPTION:"]
+        wi["data"] = []
+        for name, rf in self.raw_worm.reqFood.items():
+            wi["data"].append([name, f" {rf.show()} ", str(rf.info)])
+        # wi["color"] = "green"
+        wi["width"] = list(self.cscr["3c"])
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
     
     def show_shadow(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         if not empty_show and len(self.raw_worm.shadow) < 1:
@@ -520,6 +647,20 @@ class WormBuilder:
         else:
             return text
     
+    def show_shadow2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not empty_show and len(self.raw_worm.shadow) < 1:
+            return {}
+        wi = {}
+        wi["headers"] = ["SHADOW NAME:", "DESCRIPTION:"]
+        wi["data"] = []
+        for name, sh in self.raw_worm.shadow.items():
+            wi["data"].append([name, str(sh.info)])
+        wi["width"] = list(self.cscr["2c"])
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
+    
     def show_starter(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         if not empty_show and not self.raw_worm.starter:
             return ""
@@ -530,6 +671,18 @@ class WormBuilder:
         else:
             return text
     
+    def show_starter2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not empty_show and not self.raw_worm.starter:
+            return {}
+        wi = {}
+        wi["headers"] = ["STARTER NAME:", "DESCRIPTION:"]
+        wi["data"] = [[self.raw_worm.starter.name, str(self.raw_worm.starter.info)]]
+        wi["width"] = list(self.cscr["2c"])
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
+
     def show_wrapper(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         if not empty_show and not self.raw_worm.wrapper:
             return ""
@@ -540,6 +693,18 @@ class WormBuilder:
         else:
             return text
     
+    def show_wrapper2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not empty_show and not self.raw_worm.wrapper:
+            return {}
+        wi = {}
+        wi["headers"] = ["WRAPPER NAME:", "DESCRIPTION:"]
+        wi["data"] = [[self.raw_worm.wrapper.name, str(self.raw_worm.wrapper.info)]]
+        wi["width"] = list(self.cscr["2c"])
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
+
     def show_garbageVar(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         if not empty_show and len(self.raw_worm.garbageVar) < 1:
             return ""
@@ -550,6 +715,20 @@ class WormBuilder:
             self.msg("msg", text)
         else:
             return text
+    
+    def show_garbageVar2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not empty_show and len(self.raw_worm.garbageVar) < 1:
+            return {}
+        wi = {}
+        wi["headers"] = ["GARBAGE VARIABLE:", "VALUE:", "DESCRIPTION:"]
+        wi["data"] = []
+        for gv in self.raw_worm.garbageVar.values():
+            wi["data"].append([gv.name, f" {str(gv.value)} ", str(gv.info)])
+        wi["width"] = list(self.cscr["3c"])
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
     
     def show_process(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         if not empty_show and not self.raw_worm.process:
@@ -564,6 +743,21 @@ class WormBuilder:
         else:
             return text
     
+    def show_process2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not empty_show and not self.raw_worm.process:
+            return {}
+        wi = {}
+        wi["headers"] = ["PROCESS NAME:", "PROCESS BUILD STEP:"]
+        proc = f"[{self.raw_worm.process.sheme[0]}]"
+        for s in self.raw_worm.process.sheme[1:]:
+            proc += f" ---> [{s}]"
+        wi["data"] = [[self.raw_worm.process.name, proc]]
+        wi["width"] = list(self.cscr["2c"])
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
+    
     def show_compiler(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         comp = self.raw_worm.globalVar.get("COMPILER")
         text = self.title("Compiler:")
@@ -575,6 +769,17 @@ class WormBuilder:
             self.msg("msg", text)
         else:
             return text
+    
+    def show_compiler2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        comp = self.raw_worm.globalVar.get("COMPILER")
+        wi = {}
+        #wi["headers"] = ["COMPILER:", comp]
+        wi["data"] = [["COMPILER:", comp]]
+        wi["width"] = list(self.cscr["2c"])
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
 
 
     def show_help(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
@@ -584,6 +789,8 @@ class WormBuilder:
         text += "--- [L] - Works only on linux ---\n"
         text += "--- [W] - Works only on windows\n"
         text += "--- [CS] - Variable tag. File variable 'res' ('rc'). 'Compiler Script' variables do not affect the worm's operation, they are information of the ready executable file.\n"
+        text += "--- [PyS] - Python script. Uses standard libraries.\n"
+        text += "--- [PyEx] - Python script. Uses additional PIP libraries.\n"
         if display:
             self.msg("msg", text)
         else:
@@ -616,12 +823,107 @@ class WormBuilder:
         else:
             return text
 
-    
-
-    def show_all(self, display: bool = True) -> Union[str, None]:
+    def show_all2(self, display: bool = True) -> Union[str, list]:
         if not self.raw_worm.master_worm:
             self.msg("error", "[!!] Worm is empty. First add a worm to template [!!]")
             return
+        wi = []
+        wi.append("\n" + "*" * 40 + " - - WORM INFO - - " + "*" * 40 + "\n")
+        wi.append(self.show_help())
+        wi.append(self.show_worm2())
+        wi.append(self.show_modules2())
+        wi.append(self.show_reqPayloads2())
+        wi.append(self.show_payloads2())
+        wi.append(self.show_var2())
+        wi.append(self.show_garbageVar2())
+        wi.append(self.show_reqVar2())
+        wi.append(self.show_reqFood2())
+        wi.append(self.show_shadow2())
+        wi.append(self.show_starter2())
+        wi.append(self.show_wrapper2())
+        wi.append(self.show_process2())
+        wi.append(self.show_compiler2())
+        
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
+    
+    def make_separator(self, name: str, char: str = "*") -> str:
+        slen = self.cscr["slen"] - 8
+        sep = slen - len(name)
+        sep = int(sep / 2)
+        return f"\n{char * sep} {name} {char * sep}\n"
+    
+    def show_all(self, display: bool = True) -> Union[list, None]:
+        if not self.raw_worm.master_worm:
+            self.msg("error", "[!!] Worm is empty. First add a worm to template [!!]")
+            return
+        wi = []
+        # wi.append("\n" + "*" * 40 + " - - WORM INFO - - " + "*" * 40 + "\n")
+        wi.append(self.show_help())
+        wi.append(self.show_worm2())
+        mod = self.show_modules2()
+        if mod != {}:
+            wi.append(self.make_separator("MODULES"))
+            wi.append(mod)
+        rp = self.show_reqPayloads2()
+        if rp != {}:
+            wi.append(self.make_separator("REQUIRED PAYLOAD"))
+            wi.append(rp)
+        pay = self.show_payloads2()
+        if pay != {}:
+            wi.append(self.make_separator("PAYLOADS"))
+            wi.append(pay)
+        var = self.show_var2()
+        if var != {}:
+            wi.append(self.make_separator("VARIABLES"))
+            wi.append(var)
+        gv = self.show_garbageVar2()
+        if gv != {}:
+            wi.append(self.make_separator("GARBAGE VARIABLES"))
+            wi.append(gv)
+        rv = self.show_reqVar2()
+        if rv != {}:
+            wi.append(self.make_separator("REQUIRED VARIABLES"))
+            wi.append(rv)
+        rf = self.show_reqFood2()
+        if rf != {}:
+            wi.append(self.make_separator("REQUIRED FOOD"))
+            wi.append(rf)
+        sh = self.show_shadow2()
+        if sh != {}:
+            wi.append(self.make_separator("SHADOW"))
+            wi.append(sh)
+        st = self.show_starter2()
+        if sh != {}:
+            wi.append(self.make_separator("STARTER"))
+            wi.append(st)
+        wr = self.show_wrapper2()
+        if wr != {}:
+            wi.append(self.make_separator("WRAPPER"))
+            wi.append(wr)
+        pr = self.show_process2()
+        if pr != {}:
+            wi.append(self.make_separator("PROCESS ITEM"))
+            wi.append(pr)
+        # cmp = self.show_compiler2()
+        # if cmp != {}:
+        #     wi.append(self.make_separator("COMPILER"))
+        #     wi.append(cmp)
+        
+
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi 
+
+    def old_show_all(self, display: bool = True) -> Union[str, None]:
+        if not self.raw_worm.master_worm:
+            self.msg("error", "[!!] Worm is empty. First add a worm to template [!!]")
+            return
+        self.show_worm2()
+        return
         text = self.show_help()
         text += self.show_worm()
         text += self.show_modules()

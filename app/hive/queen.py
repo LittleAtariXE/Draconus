@@ -58,11 +58,27 @@ class Queen:
     def show_worm(self) -> None:
         self.worm.show_all()
     
+    def show_worm_item(self, types: str) -> None:
+        match types:
+            case "module":
+                self.worm.show_modules2(True)
+            case "payload":
+                self.worm.show_reqPayloads2(True)
+                self.worm.show_payloads2(True)
+            case "var":
+                self.worm.show_reqVar2(True)
+                self.worm.show_var2(True)
+            case "variable":
+                self.worm.show_reqVar2(True)
+                self.worm.show_var2(True)
+            case _:
+                self.msg("msg", f"ERROR: Unknown types: {types}")
+
     def show_compilers(self) -> None:
         self.master.show_compilers()
     
     def show_items(self, types: str) -> None:
-        self.Lib.show_items(types)
+        self.Lib.show_items2(types)
     
     def show_process_list(self) -> None:
         self.Lib.show_process_worm()
@@ -97,18 +113,8 @@ class Queen:
         self.enter()
         opt = {}
         opt["NO_COMPILE"] = True
-        opt["PAYLOAD"] = True
-        self.worm.set_name("worm_pay1")
-        self.add_worm_item("worm", "LittleMolly")
-        #self.add_worm_item("payload", "paytest")
-        #self.add_variable("FAL_exe", "WinExec")
-        # self.add_variable("GUI", True)
-        # self.add_food("TEXT_database", "PONG_layer")
-        self.show_worm()
-        self.build_worm(opt)
 
     def Run(self) -> None:
-        #self.test()
         pass
         
         

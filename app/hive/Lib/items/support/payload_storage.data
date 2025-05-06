@@ -6,7 +6,7 @@
 #!options##DLL_NO_DLL##True
 #!lang##asm
 #!system_FLAG##[W]
-#!reqPayload##PSA_payload##Any payload
+#!reqPayload##PSA_payload##Any payload. Can be binary data, code, etc.
 #!reqVar##PSA_bytes_inc##Increase the 'hex' value of each character in the payload. Makes payload analysis more difficult. By default the value is not changed.##int
 #!setVar##PSA_bytes_inc##2##int
 #!reqVar##PSA_storage##Payload storage capacity in kilobytes.##int

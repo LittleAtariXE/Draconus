@@ -22,6 +22,7 @@ class Library:
         self.dir_process = os.path.join(self.dir_items, "process")
         self.dir_comp_script = os.path.join(self.dir_items, "comp_script")
         self.dir_icons = os.path.join(os.path.dirname(__file__), "icons")
+        self.console_scr = self.queen.conf.console_screen
         self.lib = {
             "worm" : {},
             "support": {},
@@ -56,6 +57,9 @@ class Library:
             for name in files:
                 path = os.path.join(root, name)
                 item = LibraryItem(path)
+                # check if item have 'broken_FLAG'
+                if item.broken_FLAG:
+                    continue
                 if item.types in self.lib.keys():
                     self.lib[item.types][item.name] = item
                     c += 1
@@ -117,6 +121,20 @@ class Library:
             text += "\n"
             text += "- " * 70 + "\n"
         self.msg("msg", text)
+    
+    def show_items2(self, types: str) -> None:
+        items = self.lib.get(types)
+        if not items:
+            self.msg("error", f"Items: '{types}' is not in the library")
+            return
+        ii = {}
+        ii["headers"] = [f"{types.upper()} NAME:", "TAGS:", "DESCRIPTION"]
+        ii["data"] = []
+        for item in items.values():
+            ii["data"].append([item.name, f"{item.system_FLAG}{item.tags}", item.info])
+        ii["width"] = list(self.console_scr["3c"])
+        ii["types"] = "simple_grid"
+        self.msg("msg", "", table=ii)
     
     def show_process_worm(self) -> None:
         text = "\n" + "#" * 50 + " Process Items " + "#" * 50 + "\n"

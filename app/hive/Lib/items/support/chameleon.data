@@ -1,6 +1,7 @@
 #!name##Chameleon
 #!types##support
-#!info##Chameleon encode and decode socket messages
+#!info##[Pys] Chameleon encode and decode socket messages
+#!TAGS##[PyS]
 
 import base64
 

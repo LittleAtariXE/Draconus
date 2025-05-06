@@ -9,6 +9,7 @@
 #!reqVar##TCP_SOCK_TO##Socket Timeout##int
 #!reqVar##RAW_LEN##raw_len vaule in bytes##int
 #!reqVar##TCP_SOCK_SEPARATOR##Message splitting separator##str
+#!broken_FLAG##True
 
 import socket
 import json

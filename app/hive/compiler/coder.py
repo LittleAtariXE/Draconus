@@ -88,7 +88,7 @@ class Coder:
     def prepare_mod_list(self) -> str:
         mods = []
         for mod in self.WB.raw_worm.modules.values():
-            if mod.subTypes == "loader":
+            if mod.subTypes == "mod_loader":
                 continue
             mods.append(mod.name)
         out = "{"
@@ -183,7 +183,7 @@ class Coder:
         codes = []
         for mod in self.WB.raw_worm.modules.values():
             # exclusion loaders
-            if mod.subTypes == "loader":
+            if mod.subTypes == "mod_loader":
                 continue
             if mod.subTypes == "dll":
                 continue

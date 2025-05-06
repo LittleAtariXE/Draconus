@@ -1,7 +1,7 @@
 #!name##PyLoader
 #!types##module
-#!subTypes##loader
-#!info##A special block of code that executes first and tries to use PIP to install the missing modules. Useful when the worm calls Python code.
+#!subTypes##mod_loader
+#!info##[Py] A Python import loader that inserts itself before the worm executes and attempts to install any missing modules using pip. Useful when creating payloads where the target system may not have all required dependencies installed. Not necessary when compiling the worm into an .exe, as the compiler includes all required libraries in the executable.
 #!import_FLAG##True
 #!render_FLAG##True
 

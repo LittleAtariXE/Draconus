@@ -1,9 +1,10 @@
 #!name##LittleMolly
 #!types##worm
-#!info##A worm written in python with no special purpose. All sorts of modules can be added.
+#!info##[Py] A Python-based worm without a fixed purpose, designed to be built modularly. It accepts all types of Python modules and can be compiled into a standalone .exe or used as a payload. Ideal for creating custom Python-based payloads.
 #!reqSMod##MOD_Wrapper
 #!processWorm##BasicProcess
 #!globalVar##COMPILER##PyInstaller##Compiler name
+#!broken_FLAG##True
 
 from time import sleep
 

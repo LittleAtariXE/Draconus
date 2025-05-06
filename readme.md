@@ -635,6 +635,16 @@ Keep in mind that creating complex worms with multiple modules, obfuscation tech
         <li><strong>New Worm: <code>Falcon</code></strong> — A minimalistic worm written entirely in Assembly. It decodes a payload, writes it to disk, and launches it via <code>WinExec</code> or <code>OpenProcessA</code>. The execution command can be customized using a special variable. Uses memory-only dynamic imports for stealth.<br>
         ✅ <em>Tested on updated Windows 10 (April 2025). Not detected by Windows Defender.</em></li>
     </ul>
+    <h2>🛠️ Changelog for Version 1.2.2</h2>
+    <ul>
+        <li><strong>Removed Worm: <code>LittleMolly</code></strong> — The <code>LittleMolly</code> worm has been removed and replaced by a new, more advanced version.</li>
+        <li><strong>New Worm: <code>Montezuma</code></strong> — A Python-based worm that can be customized by adding various modules, including code obfuscators and more. Perfect for building your own payload or compiling into a standalone executable.</li>
+        <li><strong>Improved Compatibility</strong> — Many Python modules have been updated to ensure full compatibility with the new <code>Montezuma</code> worm template.</li>
+        <li><strong>TCP Module Update</strong> — The basic TCP communication module can now receive and interpret commands directly within the worm.</li>
+        <li><strong>Updated Module: <code>Panther</code> (Ransomware)</strong> — Improved with support for fast or slow encryption modes and extended file search across the disk. Now more effective and configurable.</li>
+        <li><strong>Improved Module Display</strong> — The module lists, worm configurations, and variable tables are now displayed using the Python <code>tabulate</code> library for better formatting and readability.  
+        ⚠️ Please re-run: <code>pip install -r requirements.txt</code> to update your environment.</li>
+    </ul>
 </div>
 </body>
 </html>

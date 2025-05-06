@@ -77,6 +77,9 @@ class RawWorm:
         #last error FLAG. 
         self.last_error = 0 # No errors
 
+        # code loaders from worm_builder
+        self.code_loaders = self.wc.worm_builder.code_loaders
+
         # update
         self.update_var()
 
@@ -447,6 +450,8 @@ class WormConstructor:
                 return self.step_build_dll_library
             case "BUILD_LIB_FILE":
                 return self.step_build_library
+            case "CODE_LOADER":
+                return self.step_build_mod_loader
             case _:
                 return self.step_empty
     
@@ -476,6 +481,13 @@ class WormConstructor:
     def step_add_imports(self, raw: RawWorm) -> RawWorm:
         imp = "\n".join(self.coder.imports)
         raw.code = imp + "\n" + raw.code
+        return raw
+    
+    def step_build_mod_loader(self, raw: RawWorm) -> RawWorm:
+        # check if loader exists
+        for cl in raw.code_loaders:
+            code = self.coder.render_single_template(cl.raw_code, raw.var)
+            raw.code = code + "\n" + raw.code
         return raw
 
     def step_save_raw(self, raw: RawWorm) -> RawWorm:
