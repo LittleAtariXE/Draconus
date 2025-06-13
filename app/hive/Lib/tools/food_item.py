@@ -8,6 +8,11 @@ class FoodItem:
         self.types = None
         self.info = None
 
+        # Not used but needed
+        self.system_FLAG = "[LW]"
+        self.tags = ""
+
+        
         # Data loading type.
         self.load = None
 
@@ -90,6 +95,11 @@ class FoodItem:
         text = text.replace("\n", " ")
         return text.title()
     
+    def load_text_clean(self, data: list) -> str:
+        text = "".join(data)
+        text = text.replace("\n", "")
+        return text
+    
     def load_data(self) -> any:
         if not self.load:
             return None
@@ -110,6 +120,8 @@ class FoodItem:
                 return self.load_text(raw)
             case "text_up":
                 return self.load_text_up(raw)
+            case "text_clean":
+                return self.load_text_clean(raw)
             case _:
                 return None
 

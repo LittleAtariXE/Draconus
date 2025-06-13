@@ -9,6 +9,7 @@
 #!setVar##Dig_mkey_rand##12##int
 #!reqVar##Dig_run_count##Number of base64 encodings used for the function that builds the code.##int
 #!setVar##Dig_run_count##8##int
+#!TAGS##[PyS]
 
 import base64
 

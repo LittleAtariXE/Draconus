@@ -25,7 +25,7 @@ class TT_MOD_Generator:
         code += "\n" + table[0:-2]
         return code
     
-    def build_asm_var_shellcodex(self, src_data: list, shellcode: str, var_name: str, table_name: str, arch: str = "x86") -> str:
+    def build_asm_var_shellcodex(self, src_data: list, shellcode: str, var_name: str, table_name: str, arch: str = "x86", add_null_byte: bool = False) -> str:
         if arch == "x64":
             arch = "dq"
         else:
@@ -39,6 +39,8 @@ class TT_MOD_Generator:
             table += f"{var_name}{i}, "
         
         code += "\n" + table[0:-2]
+        if add_null_byte:
+            code += ", 0\n"
         return code
     
     def asm_hex_bytes(self, src_data: str, add_null_bytes: bool = True) -> str:

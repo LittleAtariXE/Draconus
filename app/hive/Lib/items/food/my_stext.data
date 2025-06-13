@@ -1,0 +1,12 @@
+#!name##MY_text
+#!types##data
+#!info##Paste here the text that will be used to obfuscate functions or variable names. During the worm build process and variable assignment, mark this "food"-type variable as the base. The text should ideally contain all lowercase and uppercase letters, all digits, as well as the characters _ and ., otherwise the obfuscation will not work correctly. ** The file is located in the directory 'OUTPUT/shortcuts/shadow_text' **
+#!load##text_clean
+#!#####
+#!#####
+#!##        Paste here the text that will be used to obfuscate functions or variable names.
+#!##        During the worm build process and variable assignment, mark this "food"-type variable as the base.
+#!##        The text should ideally contain all lowercase and uppercase letters,
+#!##        all digits, as well as the characters '_' and '.' otherwise the obfuscation will not work correctly.
+
+

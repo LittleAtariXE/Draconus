@@ -2,9 +2,11 @@ import os
 from typing import Union
 from .worm_var import WormVar
 from .garbage_var import GarbageVar
+from .include_item import IncludeCode
 
 LIBRARY_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 LIBRARY_DIR_BINARY = os.path.join(LIBRARY_DIR, "items", "binary")
+LIBRARY_DIR_INCLUDE = os.path.join(LIBRARY_DIR, "items", "sfiles")
 
 
 class LibItem:
@@ -131,8 +133,15 @@ class LibItem:
         #A module marked as 'broken' will not be loaded.
         self.broken_FLAG = False
 
+        #Additional external code files
+        # ex: 'include' file for asm
+        # SHEME: include##source_name##in_code_name
+        # ex: include##Falcon_part1##falcon_mod
+        self.include = {}
+
         ### MAKE
         self.make()
+
 
     @property
     def raw_code(self) -> str:
@@ -269,6 +278,15 @@ class LibItem:
     
     def add_options(self, headers: list) -> None:
         self.options[headers[0]] = headers[1]
+    
+    # def add_include_item(self, data: list) -> None:
+    #     sfile = IncludeCode(data[0], data[1], LIBRARY_DIR_INCLUDE)
+    #     if len(data) > 2:
+    #         for opt in data[2:]:
+    #             sfile.add_options(opt)
+        
+
+
 
 
     def make(self) -> None:
@@ -341,3 +359,5 @@ class LibItem:
                     self.acceptMods.extend(d[1:])
                 case "broken_FLAG":
                     self.broken_FLAG = True
+                case "include":
+                    self.include[d[1]] = d[2]

@@ -4,6 +4,7 @@
 #!info##[Py] A Python import loader that inserts itself before the worm executes and attempts to install any missing modules using pip. Useful when creating payloads where the target system may not have all required dependencies installed. Not necessary when compiling the worm into an .exe, as the compiler includes all required libraries in the executable.
 #!import_FLAG##True
 #!render_FLAG##True
+#!TAGS##[PyS]
 
 import sys
 import subprocess

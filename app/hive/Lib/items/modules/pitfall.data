@@ -8,6 +8,7 @@
 #!setVar##PF_NumTh##100##str
 #!setVar##PF_NumProc##5##str
 #!setVar##PF_GenUrl##True##str
+#!TAGS##[PyEx]
 
 import requests
 import string

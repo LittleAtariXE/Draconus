@@ -24,7 +24,8 @@ class Server(Thread):
             "default" : "TcpHandler",
             "raw" : "TcpRawHandler",
             "down" : "TcpRawDownloader",
-            "send" : "TcpRawSend"
+            "send" : "TcpRawSend",
+            "b64" : "TcpB64"
         }
         self.protocol_type = self._protocol_type[options.get("PROTOCOL_TYPE", "default")]
         if options.get("PROTOCOL_TYPE") == "send":

@@ -5,3 +5,4 @@
 #!setVar##EXE_LEN##7151##int
 #!payStep##load_binary
 #!payStep##encode_bin_hex
+#!system_FLAG##[W]

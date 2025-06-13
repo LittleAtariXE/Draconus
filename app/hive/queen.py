@@ -78,6 +78,7 @@ class Queen:
         self.master.show_compilers()
     
     def show_items(self, types: str) -> None:
+        self.worm.show_help(True)
         self.Lib.show_items2(types)
     
     def show_process_list(self) -> None:
@@ -113,6 +114,7 @@ class Queen:
         self.enter()
         opt = {}
         opt["NO_COMPILE"] = True
+
 
     def Run(self) -> None:
         pass

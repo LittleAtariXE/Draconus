@@ -11,7 +11,10 @@ class Shortcuts:
             "icons" : os.path.join(self.dir_lib, "icons"),
             "my_payload" : os.path.join(self.dir_lib, "items", "payloads", "my_payload.data"),
             "sherlock_files" : os.path.join(self.dir_lib, "items", "food", "sherlock_files.data"),
-            "MyShellcode" : os.path.join(self.dir_lib, "items", "food", "my_shellcode.data")
+            "MyShellcode" : os.path.join(self.dir_lib, "items", "food", "my_shellcode.data"),
+            "searching_dir" : os.path.join(self.dir_lib, "items", "food", "search_path.data"),
+            "shadow_text" : os.path.join(self.dir_lib, "items", "food", "my_stext.data"),
+            "zaxxon_fext" : os.path.join(self.dir_lib, "items", "food", "zaxxon_fext.data")
         }
     
 

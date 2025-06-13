@@ -273,6 +273,11 @@ class CrossComp:
         cmd += f" -o {raw.name}.exe {raw.name}.o"
         if raw.cs_res_name:
             cmd += f" {raw.cs_res_name}.res"
+        # build entry point
+        if raw.exe_show == "gui":
+            cmd += f" -Wl,-e,WinMain"
+        else:
+            cmd += f" -Wl,-e,main"
         # add library
         if len(raw.libs) > 0:
             for lib in raw.libs:

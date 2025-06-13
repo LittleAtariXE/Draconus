@@ -6,6 +6,7 @@ from .protocols.tcp_handler import TcpHandler
 from .protocols.tcp_rawhandler import TcpRawHandler
 from .protocols.tcp_rawdown import TcpRawDownloader
 from .protocols.tcp_send import TcpRawSend
+from .protocols.tcp_b64 import TcpB64
 from .servers.tcp_server import Server
 from .servers.sender import Sender
 from .servers.raw_sender import RawSendHandler
@@ -136,7 +137,8 @@ class Central:
             "TcpHandler" : TcpHandler,
             "TcpRawHandler" : TcpRawHandler,
             "TcpRawDownloader" : TcpRawDownloader,
-            "TcpRawSend" : TcpRawSend
+            "TcpRawSend" : TcpRawSend,
+            "TcpB64" : TcpB64
         }
         self.raw_buff_to = self.draco.config.tcp_raw_buffer_to
 
@@ -265,6 +267,7 @@ class Central:
         # NO_MSG - messages from the client will not be displayed
         # RAW_DOWNLOAD - Simple download through the main channel
         # EXEC_CMD - JSON encoded messages containing cooperative commands
+        # B64_MSG - base64 encoded messages
 
         FLAG = client_object.handler.conn_FLAG
         
@@ -276,14 +279,10 @@ class Central:
         elif "EXEC_CMD" in FLAG:
             self.draco.ServerCtrl.check_cmd(recv_data, client_object)
             return
-        # elif "RAW_MSG" in FLAG:
-        #     try:
-        #         msg = recv_data.decode(self.format_code)
-        #     except:
-        #         msg = recv_data
-        # self.msg("msg", f"RAW message: {msg}", sender=client_object.client)
         elif "RAW_MSG" in FLAG:
             client_object.add_raw_buffer(recv_data)
+        elif "B64_MSG" in FLAG:
+            self.msg("msg", f"New Messages:\n{client_object.decode_raw_msg(recv_data)}", sender=client_object.client)
              
     
     def show_servers(self) -> None:
@@ -309,3 +308,4 @@ class Central:
         for cli in self.clients.values():
             text += f"{cli.client:<35}{cli.info['system']:<35}{cli.server_name}\n"
         self.msg("msg", text)
+

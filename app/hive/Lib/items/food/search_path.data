@@ -1,0 +1,10 @@
+#!name##FOOD_path_sought
+#!types##data
+#!info##Different paths to directories. These are startup paths, appended paths in which there will be a search. You can add paths and directory names themselves. ** The file is located in the directory 'OUTPUT/shortcuts/searching_dir' ** 
+#!load##list
+#!###
+#!###           Different paths to directories. These are startup paths, appended paths in which there will be a search.
+#!###           You can add paths and directory names themselves. See shortcuts directory.
+
+Documents
+Microsoft\\Edge\\User Data

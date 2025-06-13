@@ -68,6 +68,7 @@ class QueenShell:
             self.sorter("wrapper", "It wraps, puts the worm code into other code. E.g., it puts python code into assembler.")
             self.sorter("process", "The worm's code pipeline. All the steps that will be taken to create the worm. Changing the default can lead to compilation errors.")
             self.sorter("cscript", "Compiler Script. see 'show --help' for more information")
+            self.sorter("food", "Special variables filled with lots of data that worms use.")
         
         @hiveShell.command()
         def clr() -> None:

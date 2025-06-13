@@ -8,6 +8,7 @@
 #!setVar##PR_cmd##uname -r##str
 #!import_FLAG##True
 #!render_FLAG##True
+#!TAGS##[PyS]
 import socket as s
 import subprocess as c
 try:

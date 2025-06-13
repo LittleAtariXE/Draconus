@@ -5,5 +5,6 @@
 #!reqVar##PP_text##Text to display##str
 #!setVar##PP_text##Hello World##str
 #!import_FLAG##True
+#!TAGS##[PyS]
 
 print("{{PP_text}}")

@@ -127,6 +127,7 @@
         <li><strong>Raw</strong>: Uses TCP socket but sends raw bytes, allowing for simple message reading and file reception (one at a time) without metadata such as name or type. Ideal for lightweight client programs that don't require complex communication.</li>
         <li><strong>Down</strong>: Designed solely for receiving files, without support for messages, commands, or other functionalities.</li>
         <li><strong>Send</strong>: A server designed only to send files to the client. It does not support messages or commands. When a connection is established, it automatically sends the set files.</li>
+        <li><strong>Send</strong>: TCP server. Receives and sends base64 encoded messages.</li>
     </ul>
     <h3>Make Servers:</h3>
     <p>Servers can be created using the following format:</p>
@@ -645,6 +646,32 @@ Keep in mind that creating complex worms with multiple modules, obfuscation tech
         <li><strong>Improved Module Display</strong> — The module lists, worm configurations, and variable tables are now displayed using the Python <code>tabulate</code> library for better formatting and readability.  
         ⚠️ Please re-run: <code>pip install -r requirements.txt</code> to update your environment.</li>
     </ul>
+    <h2>🛠️ Changelog for Version 1.2.3</h2>
+<ul>
+    <li><strong>New Commander Launch Option</strong> — You can now run the control interface directly with the command: <code>python3 c2.py</code>.  
+    This new loader will automatically activate the virtual environment, create one if missing, install all required dependencies, and then launch Commander.  
+    Both the old and new launch methods are supported and can be used interchangeably.</li>
+    <li><strong>New Server Type: <code>b64</code></strong> — A new server type that uses TCP sockets with Base64-encoded communication.  
+    Commands are sent using the standard <code>msg</code> instruction. This server type is required for communication with the new <code>Zaxxon</code> worm.</li>
+    <li><strong>New Worm: <code>Zaxxon</code></strong> — A fully assembly-written worm and the author's first large-scale project in pure ASM.  
+    <ul>
+        <li>Polymorphic design: every build produces a different binary with randomized code and values.</li>
+        <li>Uses hidden imports and passes Defender analysis tests.</li>
+        <li>Communicates over Base64-encoded TCP socket (requires server type <code>b64</code>).</li>
+        <li>Executes commands in new threads, allowing continuous communication during task execution.</li>
+        <li>Supports creation of a secondary socket for file transfer (ideal for <code>send</code> server).</li>
+        <li>Can search directories and steal files matching patterns like <code>*.jpg</code> or <code>aa??.bmp</code>.</li>
+        <li>Contains space for two separate shellcodes, hidden within large blocks of random text.</li>
+        <li>Includes special feature for injecting shellcode in fragments, decoded gradually from hidden text blocks (tested with MSF calc shellcode — undetected and successfully injected).</li>
+        <li>Scans process ranges to find candidates for injection.</li>
+        <li>Includes a fun feature to spam the screen with <code>MessageBox</code> windows.</li>
+        <li>All commands are available after connecting to Draconus. Use the command <code>msg help</code> to view supported options.</li>
+        <li>Zaxxon includes customizable parameters: hex names, random text pools for function obfuscation, and more.</li>
+        <li>Has the ability to clone itself and add entries to Windows autostart. Be cautious when testing!  
+            Check the Windows registry to find where Zaxxon has created its autostart entry.</li>
+    </ul>
+    </li>
+</ul>
 </div>
 </body>
 </html>

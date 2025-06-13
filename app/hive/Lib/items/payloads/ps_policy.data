@@ -3,5 +3,7 @@
 #!info##A command that launches the ability to execute scripts in powershell.
 #!payStep##format_ps
 #!lang##PowerScript
+#!system_FLAG##[W]
+#!TAGS##[PS]
 
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser

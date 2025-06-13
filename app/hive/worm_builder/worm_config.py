@@ -132,6 +132,13 @@ class WormBuilder:
                 self.add_compiler_script(item)
         
         self.check_depediences()
+
+    def add_support_file(self, item: object, target: str) -> None:
+        if target in self.raw_worm.sfiles.keys():
+            return
+        self.raw_worm.sfiles[target] = item
+        self.msg("msg", f"Add support file: {item.name} successfull")
+
             
     def add_compiler_script(self, item: object) -> None:
         wcomp = self.raw_worm.globalVar.get("COMPILER")
@@ -396,6 +403,17 @@ class WormBuilder:
                         self.Add("cscript", m.reqCS)
                 else:
                     self.Add("cscript", m.reqCS)
+        
+        # check for support files (sfile module)
+        for item in self.items:
+            for name, target in item.include.items():
+                sf = self.get_item("sfiles", name)
+                if not sf:
+                    self.msg("error", f"[!!] ERROR: No support file: '{name}' [!!]")
+                else:
+                    self.add_support_file(sf, target)
+        
+                    
         
         
         
@@ -791,6 +809,7 @@ class WormBuilder:
         text += "--- [CS] - Variable tag. File variable 'res' ('rc'). 'Compiler Script' variables do not affect the worm's operation, they are information of the ready executable file.\n"
         text += "--- [PyS] - Python script. Uses standard libraries.\n"
         text += "--- [PyEx] - Python script. Uses additional PIP libraries.\n"
+        text += "--- [PS] - Powershell script\n"
         if display:
             self.msg("msg", text)
         else:
@@ -965,6 +984,7 @@ class WormConfig:
         self.garbageVar = {}
         self._globalVar = {}
         self.cscript = None
+        self.sfiles = {}
     
     
     @property

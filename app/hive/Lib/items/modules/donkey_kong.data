@@ -8,6 +8,7 @@
 #!setVar##DK_clone_replace##False##str
 #!reqVar##DK_pause_start##Module start delay time given in seconds.##str
 #!setVar##DK_pause_start##1##str
+#!TAGS##[PyS]
 
 
 import psutil

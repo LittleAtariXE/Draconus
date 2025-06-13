@@ -11,6 +11,10 @@ class ProcessItem:
         self.sheme = []
         self.options = {}
 
+        # Not used but needed
+        self.system_FLAG = "[LW]"
+        self.tags = ""
+
         self.make()
     
 

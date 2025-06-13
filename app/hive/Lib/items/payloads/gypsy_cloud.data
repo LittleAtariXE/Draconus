@@ -10,7 +10,7 @@
 #!setVar##GC_target##windows##str
 #!import_FLAG##True
 #!render_FLAG##True
-
+#!TAGS##[PyS]
 
 
 import socket

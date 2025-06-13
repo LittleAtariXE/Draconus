@@ -4,6 +4,7 @@
 #!reqFood##FOOD_WinCookiesPath##FOOD_WinCookiesPath##Path to cookies directory
 #!reqSMod##DustMan
 #!system_FLAG##[W]
+#!TAGS##[PyS]
 
 
 import os

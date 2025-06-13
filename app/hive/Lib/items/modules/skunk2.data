@@ -8,7 +8,7 @@
 #!reqPayload##SKN_bin##Binary Payload
 #!payStep##load_binary
 #!payStep##encode_bin64
-
+#!TAGS##[PyS]
 
 import os
 import multiprocessing

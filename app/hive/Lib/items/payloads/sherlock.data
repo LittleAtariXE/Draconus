@@ -11,6 +11,7 @@
 #!reqVar##IP_ADDR##Host ip address##str
 #!reqVar##SHL_port##Host port number##int
 #!setVar##SHL_port##4444##int
+#!TAGS##[PyS]
 
 
 import socket

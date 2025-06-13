@@ -18,7 +18,7 @@
 #!reqFood##FOOD_company##FOOD_company_name##Company name database
 #!reqFood##FOOD_app##FOOD_app_name##Application name database
 #!reqFood##FOOD_fdesc##FOOD_file_description##Application description database
-
+#!system_FLAG##[W]
 
 
 

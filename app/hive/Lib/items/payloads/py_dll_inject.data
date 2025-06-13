@@ -16,6 +16,8 @@
 #!setVar##GLOBAL_NO_DLL##True##str
 #!import_FLAG##True
 #!render_FLAG##True
+#!system_FLAG##[W]
+#!TAGS##[PyS]
 
 
 import os

@@ -14,13 +14,3 @@ if __name__ == "__main__":
     draco = Draconus(builder, opt)
     draco.Start()
 
-
-
-# if __name__ == "__main__":
-#     options = Starter(sys.argv)
-#     builder = Builder(options.args.get("extra_config", None))
-#     draco = Draconus(builder, **options.args)
-#     draco.Start()
-#     # input()
-#     # draco.Exit()
-    

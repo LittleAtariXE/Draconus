@@ -2,7 +2,7 @@
 #!types##module
 #!info##Allows communication via Discord Webhook and requests module. Send messages and files to Discord.
 #!reqVar##DC_url##Discord webhook url.##str
-
+#!TAGS##[PyEx]
 
 import requests
 import os

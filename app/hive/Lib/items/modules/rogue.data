@@ -3,6 +3,7 @@
 #!info##A simple module for stealing files with a specific extension. It searches directories from the startup location.
 #!reqVar##RO_ext##File extension too steal##str
 #!setVar##RO_ext##ico##str
+#!TAGS##[PyS]
 
 import os
 from time import sleep

@@ -7,6 +7,8 @@
 #!setVar##PSB_hz##500##str
 #!render_FLAG##True
 #!payStep##format_ps
+#!system_FLAG##[W]
+#!TAGS##[PS]
 
 [System.Console]::Beep({{PSB_hz}},{{PSB_time}})
 Start-Sleep -milliseconds 700
