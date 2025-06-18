@@ -681,6 +681,10 @@ Keep in mind that creating complex worms with multiple modules, obfuscation tech
     <ul>
     <li><strong>Update readme</strong></li>
     </ul>
+<h2>🛠️ Changelog for Version 1.2.42</h2>
+    <ul>
+    <li><strong>Fixing bugs</strong></li>
+    </ul>
 </div>
 </body>
 </html>
