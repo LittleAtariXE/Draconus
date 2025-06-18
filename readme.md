@@ -34,6 +34,10 @@
     <p>Some modules, such as <code>PyVir</code> or <code>Panther</code>, can infect files or destroy a system after a single execution. The same applies to modules designed for DDOS attacks.</p>
     <p>Use this tool wisely to avoid unintentionally causing harm to yourself or others.</p>
 </div>
+<div id="tutorial_link">
+    <h2>Draconus Tutorials</h2>
+    <p>***** <a href="https://github.com/LittleAtariXE/Draconus_Tutorials">TUTORIALS</a> *****</p>
+</div>
 <div id="Contents">
     <h2>Contents</h2>
     <ul>
@@ -53,6 +57,7 @@
         <li><a href="#AboutProject">About The Project</a></li>
         <li><a href="#Features">Project Features</a></li>
         <li><a href="#Changelog">Changelog</a></li>
+        <li><a href="https://github.com/LittleAtariXE/Draconus_Tutorials">Tutorials</a></li>
     </ul>
 </div>
 <div id="About">
@@ -672,6 +677,10 @@ Keep in mind that creating complex worms with multiple modules, obfuscation tech
     </ul>
     </li>
 </ul>
+<h2>🛠️ Changelog for Version 1.2.4</h2>
+    <ul>
+    <li><strong>Update readme</strong></li>
+    </ul>
 </div>
 </body>
 </html>

