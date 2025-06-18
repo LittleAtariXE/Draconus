@@ -22,7 +22,7 @@ class CompilerData:
         return self.comp.status
     
     def status(self) -> str:
-        if not self.status:
+        if not self.comp.status:
             return "NOT INSTALLED"
         else:
             return "READY"
