@@ -28,6 +28,8 @@ class WormBuilder:
         # self.texter_4c = Texter4C(25,25,30,100,add_new_line=True)
         self.shadow_mod_tag = "_"
         self.icons = Icons(self, self.queen)
+        
+
     
     def prepare_screen(self) -> None:
         c2 = self.cscr["2c"]
@@ -70,7 +72,7 @@ class WormBuilder:
         if not self.raw_worm.master_worm:
             return "<UNKNOWN>"
         if not self.raw_worm.master_worm.lang:
-            return "Python"
+            return "py"
         else:
             return self.raw_worm.master_worm.lang
     
@@ -130,8 +132,23 @@ class WormBuilder:
                 self.add_process(item)
             case "cscript":
                 self.add_compiler_script(item)
+            case "scode":
+                self.add_shellcode_temp(item)
         
         self.check_depediences()
+    
+    def add_shellcode_temp(self, item: object) -> None:     
+        if self.raw_worm.master_worm.extBuild != "WinShell":
+            self.msg("error", "[!!] ERROR: Shellcode template can only be added to a special worm. [!!]")
+            self.msg("error", "[!!] Choose a worm to build shellcodes. [!!]")
+            return
+        if not self.raw_worm.scode:
+            resp = f"Add shellcode template: '{item.name}' successfull"
+        else:
+            resp = f"Replace shellcode template from '{self.raw_worm.scode.name}' to '{item.name}' successfull"
+        self.raw_worm.scode = item
+        self.msg("msg", resp)
+
 
     def add_support_file(self, item: object, target: str) -> None:
         if target in self.raw_worm.sfiles.keys():
@@ -477,6 +494,8 @@ class WormBuilder:
                     acm += f"[{am}] "
             wi["data"].append(["Accepted Modules:"], acm)
         comp = self.raw_worm.globalVar.get("COMPILER")
+        if not comp:
+            comp = "<Compiler not set>"
         wi["data"].append(["Compiler:", comp])
         width = list(self.cscr["2c"])
         # wi["headers"] = ["-" * width[0], " ----------------------- WORM INFO ----------------------------"]
@@ -798,7 +817,18 @@ class WormBuilder:
             self.msg("msg", "", table=wi)
         else:
             return wi
-
+    
+    def show_scode_temp2(self, display: bool = False, empty_show: bool = False) -> Union[dict, None]:
+        if not self.raw_worm.scode:
+            return {}
+        wi = {}
+        wi["headers"] = ["TEMPLATE NAME:", "NULL Bytes:", "SHELLCODE DESCRIPTION:"]
+        wi["data"] = [[self.raw_worm.scode.name, "yes" if self.raw_worm.scode.NullBytes else "no", self.raw_worm.scode.info]]
+        wi["width"] = list(self.cscr["3c"])
+        if display:
+            self.msg("msg", "", table=wi)
+        else:
+            return wi
 
     def show_help(self, display: bool = False, empty_show: bool = False) -> Union[str, None]:
         text = self.title("Description:")
@@ -810,6 +840,7 @@ class WormBuilder:
         text += "--- [PyS] - Python script. Uses standard libraries.\n"
         text += "--- [PyEx] - Python script. Uses additional PIP libraries.\n"
         text += "--- [PS] - Powershell script\n"
+        text += "--- [SCode] - Shellcode"
         if display:
             self.msg("msg", text)
         else:
@@ -862,6 +893,7 @@ class WormBuilder:
         wi.append(self.show_wrapper2())
         wi.append(self.show_process2())
         wi.append(self.show_compiler2())
+        wi.append(self.show_scode_temp2())
         
         if display:
             self.msg("msg", "", table=wi)
@@ -926,6 +958,12 @@ class WormBuilder:
         if pr != {}:
             wi.append(self.make_separator("PROCESS ITEM"))
             wi.append(pr)
+        sc = self.show_scode_temp2()
+        if sc != {}:
+            wi.append(self.make_separator("SHELLCODE TEMPLATE"))
+            wi.append(sc)
+        
+        wi.append(self.make_separator("*"))
         # cmp = self.show_compiler2()
         # if cmp != {}:
         #     wi.append(self.make_separator("COMPILER"))
@@ -985,6 +1023,7 @@ class WormConfig:
         self._globalVar = {}
         self.cscript = None
         self.sfiles = {}
+        self.scode = None
     
     
     @property
@@ -1016,6 +1055,8 @@ class WormConfig:
             mods.append(self.wrapper)
         if self.cscript:
             mods.append(self.cscript)
+        if self.scode:
+            mods.append(self.scode)
         return mods
 
     @property

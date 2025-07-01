@@ -1,0 +1,7 @@
+#!name##shellcode_x64
+#!types##process
+#!info##shellcode builder
+
+[BASE]
+[SAVE_RAW]
+[WIN_SHELLCODE]

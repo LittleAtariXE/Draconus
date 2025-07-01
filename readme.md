@@ -685,6 +685,26 @@ Keep in mind that creating complex worms with multiple modules, obfuscation tech
     <ul>
     <li><strong>Fixing bugs</strong></li>
     </ul>
+<h2>🛠️ Changelog for Version 1.3</h2>
+<ul>
+    <li><strong>New Worm: <code>WShellcode</code></strong> — A new template for generating Windows x64 shellcode.  
+    This main worm type allows you to create shellcode from predefined templates.  
+    To begin shellcode generation, add <code>WShellcode</code> as your base worm with the command:  
+    <code>add worm WShellcode</code>.  
+    Templates are available as a new type of module called <code>scode</code>.  
+    To list all available shellcode templates, run: <code>show scode</code>.</li>
+    <li><strong>New Module Type: <code>scode</code></strong> — Shellcode templates used to generate working shellcode.  
+    These modules provide different payload behaviors in low-level binary form.</li>
+    <li><strong>New Shellcode Module: <code>WinExec</code></strong> — A simple test shellcode that uses the <code>WinExec</code> function to launch a program (default: <code>calc.exe</code>, can be changed).  
+    Mainly for testing — unless someone gets creative with the commands 😄</li>
+    <li><strong>New Shellcode Module: <code>WEPy</code></strong> — A shellcode that uses <code>OpenProcessA</code> to spawn Python via <code>cmd</code> and inject a script directly.  
+    It includes a slot for a Python-based payload that you can insert manually.</li>
+    <li><strong>New Compiler Option: <code>build --spayload</code></strong> — Builds a shellcode and places it into the payload library.  
+    The generated shellcode can then be used like any other ready-to-use payload in other worms.</li>
+    <li><strong>New Compiler Option: <code>build --food</code></strong> — Builds a shellcode and stores it as a <code>FOOD</code>-type variable.  
+    These shellcodes can later be inserted into other worms or modules that accept shellcode as input.</li>
+    <li><strong>Bug Fixes</strong> — Several minor bugs were fixed and improvements made for better overall stability.</li>
+</ul>
 </div>
 </body>
 </html>

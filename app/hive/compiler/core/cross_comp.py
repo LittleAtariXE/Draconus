@@ -408,3 +408,20 @@ class CrossComp:
         self.msg("msg", "Stopping Compiler ......")
         self.compiler.stop()
         return raw
+    
+    def build_shellcode64(self, raw: object) -> object:
+        self.msg("msg", "Use mingw-x64", sender=self.name)
+        self.msg("msg", "Start Compiler: mingw-x64", sender=self.name)
+        self.compiler.start()
+        cmd = f"nasm -f bin {raw.raw_code_file_name} -o {raw.name}.o"
+        self.msg("dev", cmd, sender=self.name)
+        self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && {cmd}")
+        cmd = f"objdump -D -b binary -mi386:x86-64 {raw.name}.o"
+        self.msg("msg", cmd, sender=self.name)
+        self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && {cmd}")
+        self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && {cmd} > {raw.name}_objdump.txt")
+        self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && chmod 777 *")
+        raw.bin_file_path = os.path.join(raw.work_dir, f"{raw.name}.o")
+        self.msg("msg", "Stopping Compiler ......")
+        self.compiler.stop()
+        return raw

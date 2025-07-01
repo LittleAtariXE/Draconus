@@ -3,6 +3,7 @@ from typing import Union
 from .worm_var import WormVar
 from .garbage_var import GarbageVar
 from .include_item import IncludeCode
+from .payload_object import PayloadObject
 
 LIBRARY_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 LIBRARY_DIR_BINARY = os.path.join(LIBRARY_DIR, "items", "binary")
@@ -139,8 +140,22 @@ class LibItem:
         # ex: include##Falcon_part1##falcon_mod
         self.include = {}
 
+        # Using additional modules to build the worm
+        # WinShell - Shellcode builder for windows x64
+        self.extBuild = None
+
+        # New payload building system
+        # "#!Payload##<payload_name>##<operation_type>##value"
+        # ex "#!Payload##my_payload##step##encode_hex"
+        # ex "#!Payload##my_payload##options##render_FLAG##True
+        self.payload_object = {}
+        # use new payload building system
+        # "#!NewPayload##True"
+        self.payload_new = False
+
         ### MAKE
         self.make()
+
 
 
     @property
@@ -284,6 +299,16 @@ class LibItem:
     #     if len(data) > 2:
     #         for opt in data[2:]:
     #             sfile.add_options(opt)
+
+    def payload_add(self, headers: list) -> None:
+        if not self.payload_object.get(headers[0]):
+            self.payload_object[headers[0]] = PayloadObject(self.name, self)
+            pay = self.payload_object[headers[0]]
+        else:
+            pay = self.payload_object.get(headers[0])
+        
+        pay.read_headers(headers[1:])
+
         
 
 
@@ -361,3 +386,11 @@ class LibItem:
                     self.broken_FLAG = True
                 case "include":
                     self.include[d[1]] = d[2]
+                case "extBuild":
+                    self.extBuild = d[1]
+                # New payload building system
+                case "Payload":
+                    self.payload_add(d[1:])
+                case "NewPayload":
+                    self.payload_new = bool(d[1])
+                    

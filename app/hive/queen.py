@@ -9,6 +9,7 @@ from .worm_builder.worm_config import WormBuilder
 from .compiler.coder import Coder
 from .compiler.master import MasterCompiler
 from .compiler.worm_constructor import WormConstructor
+# from .compiler.tools.shell_master import ShellMaster
 
 class Queen:
     def __init__(self, builder_object: object):
@@ -114,7 +115,6 @@ class Queen:
         self.enter()
         opt = {}
         opt["NO_COMPILE"] = True
-
 
     def Run(self) -> None:
         pass

@@ -94,3 +94,7 @@ class MasterCompiler:
             case _:
                 self.msg("error", f"[!!] ERROR: Compiler: '{raw.compiler}' does not exists [!!]")
         return raw
+
+    def build_shellcode(self, raw: object) -> object:
+        self.cc.build_shellcode64(raw)
+        return raw

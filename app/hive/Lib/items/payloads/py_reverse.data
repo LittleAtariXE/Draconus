@@ -6,8 +6,7 @@
 #!setVar##PyR_port##4444##int
 #!reqVar##PyR_target##Target operating system. Select: 'linux' or 'windows'.##str
 #!setVar##PyR_target##windows##str
-#!import_FLAG##True
-#!redenr_FLAG##True
+#!NewPayload##True
 #!TAGS##[PyS]
 
 {% if PyR_target=="linux" %}

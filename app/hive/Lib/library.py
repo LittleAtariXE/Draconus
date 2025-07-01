@@ -5,6 +5,7 @@ from typing import Union
 from .tools.lib_item import LibItem as LibraryItem
 from .tools.food_item import FoodItem
 from .tools.process_item import ProcessItem
+from .tools.sc_item import ShellCodeItem
 from app.tools.text_formater import Texter
 
 LIBRARY_ITEMS = os.path.join(os.path.dirname(__file__), "items")
@@ -23,8 +24,9 @@ class Library:
         self.dir_comp_script = os.path.join(self.dir_items, "comp_script")
         self.dir_sfiles = os.path.join(self.dir_items, "sfiles")
         self.dir_icons = os.path.join(os.path.dirname(__file__), "icons")
+        self.dir_scode = os.path.join(self.dir_items, "sc_temp")
         self.console_scr = self.queen.conf.console_screen
-        self.not_standard_items = ["binary", "food", "process", "comp_script", "sfiles"]
+        self.not_standard_items = ["binary", "food", "process", "comp_script", "sfiles", "sc_item"]
         self.lib = {
             "worm" : {},
             "support": {},
@@ -37,7 +39,8 @@ class Library:
             "food" : {},
             "process": {},
             "cscript": {},
-            "sfiles" : {}
+            "sfiles" : {},
+            "scode" : {}
         }
         self.shadow = {}
         self.find_items()
@@ -46,6 +49,7 @@ class Library:
 
         # library directory
         self.DIR_PAYLOAD = os.path.join(LIBRARY_ITEMS, "payloads")
+        self.DIR_FOOD = os.path.join(LIBRARY_ITEMS, "food")
         
     
     @property
@@ -86,6 +90,11 @@ class Library:
         for item in os.listdir(self.dir_sfiles):
             sf = LibraryItem(os.path.join(self.dir_sfiles, item))
             self.lib["sfiles"][sf.name] = sf
+        ### Shellcode template ###
+        for item in os.listdir(self.dir_scode):
+            sc = ShellCodeItem(os.path.join(self.dir_scode, item))
+            self.lib["scode"][sc.name] = sc
+
         
 
     

