@@ -9,6 +9,10 @@ class TT_MOD_Shadow:
     def __init__(self, temp_tool: object):
         self.TT = temp_tool
         self.default_table = None
+
+        # layers
+        self.LAYER_TEXT_PRINTABLE = string.printable
+        self.LAYER_DEFAULT = string.ascii_letters + string.digits + "_" + "." + " " + ":" + "%" + '"' + "-"
     
     def reset_default_table(self) -> None:
         self.default_table = None
@@ -38,7 +42,8 @@ class TT_MOD_Shadow:
     
     def make_table(self, data: str, base_chars: str = None, set_as_default: bool = False) -> dict:
         if not base_chars:
-            base_chars = string.ascii_letters + string.digits + "." + "_"
+            # base_chars = string.ascii_letters + string.digits + "." + "_" + "-" + "!" + "@" + "#" + "$" + "&" + "*" + "(" + ")"
+            base_chars = self.LAYER_DEFAULT
         chars = {}
         for char in base_chars:
             chars[char] = []
@@ -49,6 +54,8 @@ class TT_MOD_Shadow:
             chars[char].append(index)
         if set_as_default:
             self.default_table = chars
+        # for k, i in self.default_table.items():
+        #     print(f"{k} - {i}")
         return chars
     
     def make_code(self, in_name: str, data: str = None, base_chars: str = None) -> str:
@@ -76,3 +83,4 @@ class TT_MOD_Shadow:
         scode += " 0"
         code = vcode + "\n" + scode + "\n"
         return code
+

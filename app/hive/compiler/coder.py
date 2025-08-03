@@ -12,6 +12,7 @@ from .tools.pay_builder import PayloadBuilder
 from .tools.pay_builder2 import PayloadBuilder2
 
 from .tools.coder_template_tools.master_tool import MasterTempTool
+from .tools.coder_template_tools.master_gen_tool import MasterGenTools
 
 
 class RawCode:
@@ -84,6 +85,7 @@ class Coder:
         self.shadow = Shadow(self)
         self.garbage_man = GarbageMan(self)
         self.temp_tools = MasterTempTool(self)
+        self.gen_temp_tools = MasterGenTools(self)
         
  
     @property
@@ -203,14 +205,14 @@ class Coder:
         code = self.return_code(mod, mod.import_FLAG)
         if mod.render_FLAG:
             code = Template(code)
-            code = code.render(**var, TOOL=self.temp_tools)
+            code = code.render(**var, TOOL=self.temp_tools, GTOOL=self.gen_temp_tools)
         return code
 
     # New render
     def render_single_template(self, code_temp: str, var: dict = {}):
         try:
             code = Template(code_temp)
-            code = code.render(**var, TOOL=self.temp_tools)
+            code = code.render(**var, TOOL=self.temp_tools, GTOOL=self.gen_temp_tools)
             return code
         except Exception as e:
             self.msg("error", f"[!!] ERROR render template: {e} [!!]")

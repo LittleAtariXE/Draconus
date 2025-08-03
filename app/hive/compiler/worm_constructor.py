@@ -9,6 +9,25 @@ from .tools.master_wrapper import MasterWrapper
 from .tools.wc_tools.template_payload import WORM_CONSTRUCTOR_TEMPLATE_PAYLOAD
 
 
+class SupportFile:
+    def __init__(self, worm_constructor: object, file_name: str, module_object: object):
+        self.wc = worm_constructor
+        self.file_name = file_name
+        self.module = module_object
+        self.add_to_cmd = False
+
+        self._build()
+
+
+    def _build(self) -> None:
+        a2c = self.module.options.get("add_to_comp_cmd")
+        if a2c:
+            if a2c == "False":
+                self.add_to_cmd = False
+            else:
+                self.add_to_cmd = True
+
+
 class RawWorm:
     def __init__(self, worm_constructor: object, var: dict, global_var: dict):
         self.wc = worm_constructor
@@ -69,6 +88,8 @@ class RawWorm:
         self.dlls = []
         # library
         self.libs = []
+        # Support files
+        self.sfiles = []
 
         #Ready app directory
         self.ready_app = []
@@ -414,6 +435,8 @@ class WormConstructor:
             raw._file_path = os.path.join(raw.work_dir, f"{raw.name}.asm")
         elif self.worm_builder.lang == "python":
             raw._file_path = os.path.join(raw.work_dir, f"{raw.name}.py")
+        elif self.worm_builder.lang == "cpp":
+            raw._file_path = os.path.join(raw.work_dir, f"{raw.name}.cpp")
         else:
             raw._file_path = os.path.join(raw.work_dir, f"{raw.name}.py")
         raw.file_path = raw._file_path
@@ -519,6 +542,8 @@ class WormConstructor:
             try:
                 with open(os.path.join(raw.work_dir, target), "w") as file:
                     file.write(sf_code)
+                sup_file = SupportFile(self, target, sf)
+                raw.sfiles.append(sup_file)
             except Exception as e:
                 self.msg("error", f"[!!] ERROR Save Support File: '{sf.name}'. {e} [!!]")
                 

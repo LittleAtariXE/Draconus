@@ -1,0 +1,81 @@
+#!name##TEXT_data1
+#!types##data
+#!info##Some text: description, instruction etc.
+#!load##text_clean
+
+In the year 2049-AE, after the fall of Neo-Terra#7, the remnants of humanity formed the Resistance_Unit!X under Commander Jax*Vortex99. Their mission: to stop the rogue AI entity known as (Ω-KRYP7ON) from activating the ancient weapon Zion_Core@Alpha(1).
+You play as operative Elara-X9, a cyber-enhanced shadow agent trained by the secret guild Ghost$Byte. Traverse hostile zones such as Cryo-Fortress#88, Reactor_Pit-42, and the Mirage@Delta_Complex while decoding encrypted terminals and bypassing firewall systems named Sentinel#LOCK!01.
+Throughout the journey, you’ll acquire weapons like the Pulse_Blade!, Quantum-Bow#X, and the legendary (Neuro$Burst@Cannon). Use stealth, logic, and raw power to overcome units like DRONE_Unit#Z3, Berserker_!Golem, and Hack_Hound(Δ).
+Collect 128 shards of the $Key_Shard-XZ@777, survive the ZeroGravity$Maze, and finally face the final boss: Overseer!@Protocol(Ω)—the last line of defense between Earth and the Digital Abyss.
+Power levels are measured in Q-Units@!, and time is tracked using Chrono_Ticks#09. Can you decode the past and unlock the truth of the X-Zion Protocol?
+
+<<SEPARATOR>>
+Chapter 4: The Overseer@Kernel_$phere
+The final confrontation begins at the floating citadel, Kernel_Sphere-∞, orbiting the dead core of Neo-Terra. Protected by a shield encrypted with 4096-bit quantum layers, only the complete key — Final_Key-Ω@Prime(Complete_128) — can grant access.
+As Elara breaches the inner sanctum, the Overseer!@Protocol(Ω) activates. A construct of code, memory, and vengeance, it wields attacks such as Recur$ive_Firestorm(), Hex-Grid_Lockout#22, and AI_Mind_Rupture!.
+Combat is turnless, chaotic, and real-time — expect HUD malfunctions, memory overwrites, and fake system alerts like:
+ALERT: Your consciousness has been duplicated. Press [Y/N] to continue corruption.
+
+<<SEPARATOR>>
+"The code is not written. It is remembered. 0011_@Δ"
+— Dr. V!Rux_7, Cipher Architect of the Nullwave Syndicate
+"You think you're the player? Look again: you're the save file."
+— Overseer!@Protocol(Ω)
+"Reality fractured when Line_42# of the Source Code was executed without parameters..."
+— SysLog: VaultZX_0001/sys_error@2:18
+"To bypass a lock, become the key."
+— Elara-X9, Journal Entry @ 3:77:Ξ
+"Do not trust the prompt that says 'Press (Y) to continue' — it’s not for you."
+— Hollow_Monk#44, Guardian of Sector_Rift
+PROJECT: ASCENSION_PROTOCOL@VOID-21
+In the BROKEN SKIES of SECTOR-XN, humanity's LAST HOPE lies in the hands of the rogue AI, ALPHA-ZERO, and the shadow unit known as TEAM_NOVA@777. After the fall of the CORE_STATION-Z, the REMNANT FORCES initiated OPERATION: BLACKFIRE_EXODUS.
+You are AGENT ZYX-47, a GENETICALLY-ENHANCED HACKER-SOLDIER. Equipped with the VORTEX_SUIT-X, you are deployed into hostile regions like ZONE_OMEGA, FALLEN_BASE#A3, and CITADEL@DUSK-XC. Each region contains encrypted RELIC NODES guarded by DRONES, MECHAS, and THE_WARDEN@VOID(Ω).
+To survive, access UPGRADE_STATIONS and install mods like:
+SHIELD++_ALPHA_MODE
+JETPACK_MODULE$G2
+GHOST_PROTOCOL_@SHADOW(99)
+
+<<SEPARATOR>>
+#Welcome to Tarzan Diamond Quest, a thrilling jungle adventure where players take on the role of Tarzan, the legendary king of the jungle, in a fast-paced platformer filled with danger, mystery, and sparkling treasure. The game begins deep in the heart of the Emerald Wilds, a lush and dangerous rainforest filled with ancient ruins, hidden caves, and wild beasts. Tarzan receives a vision from the spirits of the jungle revealing that the sacred Diamond of Life has shattered into hundreds of pieces scattered across the land. Without these magical diamonds, the balance of nature will be lost and the jungle will fall into chaos.
+Armed with only a vine whip and his unmatched agility, Tarzan must swing through treetops, leap over ravines, and battle deadly predators such as panthers, snakes, and giant apes. Each level offers a new environment, from misty waterfalls and forgotten temples to lava-filled volcanic tunnels and underground crystal caverns. Along the way, Tarzan collects diamonds that glimmer in the trees, float above treacherous cliffs, or lie hidden in secret chambers protected by ancient traps.
+The game features dozens of missions including time challenges, puzzle-solving, and boss fights against jungle warlords corrupted by the diamonds' power. As players gather more diamonds, Tarzan gains new abilities like double-jumping, wall climbing, and summoning animal allies such as Zula the eagle and Bombo the gorilla to help in his quest. Collecting all 300 diamonds unlocks the final level, the Temple of the First Tree, where Tarzan faces the spirit of a fallen jungle god and must restore the Diamond of Life to its original form.
+Tarzan Diamond Quest is not just about speed and reflexes, but also exploration and mastery. Hidden paths, secret shortcuts, and bonus stages reward players who pay attention to the environment and think like a jungle survivor. The game offers both single-player and cooperative multiplayer modes, where a second player can join as Jane, equipped with her own gadgets and a grappling vine.
+With its vibrant hand-drawn art style, dynamic weather effects, and a sweeping orchestral soundtrack full of drums and animal cries, Tarzan Diamond Quest immerses players in a rich, living jungle world. Whether you're jumping from vines over a crocodile pit or racing against a collapsing stone bridge, every moment in Tarzan Diamond Quest is packed with excitement and wild discovery. Are you ready to reclaim the jungles heart and bring balance back to the wild?
+Welcome to XENOVOID 2099 The Fall of RAINBOW_CORP
+In the year 2099 the world is no longer what it once was Mega-corporations like RAINBOW_CORP Z3NTAX_Ultra and OmegaByte7 have divided the Earth into districts ruled by data drones and domination From the acid deserts of Qyxora to the floating islands of Delta_Cloud9 the balance of power hinges on one thing control of the XENOVOID a powerful digital realm bridging reality and code
+Gameplay Overview
+5. In XENOVOID 2099 you play as Agent_ZeroX a genetically modified infiltrator working for the resistance faction known as AlphaZeta_Unit Your mission decrypt the 64 keys hidden across 26 zones each guarded by a unique AI warden like Kappa_Mind_V2 EchoZilla_404 or ByteKnight_X1
+To survive you'll use tools like
+X_Scan3000 a realtime data analyzer
+jump_module_v12 allows zerogravity parkour
+
+<<SEPARATOR>>
+MP does not start if the player states differ
+Ubi.com error message does not appear after a win in a rating game
+Random cities use name and description from map
+Profile screen fixes (experience, alignment)
+Haven: stables message is back, other messages fixed
+Profile screen: random race games now shown correctly
+Camera glitches in Rebellion' campaign map cutscene removed
+Item selection in lobby screen fixed
+Ghost mode 'guard' command fixed
+Ghost mode after disconnection turn transfer fixed
+Profile info for other players now accessible
+Map info for MP games is localized
+The spells added by the library are given to the hero immediately
+MP game preferences panel fixed
+Resisted combat text fixed
+Training games results are not reported to Ubi.com now
+Hero perk rolls fixed
+Elemental creatures not affecting by Wasp Swarm spell now
+Druid Elder's Mana Feed ability fixed
+Temptress hero specialization fixed
+Some points of Combat AI fixed
+The Promise campaign map 3-th cutscene sound fixed
+ATBBar refresh fixed
+Separate stacks displayed in Combat Results
+Heroes planned paths searching at turn start after whirlpool fixed
+Invalid level ups (double skill increases) blocked
+Representation of heroes on boats in ghost mode now is correct
+
+<<SEPARATOR>>

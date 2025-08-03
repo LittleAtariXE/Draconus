@@ -16,6 +16,9 @@ class FoodItem:
         # Data loading type.
         self.load = None
 
+        # options
+        self.options = {}
+
         self.make()
 
 
@@ -45,13 +48,23 @@ class FoodItem:
                     self.info = d[1]
                 case "load":
                     self.load = d[1]
+                case "options":
+                    self.options[d[1]] = d[2]
     
     def load_list(self, data: list) -> list:
         out = []
-        for d in data:
-            if d == "" or d == "\n":
-                continue
-            out.append(d.rstrip("\n"))
+        cut_text = self.options.get("cut")
+        if cut_text:
+            cut_text = int(cut_text)
+            for d in data:
+                if d == "" or d == "\n" or len(d) < cut_text:
+                    continue
+                out.append(d.rstrip("\n"))
+        else:
+            for d in data:
+                if d == "" or d == "\n":
+                    continue
+                out.append(d.rstrip("\n"))
         return out
     
     def load_list_tuple(self, data: list) -> list:
@@ -96,8 +109,17 @@ class FoodItem:
         return text.title()
     
     def load_text_clean(self, data: list) -> str:
-        text = "".join(data)
-        text = text.replace("\n", "")
+        cut_text = self.options.get("cut")
+        if cut_text:
+            cut_text = int(cut_text)
+            text = ""
+            for line in data:
+                if len(line) < cut_text:
+                    continue
+                text += line.replace("\n", "")
+        else:
+            text = "".join(data)
+            text = text.replace("\n", "")
         return text
     
     def load_data(self) -> any:

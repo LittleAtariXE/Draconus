@@ -1,0 +1,10 @@
+#!name##ExampleText1
+#!types##data
+#!info##Text contains all letters, digits and some symbols. This is simple: qwertyuiopasdf.... etc.
+#!load##text_clean
+
+#qwertyuiopasdfghjklzxcvbnm
+QWERTYUIOPASDFGHJKLZXCVBNM_-
+1234567890.,$%
+EXAMPLE TEXT example text
+

@@ -7,6 +7,8 @@ from .shadow_tool import SHADOW_DEFAULT_LAYER, SHADOW_LAYER_1
 from .var_tool import TT_MOD_VarGenerator
 from .win_shellcoder import WinShell
 from .command_tool import CommandTool
+from .shadow_scode import ShadowSC
+from .asm_generator import AsmGenerator
 
 from typing import Union
 
@@ -20,6 +22,8 @@ class MasterTempTool:
         self.var_generator = TT_MOD_VarGenerator(self)
         self.wshell = WinShell(self)
         self.cmd_tool = CommandTool(self)
+        self.shadow_scode = ShadowSC(self)
+        self.asmgen = AsmGenerator(self)
 
 
         # Layers
@@ -104,3 +108,15 @@ class MasterTempTool:
         # ex: cmd.exe /C python -c exec($)
         # $ - script
         return self.cmd_tool.script_loader(script, loader, loader_char)
+
+    def asm_stack_load(self, code: str, registry: str = "rcx", bytes_len: int = 8, shadow_space_enter: int = 40, add_null_terminator: bool = True, add_tabulate: int = 1) -> tuple:
+        # push data on stack, use registry
+        # ex: mov rcx, 0x1234567890
+        #     push rcx
+        return self.wshell.stack_load(code, registry, bytes_len, shadow_space_enter, add_null_terminator, add_tabulate)
+    
+    def shellcode_text(self, text_database: list, scode: str, var_name: str, sc_bytes_num: int = 2, num_range: int = 5, start_index: int = None) -> str:
+        return self.shadow_scode.build(text_database, scode, var_name, sc_bytes_num, num_range, start_index)
+    
+    def asm_build_scode(self, shellcode: str, text_data: str, var_name: str) -> str:
+        return self.asmgen.build_scode(shellcode, text_data, var_name)

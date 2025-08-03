@@ -1,0 +1,434 @@
+#!name##DuckTales
+#!types##support
+#!subTypes##lib
+#!info##A module containing a text base used for obfuscating called function names, loaded libraries, and more. It allows dynamic function imports directly from kernel32, as well as loading additional libraries and functions. It requires a text base that includes all letters, digits, and most special characters. By default, it uses the base from the 'FOOD' section, which can be changed or modified.
+#!options##LIB_COMPILER##mingw-x64
+#!options##DLL_NO_DLL##True
+#!lang##asm
+#!system_FLAG##[W]
+#!reqFood##DT_text##ExampleText1##text database
+
+{% set DUCK_TBASE = TOOL.AsmSh_make_table(data=DT_text, set_as_default=True) %}
+
+
+bits 64
+default rel
+
+%define DUCK_TALES_TITLE_BUFFER 4096
+%define DUCK_TALES_DECRYPTED_BUFF 1024
+%define DUCK_TALES_FUNC_NAME_BUFF 128
+
+global DuckGet
+global DuckShow
+global DuckShow2
+global DuckStartTales
+global DuckGetKFunc
+global DuckIntro
+
+
+
+extern lstrcmpA
+
+
+section .data
+
+{{TOOL.AsmSh_build_var(DT_text, "louie")}}
+
+    
+    duck_item1: dd {{TOOL.AsmSh_encode("LoadLibraryA")}} ; LoadLibraryA
+    duck_item2: dd {{TOOL.AsmSh_encode("GetProcAddress")}} ; GetProcAddress
+
+
+    
+section .bss
+    duck_k32: resq 1    ; kernel32.dll address
+    duck_exp: resq 1    ; Export Table address
+    mc_duck: resb DUCK_TALES_TITLE_BUFFER   ; buffer for text
+    duck_temp: resb DUCK_TALES_DECRYPTED_BUFF   ; buffer for decrypted text
+    duck_ftemp: resb DUCK_TALES_FUNC_NAME_BUFF
+    dowey_duck: resq 1  ; LoadLibraryA address
+    huey_duck: resq 1   ; GetProcAddress address
+
+section .text
+
+DuckIntro:
+; return pointer to text database
+; OUT: rax - pointer to text database
+    push rbp
+    mov rbp, rsp
+    
+    lea rax, [mc_duck]
+    
+    pop rbp
+    ret
+  
+DuckGet:
+; Get function address from kernel32 or other library
+; IN: rcx - encoded function name
+; IN: rdx - encoded DLL name or 0 (kernel32)
+; OUT: rax - function address or 0
+    push rbp
+    mov rbp, rsp
+    sub rsp, 24
+    mov [rbp-8], rcx    ; encoded func name
+    mov [rbp-16], rdx   ; encoeded dll name
+    push rsi
+    push rdi
+    
+    cmp rdx, 0
+    je .kernel_load
+    
+    
+    ; decode DLL name
+    sub rsp, 40
+    mov rcx, [rbp-16]
+    mov rdx, DUCK_TALES_FUNC_NAME_BUFF
+    lea r8, [duck_ftemp]
+    call DuckShow2
+    ; decode func name
+    mov rcx, [rbp-8]
+    call DuckShow
+    ; load DLL and get function address
+    mov rcx, rax
+    lea rdx, [duck_ftemp]
+    call DuckGetChest
+    add rsp, 40
+      
+    
+    .return:
+        pop rdi
+        pop rsi
+        add rsp, 24
+        pop rbp
+        ret
+
+    .kernel_load:
+        sub rsp, 40
+        call DuckGetKFunc
+        add rsp, 40
+        jmp .return
+        
+
+
+
+
+
+DuckGetChest:
+; Load DLL and get function address
+; IN: rcx - function name
+; IN: rdx - DLL name
+; OUT: rax - function address or 0
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    mov [rbp-8], rcx   ; function name
+    mov [rbp-16], rdx   ; dll name
+    
+    
+    ; load DLL
+    sub rsp, 32
+    mov rcx, rdx
+    lea rax, [dowey_duck]
+    mov rax, [rax]
+    call rax    ; call LoadLibraryA
+
+    cmp rax, 0
+    je .error
+    
+    ; get function address
+    mov rcx, rax
+    mov rdx, [rbp-8]
+    lea rax, [huey_duck]
+    mov rax, [rax]
+    call rax    ; call GetProcAddress
+    cmp rax, 0
+    je .error
+    
+    .return:
+        add rsp, 16 + 32
+        pop rbp
+        ret
+
+    .error:
+        xor rax, rax    ;return 0
+        jmp .return
+
+DuckStartTales:
+; Initialize module
+    push rbp
+    mov rbp, rsp
+    sub rsp, 48
+    
+    ; Find kernel32
+    call OpenTreasury
+    
+    ; build text data base
+    call PrepareTale
+    
+    ; get LoadLibraryA address
+    mov rcx, duck_item1
+    call DuckGetKFunc
+    lea rcx, [dowey_duck]
+    mov [rcx], rax  ; save address
+    
+    ; get GetProcAddress address
+    mov rcx, duck_item2
+    call DuckGetKFunc
+    lea rcx, [huey_duck]
+    mov [rcx], rax  ; save address
+     
+    add rsp, 48
+    pop rbp
+    ret
+
+DuckGetKFunc:
+; get function address from kernel32
+; IN: rcx - encoded function name. (dword list)
+; OUT: rax - function address or 0
+    push rbp
+    mov rbp, rsp
+    
+    sub rsp, 48
+    call DuckShow
+    mov rcx, rax
+    call DuckGetAddr
+    add rsp, 48
+    
+    pop rbp
+    ret
+    
+
+
+DuckGetAddr:
+; get function address from kernel32
+; IN: rcx - function name
+; OUT: rax - function address
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    push r12
+    push r13
+    push rsi
+    push rdi
+    push rbx
+    mov [rbp-8], rcx    ; function name
+    
+    lea rbx, [duck_k32]
+    mov rbx, [rbx]  ; RBX - kernel32 address
+    lea rsi, [duck_exp]
+    mov rsi, [rsi]     ; RSI - Export Table address
+    xor r12, r12    ; R12 - counter
+    mov r13d, [rsi+0x14]    ; Number of Function
+    
+    .loop:
+        cmp r12, r13    ; check func limit
+        jg .not_find
+        ; get function name
+        mov edx, [rsi+0x20]     ; RVA function name table
+        add rdx, rbx    ; RVA func name table + VA kernel32
+        mov edx, [rdx + 4 * r12]    ; get next entry RVA function name
+        add rdx, rbx    ; RVA func name + VA kernel32
+        
+        ; compare function name
+        sub rsp, 40
+        mov rcx, [rbp-8]
+        call lstrcmpA
+        add rsp, 40
+        cmp rax, 0
+        je .finded
+        inc r12 ; counter + 1
+        jmp .loop
+    
+    .finded:
+        mov edx, [rsi+0x24] ; get RVA AddressOfNameOrdinals (dword)
+        add rdx, rbx    ; RVA name ordinals + VA kernel32
+        xor rcx, rcx
+        mov cx, [rdx + 2 * r12]     ; get function index to function address (word)
+        mov edx, [rsi+0x1c]     ; get RVA table 'AddressOfFunctions'
+        add rdx, rbx    ; RVA table + VA kernel32
+        mov edx, [rdx + 4 * rcx]    ; get RVA function address
+        add rdx, rbx    ; RVA func addr + VA kernel32
+        ; return function address
+        mov rax, rdx
+    
+    .return:
+        pop rbx
+        pop rdi
+        pop rsi
+        pop r13
+        pop r12
+        add rsp, 16
+        pop rbp
+        ret
+     
+    .not_find:
+        xor rax, rax    ; return 0
+        jmp .return
+    
+    
+
+
+DuckShow2:
+; decrypt function name
+; IN: rcx - encrypted func name (dword)
+; IN: rdx - buffer length
+; IN: r8 - pointer to buffer
+; OUT: rax - pointer to buffer
+    push rbp
+    mov rbp, rsp
+    sub rsp, 32
+    mov [rbp-8], rcx    ; encrypted function name
+    mov [rbp-16], rdx   ; buffer length
+    mov [rbp-24], r8    ; pointer to buffer
+    push rsi
+    push rdi
+    
+    ;clear buffer
+    xor rax, rax
+    xor rcx, rcx
+    mov rdi, r8     ; pointer to buffer
+    mov rcx, [rbp-16]   ; buff len
+    mov byte al, 0
+    cld
+    rep stosb
+    
+    xor rdx, rdx    ; main index
+    mov rsi, [rbp-8]    ; encrypted func name
+    mov rdi, [rbp-24]
+    lea rcx, [mc_duck]  ; text data
+    xor rax, rax    ; temp
+    xor r8, r8  ; temp for index
+    .decode:
+        mov r8d, [rsi + 4 * rdx]     ; get char index from encrypted function name
+        cmp r8d, 0
+        je .return
+        mov byte al, [rcx + r8]     ; get char from text database
+        mov byte [rdi + rdx], al    ; put char in output buffer
+        inc rdx     ; index + 1
+        jmp .decode
+    
+    .return:
+        mov rax, [rbp-24]
+        pop rdi
+        pop rsi
+        add rsp, 32
+        pop rbp
+        ret
+
+DuckShow:
+; decrypt function name
+; IN: rcx - encrypted func name (dword)
+; OUT: rax - pointer to decrypted func name
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    mov [rbp-8], rcx    ; encrypted function name
+    push rdi
+    push rsi
+    
+    ; clear buffer
+    xor rax, rax
+    mov rcx, DUCK_TALES_DECRYPTED_BUFF
+    lea rdi, [duck_temp]
+    mov byte al, 0
+    cld
+    rep stosb
+    
+    xor rdx, rdx    ; main index
+    mov rsi, [rbp-8]    ; encrypted func name
+    lea rdi, [duck_temp]
+    lea rcx, [mc_duck]  ; text data
+    xor rax, rax    ; temp
+    xor r8, r8  ; temp for index
+    .decode:
+        mov r8d, [rsi + 4 * rdx]     ; get char index from encrypted function name
+        cmp r8d, 0
+        je .return
+        mov byte al, [rcx + r8]     ; get char from text database
+        mov byte [rdi + rdx], al    ; put char in output buffer
+        inc rdx     ; index + 1
+        jmp .decode
+    
+    .return:
+        lea rax, [duck_temp]    ; return pointer
+        pop rsi
+        pop rdi
+        add rsp, 16
+        pop rbp
+        ret
+    
+    
+PrepareTale:
+; combines parts of text into one text
+
+    push rbp
+    mov rbp, rsp
+    push rbx
+    
+    lea rax, mc_duck
+    lea rbx, louie_all
+    xor rcx, rcx    ; mc_duck counter
+    xor r9, r9  ; mc_duck byte index
+    xor rdx, rdx
+    .main_copy:
+        mov rdx, [rbx + 8 * rcx]
+        ; check end of struct 
+        cmp rdx, 0
+        je .return
+        xor rsi, rsi
+        xor rdi, rdi
+        .copy_var:
+            mov byte dil, [rdx + rsi]
+            cmp dil, 0
+            je .end_var
+            mov byte [rax + r9], dil    ; put bytes in mc_duck
+            inc r9  ; mc_duck byte index + 1
+            inc rsi ; var index + 1
+            jmp .copy_var
+    
+    .return:
+        pop rbx
+        pop rbp
+        ret   
+
+    .end_var:
+        inc rcx ; mc_duck counter + 1
+        jmp .main_copy 
+
+OpenTreasury:
+; find kernel32 and export table address
+
+    push rbp
+    mov rbp, rsp
+    push rbx    ; save rbx
+    push rsi    ; save rsi
+    push rdi    ; save rdi
+   
+    xor rbx, rbx
+    mov rbx, gs:[0x60]  ; Get address of PEB struct
+    mov rbx, [rbx+0x18] ; Get PEB_LDR_DATA address
+    mov rbx, [rbx+0x20] ; Get InMemoryOrderModuleList
+    mov rbx, [rbx]  ; 1st entry in InMemoryOrderModuleList (ntdll.dll)
+    mov rbx, [rbx]  ; 2st entry in InMemoryOrderModuleList (kernel32.dll)
+    mov rsi, [rbx+0x20]  ; Get kernel32.dll address
+    lea rdi, [duck_k32]
+    mov [rdi], rsi  ; save kernel32.dll address
+    
+    xor rdi, rdi
+    mov edi, [rsi + 0x3c]   ; RVA PE file signature
+    add rdi, rsi    ; RVA PE + kernel32 addr
+    add rdi, 0x88   ; 0x88 bytes after the PE signature is the RVA for the Export Table
+    mov edi, [rdi]  ; get RVA Export Table
+    add rdi, rsi    ; RVA Export Table + kernel32 address
+    lea rbx, [duck_exp]
+    mov [rbx], rdi  ; save Export Table address
+    ; restore registry
+    pop rdi
+    pop rsi
+    pop rbx
+    pop rbp
+    ret
+
+
+
+    

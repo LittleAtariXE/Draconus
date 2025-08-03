@@ -1,0 +1,36 @@
+#!name##SC_Storage_h
+#!types##sfile
+#!info##Shellcode Storage Header file.
+
+
+
+#ifndef SC_STORAGE_H
+#define SC_STORAGE_H
+
+ 
+
+#include <string>
+#include <vector>
+
+class Storage
+{
+    private:
+        int max_index;
+        std::vector<std::string> raw_scode;
+
+    public:
+        int index = 0;
+        int size = 0;
+        std::vector<unsigned char> shellcode;
+        std::vector<unsigned char> sc_buff;
+
+        Storage(); // Constructor
+
+        void build();
+        unsigned char getRawInt();
+        std::vector<unsigned char> getSCode();
+        std::vector<unsigned char> getSPart(int bytes_number);
+};
+
+
+#endif

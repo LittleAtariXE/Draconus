@@ -303,6 +303,47 @@ class CrossComp:
         raw.ready_app.append(raw.exe_file_path)
         return raw
     
+    def mingw_x64_cpp_compile(self, raw: object) -> object:
+        self.msg("msg", "Use mingw-x64-cpp", sender=self.name)
+        if raw.cs:
+            self.msg("dev", "Builiding res command", sender=self.name)
+            raw = self.build_rc_file_command(raw)
+        self.msg("msg", "Start Compiler: mingw-x64", sender=self.name)
+        self.compiler.start()
+        if raw.cs_cmd:
+            self.msg("msg", f"Builiding res file", sender=self.name)
+            self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && {raw.cs_cmd}")
+        self.msg("msg", f"Building worm: '{raw.name}'", sender=self.name)
+        cmd = f"x86_64-w64-mingw32-g++"
+        cmd += f" -o {raw.name}.exe {raw.name}.cpp"
+        # add support files
+        if len(raw.sfiles) > 0:
+            for sf in raw.sfiles:
+                if sf.add_to_cmd:
+                    cmd += f" {sf.file_name}"
+        # add library
+        if len(raw.libs) > 0:
+            for lib in raw.libs:
+                cmd += f" {lib.name}"
+        # add dll
+        if len(raw.need_lib) > 0:
+            elib = ""
+            for nl in raw.need_lib:
+                elib += f" {os.path.join(self.dir_work, raw.name, nl)}"
+            cmd += elib
+        cmd += f" {self._DLL}"
+        if raw.gvar.get("NO_DLL"):
+            cmd += " -Os -s -Wl,--gc-sections"
+        self.msg("dev", cmd, sender=self.name)
+        self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && {cmd}")
+        self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && chmod 777 *")
+        self.msg("msg", "Stoping Compiler: mingw-x64", sender=self.name)
+        self.compiler.stop()
+        raw.exe_file_name = f"{raw.name}.exe"
+        raw.exe_file_path = os.path.join(raw.work_dir, raw.exe_file_name)
+        raw.ready_app.append(raw.exe_file_path)
+        return raw
+    
     def mingw_x32_compile(self, raw: object) -> object:
         self.msg("msg", "Use mingw-x32", sender=self.name)
         if raw.cs:
@@ -417,7 +458,7 @@ class CrossComp:
         self.msg("dev", cmd, sender=self.name)
         self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && {cmd}")
         cmd = f"objdump -D -b binary -mi386:x86-64 {raw.name}.o"
-        self.msg("msg", cmd, sender=self.name)
+        # self.msg("msg", cmd, sender=self.name)
         self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && {cmd}")
         self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && {cmd} > {raw.name}_objdump.txt")
         self.exec_cmd(f"cd {self.dir_work} && cd {raw.name} && chmod 777 *")

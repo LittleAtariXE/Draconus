@@ -41,7 +41,6 @@ class WinShell:
         # loader need '$'
         if loader:
             code = loader.replace(loader_char, code)
-        print(code)
         tab = ""
         for _ in range(add_tabulate):
             tab += "\t"
@@ -67,11 +66,34 @@ class WinShell:
             code += f"{tab}push 0x{line}\n"
         # return: code, shadow space enter, shadow space exit
         return (code, ss_enter, ss_exit)
+    
+    def stack_load(self, code: str, registry: str = "rcx", bytes_len: int = 8, shadow_space_enter: int = 40, add_null_terminator: bool = True, add_tabulate: int = 1) -> tuple:
+        # push data on stack, use registry
+        # ex: mov rcx, 0x1234567890
+        #     push rcx
 
-# code = "print('hello')"
-# load = "cmd.exe /C python -c $"
-# ws = WinShell("")
-# asm = ws.stack_build(code, loader=load)
-# print(asm[0])
-# print(asm[1])
-# print(asm[2])
+        tab = "\t" * add_tabulate
+        data = []
+        for n in range(0, len(code), bytes_len):
+            data.append(code[n:n+bytes_len][::-1])
+        ascii_data = []
+        for d in reversed(data):
+            ascii_data.append(d.encode("ascii").hex())
+        if len(ascii_data[0]) == bytes_len * 2 and add_null_terminator:
+            ascii_data.insert(0, "00")
+        while len(ascii_data[0]) < bytes_len * 2:
+            ascii_data[0] = "00" + ascii_data[0]
+        # shadow space
+        ss_exit = len(ascii_data) * 8
+        if ss_exit & 8 == 0:
+            ss_enter = shadow_space_enter
+        else:
+            ss_enter = shadow_space_enter + 8
+        ss_exit += ss_enter
+        code = ""
+        for line in ascii_data:
+            code += f"{tab}mov {registry}, 0x{line}\n"
+            code += f"{tab}push {registry}\n"
+        return (code, ss_enter, ss_exit)
+
+

@@ -155,6 +155,8 @@ class WormBuilder:
             return
         self.raw_worm.sfiles[target] = item
         self.msg("msg", f"Add support file: {item.name} successfull")
+        self.check_depediences()
+        
 
             
     def add_compiler_script(self, item: object) -> None:
@@ -1057,6 +1059,8 @@ class WormConfig:
             mods.append(self.cscript)
         if self.scode:
             mods.append(self.scode)
+        for sf in self.sfiles.values():
+            mods.append(sf)
         return mods
 
     @property

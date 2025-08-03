@@ -49,10 +49,8 @@
         <li><a href="#Start">Start</a></li>
         <li><a href="#First_Step">First Step</a></li>
         <li><a href="#Hive">Hive</a></li>
-        <li><a href="#MyFirstRat">My First Rat</a>
-            <ol><a href="#first_rat">Python RAT</a></ol>
-            <ol><a href="#small_worm">Little Worm</a></ol>
-            <ol><a href="#two_stage">Two Stage Attack</a></ol>
+        <li><a href="#">My First Rat</a>
+            <ol><a href="https://github.com/LittleAtariXE/Draconus_Tutorials">Please see Tutorials</a></a></ol>
         </li>
         <li><a href="#AboutProject">About The Project</a></li>
         <li><a href="#Features">Project Features</a></li>
@@ -132,7 +130,7 @@
         <li><strong>Raw</strong>: Uses TCP socket but sends raw bytes, allowing for simple message reading and file reception (one at a time) without metadata such as name or type. Ideal for lightweight client programs that don't require complex communication.</li>
         <li><strong>Down</strong>: Designed solely for receiving files, without support for messages, commands, or other functionalities.</li>
         <li><strong>Send</strong>: A server designed only to send files to the client. It does not support messages or commands. When a connection is established, it automatically sends the set files.</li>
-        <li><strong>Send</strong>: TCP server. Receives and sends base64 encoded messages.</li>
+        <li><strong>b64</strong>: TCP server. Receives and sends base64 encoded messages.</li>
     </ul>
     <h3>Make Servers:</h3>
     <p>Servers can be created using the following format:</p>
@@ -264,6 +262,14 @@ For example, many shortcuts in the <code>Shortcuts</code> folder are only create
     <li>
         <strong>cscript</strong> - Special scripts used during compilation. They add information to EXE and DLL files, such as version numbers, company names, etc. You can create your own custom entries or use entries from a predefined database.
     </li>
+    <li>
+        <strong>food</strong> - You could say it's food for the worm. These are special variables that contain pre-defined values. When building a worm, it may need things like text to hide shellcode, base URLs, or other resources — these are fetched from the Food section.
+        Food values can be assigned to variables, making it a convenient tool when you want to store a collection of paths, text, shellcode, scripts, etc.
+        In the shortcuts directory, you'll find references to some Food variables that you can modify — and those changes will be reflected in the worms you create.
+    </li>
+    <li>
+        <strong>scode</strong> - Templates used to generate shellcode.
+    </li>
     </ul>
     <h3>Hive Commands</h3>
     <ul>
@@ -354,206 +360,6 @@ For example, many shortcuts in the <code>Shortcuts</code> folder are only create
     </li>
     </ul>
     <p>Many commands offer additional help, accessible with the <code>--help</code> option, e.g., <code>build --help</code>.</p>
-</div>
-<div id="MyFirstRat">
-<h3 id="first_rat">My First Rat</h3>
-<p>Below, I will demonstrate how to create simple worms using examples so you can understand the creation process. These are straightforward examples—experimentation is up to you, and who knows, you might come up with something great.
-Keep in mind that creating complex worms with multiple modules, obfuscation techniques, and other features can result in a lengthy compilation process. For instance, Nuitka might take around 5 minutes to compile a file on a virtual machine with 4 GB of RAM and a dual-core CPU running at 3 GHz. If you plan to create more resource-intensive worms, consider increasing the resources of your virtual machine.</p>
-<h4>Simple python RAT.</h4>
-<p>When you are in the HIVE section:<p>
-    <ul>
-        <li><code>add worm LittleMolly</code><br>We choose the LittleMolly template, it has spaces for various modules from which we will build the worm.</li>
-        <li><code>add module Tcp_v1</code><br>For communication, we choose the module “Tcp_v1” is the one that allows sending and receiving more complex commands. To handle this module server use the default server in Draconus.</li>
-        <li><code>add module Binky</code><br>We add the “Binky” module, which is a simple RAT, allows you to execute commands on the command line and powershell.</li>
-        <li><code>worm</code><br>We run the “worm” command to see what our worm looks like.</li>
-    </ul>
-    <p>
-        <img src="img/first_rat.png">
-    </p>
-    <p>What we see in the image is a snippet of the <code>worm</code> command output, which displays the modules we have added. This also includes modules automatically added by the program, referred to as "support modules." Draconus adds these modules automatically when another module requires them to function correctly. These modules cannot be removed manually as they are essential for proper operation.</p>
-    <p>The second section is <strong>"Variables"</strong>, which lists the variables we can configure. Different variables will appear here depending on the modules we add. Many variables will take default values set by Draconus to ensure compatibility with the servers created by the program.</p>
-    <p>In the displayed table:</p>
-    <ul>
-    <li><strong>First column</strong>: Shows the variable name.</li>
-    <li><strong>Second column</strong>: Indicates the module that requires it.</li>
-    <li><strong>Third column</strong>: Contains the current value of the variable.</li>
-    <li><strong>Fourth column</strong>: Provides a description of the variable.</li>
-    </ul>
-    <p>As you can see, the worm automatically retrieved the IP address and other variables directly from Draconus's configuration.</p>
-    <p>If we have all the variables set and the desired modules added, we can proceed to build the worm. To do this, we issue the command: <code>build</code> and wait for the worm to compile. The default compiler is PyInstaller unless we have changed it to another one.</p>
-    <p>Once the program is compiled, a directory with the name of our worm will appear in the OUTPUT/Hive folder. Inside this directory, you will find a file containing the code and the executable file.</p>
-    <br/>
-    <h3 id="small_worm">Small is beautiful, and the smaller, the better</h3>
-    <p><strong>Creating a small worm:</strong></p>
-    <p>When you are in the HIVE section:<p>
-    <ul>
-    <li><code>add worm Lil_Py</code></li>
-    </ul>
-    <p>For the main template, we select <code>Lil_Py</code>, which is written in assembler. Its main advantage is that it doesn’t use variables in the code, embedding everything directly on the stack. 
-    Additionally, the executable file does not include any extra DLLs, resulting in a very small final file size of just 3-4 KB.</p>
-    <ul>
-        <li><code>worm</code></li>
-    </ul>
-    <br/>
-    <p>
-        <img src="img/lilpy1.png">
-    <p>
-    <p>When we issue the <code>worm</code> command, we’ll see that there are no variables to fill in, but there is space for a payload. 
-    To add a payload, the module must have space allocated for it. Some modules allow for multiple payloads, and to add them, we can use an additional option in the <code>add</code> command: <code>-t</code>, which lets us place the payload in a specific location.</p>
-    <p>In this example, there is space for only one payload, and from the description, we can see that it must be a payload written in Python. 
-    Other types of payloads will not work.</p>
-    <br/>
-    <ul>
-        <li><code>add payload MicroRat</code></li>
-        <li><code>worm</code></li>
-    </ul>
-    <p>
-        <img src="img/lilpy2.png">
-    </p>
-    <p>After adding the payload, we notice that a section with variables has appeared. Every module, regardless of its type, can have variables that can be modified. 
-    Therefore, after adding any module, it’s a good practice to review the entire template using the <code>worm</code> command.</p>
-    <p>Once we have configured the variables as desired, we can proceed with the build process by issuing the <code>build</code> command. 
-    After a short while, our small worm should appear in the <code>Hive</code> directory with a size of approximately 3-4 KB. 
-    Keep in mind that the larger the scripts you add, the more space the final file will occupy.</p>
-    <br/>
-    <br/>
-    <h3 id="two_stage">Two Stage Attack</h3>
-    <p>The following steps outline the process for preparing a two-stage attack:</p>
-    <ol>
-        <li><strong>Create the main worm</strong> that will ultimately be executed on the victim's computer.</li>
-        <li><strong>Create a small worm</strong> that will download and execute the main worm.</li>
-        <li><strong>Set up a server</strong> for communication with the main worm.</li>
-        <li><strong>Create and configure a server</strong> responsible for sending the main worm.</li>
-    </ol>
-    <h4>Step 1: Create the Main Worm</h4>
-    <p>While in the <strong>HIVE</strong> section, follow these steps:</p>
-    <pre>
-    add worm LittleMolly
-    </pre>
-    <p>We select <code>LittleMolly</code> as the main template because it is ideal for building custom worms.</p>
-    <pre>
-    add module Binky
-    </pre>
-    <p>We add the <code>Binky</code> module, which provides RAT (Remote Access Tool) functionality.</p>
-    <pre>
-    add module Gyruss
-    </pre>
-    <p>We add the <code>Gyruss</code> module, which allows the worm to perform a TCP port scan on the victim's computer or other targets.</p>
-    <pre>
-    add module Tcp_v1
-    </pre>
-    <p>We add the <code>Tcp_v1</code> module to enable TCP communication. This module allows sending commands, receiving messages, and transferring multiple files simultaneously.</p>
-    <p>This is just an example. If you want, you can add other modules, use code obfuscators, and apply a starter.</p>
-    <pre>
-    worm
-    </pre>
-    <p>Finally, we use the <code>worm</code> command to review the current state of our worm configuration.</p>
-    <p>
-        <img src="img/2stage1.png">
-    </p>
-    <p>Next, we locate the <strong>Variables</strong> section and observe that our port has a default value (usually <code>4444</code>). Since we will be hosting the main worm on a separate server, we change the port value by issuing the following command:</p>
-    <pre>
-    var PORT "5555"
-    </pre>
-    <p>This sets the <code>PORT</code> variable to <code>5555</code>. Our worm will connect through this port.</p>
-    <p>Once our worm configuration is ready, we start the build process with:</p>
-    <pre>
-    build
-    </pre>
-    <p>Now, we wait for the worm to compile. After a successful build, the compiled worm will appear in the <code>OUTPUT/Hive</code> directory.</p>
-    <h4>Step 2: Create the Small Worm</h4>
-    <p>First, we issue the following command to clear the previous configuration and start creating a new worm template:</p>
-    <pre>
-    rebuild
-    </pre>
-    <p>Next, we set a name for the new worm to ensure it doesn’t overwrite the previous one:</p>
-    <pre>
-    name deliver
-    </pre>
-    <p>Here, we named it <code>deliver</code> (you can use any other name). During compilation, a new file will be created instead of replacing the previous worm.</p>
-    <p>We then select the <code>Lil_Py</code> worm template, which is very small and has space for a Python payload:</p>
-    <pre>
-    add worm Lil_Py
-    </pre>
-    <p>Now, we add the <code>PyDelivery</code> payload, a simple script that connects to the server, downloads a file, and executes it:</p>
-    <pre>
-    add payload PyDelivery
-    </pre>
-    <p>To verify our configuration, we use:</p>
-    <pre>
-    worm
-    </pre>
-    <p>
-        <img src="img/2stage2.png">
-    </p>
-    <p>If the port value is different from the expected <code>4444</code>, we set it using:</p>
-    <pre>
-    var PyD_port "4444"
-    </pre>
-    <p>Once everything is configured, we proceed with the build process:</p>
-    <pre>
-    build
-    </pre>
-    <p>After a short wait, the compiled small worm will be created in the <code>OUTPUT/Hive</code> directory.</p>
-    <h4>Step 3 & 4: Preparing the Servers</h4>
-    <p>Once our worms are ready, we need to prepare the servers. We exit the HIVE console and return to the main Draconus console by issuing:</p>
-    <pre>
-    exit
-    </pre>
-    <h5>Creating the Master Server</h5>
-    <p>In the Draconus console, we create the main server that will handle communication with the primary worm:</p>
-    <pre>
-    server master 5555
-    </pre>
-    <p>This command creates a server named <code>master</code> on port <code>5555</code>, which matches the port set in our main worm. We do not specify a server type so that the default type is created, allowing full communication with the worm (enabled by the <code>Tcp_v1</code> module).</p>
-    <p>After issuing this command, you should see a message indicating that the server is ready and listening for incoming connections.</p>
-    <h5>Creating the File Delivery Server</h5>
-    <p>Next, we create a server responsible for sending files, which will communicate with the small worm:</p>
-    <pre>
-    server post 4444 -t send
-    </pre>
-    <p>This command creates a server named <code>post</code> on port <code>4444</code> with the <code>send</code> type. This server is specifically designed for file delivery.</p>
-    <p>After creating the <code>send</code> server, a directory named after the server (in this case, <code>post</code>) will automatically appear in the <code>IN</code> folder located in Draconus's main directory.</p>
-    <p>We place the main worm file (built in Step 1) into the <code>post</code> directory. The <code>send</code> server will automatically send any file located in its directory to clients requesting it.</p>
-    <p>Once the servers are ready, we navigate to the main Draconus directory and then to the <code>OUTPUT</code> folder using a file browser or console. From there, go to the <code>HIVE</code> folder where the worms are located.</p>
-    <p>You should see two directories:</p>
-    <ul>
-    <li><code>MyWorm</code> - Contains the main worm.</li>
-    <li><code>deliver</code> - Contains the small worm used to initiate the first stage of the attack.</li>
-    </ul>
-    <p>Navigate to the <code>MyWorm</code> directory and copy or move the main worm executable <code>MyWorm.exe</code> to the <code>IN/post</code> folder. Once the worm is placed in this folder, anyone who runs the <code>deliver</code> worm will automatically connect to the <code>post</code> server, download the main worm, and execute it on the target computer.</p>
-    <h5>Testing the Attack</h5>
-    <ol>
-    <li>Start a Windows machine (e.g., a virtual machine).</li>
-    <li>Place the <code>deliver.exe</code> worm on the machine and run it.</li>
-    <li>After a short while, the main worm will be downloaded and executed. It will appear as a process in the Task Manager.</li>
-    </ol>
-    <p>
-        <img src="img/2stage3.png">
-    </p>
-    <br/>
-    <p>In the Draconus console, the <code>master</code> server should accept the connection. You will see a message along with the unique <strong>ID</strong> assigned to the connection.</p>
-    <p>You can now start remote management of the worm by issuing the following command:</p>
-    <pre>
-    conn [number_ID]
-    </pre>
-    <p>For example:</p>
-    <pre>
-    conn 2
-    </pre>
-    <p>Once you enter the client's console, you can execute the following command to retrieve a list of available commands:</p>
-    <pre>
-    msg help
-    </pre>
-    <p>This command sends a request to the worm, asking for the list of commands it supports. The list of commands will depend on how the worm was built, its available options, and the modules used.</p>
-    <p>
-        <img src="img/2stage5.png">
-    </p>
-    <br/>
-    <h3>Conclusion</h3>
-    <p>I have demonstrated through examples how to create simple worms. The rest is up to you. Experiment, try new things, and create crazy ideas :)) – who knows, something amazing might come out of it!</p>
-    <p>I’ve spent a lot of time testing the entire project, but despite this, some errors may still occur. Occasionally, a compiler might refuse to cooperate or freeze during compilation (this is rare, but it can happen). If this happens, try compiling the worm again—it should work.</p>
-    <p>Good luck!!</p>
 </div>
 <div id="AboutProject">
     <h3>About the Project</h3>
@@ -704,6 +510,21 @@ Keep in mind that creating complex worms with multiple modules, obfuscation tech
     <li><strong>New Compiler Option: <code>build --food</code></strong> — Builds a shellcode and stores it as a <code>FOOD</code>-type variable.  
     These shellcodes can later be inserted into other worms or modules that accept shellcode as input.</li>
     <li><strong>Bug Fixes</strong> — Several minor bugs were fixed and improvements made for better overall stability.</li>
+</ul>
+<h2>📦 Version 1.3.1 – Update Summary</h2>
+<h3>🆕 New Modules:</h3>
+<ul>
+  <li><strong>New Shellcode module: <code>MsgBoxA</code></strong> – New shellcode module. Generates MessageBoxA shellcode with custom text (default: <code>"Hello World"</code>). The message box appears as an error-type window.</li>
+  <li><strong>New Worm: <code>JackRoad</code></strong> – New main worm module written in C++. Designed for shellcode testing. It scans processes within a given PID range, locates a vulnerable process, injects, and executes the shellcode.<br />
+    Does not use <code>windows.h</code>; instead, it dynamically imports all functions through a custom library. Displays detailed information about the target process, memory allocation, and more.<br />
+    Successfully tested with shellcode generated via Draconus on Windows 10. Injection and execution worked without detection by Windows Defender.<br />
+    <em>Note: Not tested with signed shellcode generated via MSFramework.</em>
+  </li>
+</ul>
+<h3>🔧 Other Changes:</h3>
+<ul>
+  <li>Removed the outdated <strong>example RAT creation</strong> section from the README.</li>
+  <li>Added a link to the new <strong>tutorial section</strong>, which now includes both written guides and video walkthroughs.</li>
 </ul>
 </div>
 </body>

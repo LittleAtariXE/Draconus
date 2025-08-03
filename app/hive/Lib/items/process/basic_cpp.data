@@ -1,0 +1,7 @@
+#!name##BasicCpp
+#!types##process
+#!info##Basic process to build executable
+
+[BASE]
+[SAVE_RAW]
+[COMPILER]

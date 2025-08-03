@@ -46,6 +46,7 @@ class MasterCompiler:
         self.compilers["mingw-x64"] = CompilerData("mingw-x64", "Mingw cross compiler, compiles EXE, DLL for windows x64.", self, self.cc)
         self.compilers["mingw-x32"] = CompilerData("mingw-x32", "Mingw cross compiler, compiles EXE, DLL for windows x86.", self, self.cc, arch="x86")
         self.compilers["LD-x32"] = CompilerData("LD-x32", "Compiles assembler files into executables on Linux x86 (32 bit).", self, self.cc, "Linux", "x86")
+        self.compilers["mingw-x64-cpp"] = CompilerData("mingw-x64-cpp", "Mingw c++ cross compiler, compiles EXE for windows x64", self, self.cc)
 
         
 
@@ -91,6 +92,8 @@ class MasterCompiler:
                 raw = self.cc.mingw_x32_compile(raw)
             case "mingw-x64":
                 raw = self.cc.mingw_x64_compile(raw)
+            case "mingw-x64-cpp":
+                raw = self.cc.mingw_x64_cpp_compile(raw)
             case _:
                 self.msg("error", f"[!!] ERROR: Compiler: '{raw.compiler}' does not exists [!!]")
         return raw
