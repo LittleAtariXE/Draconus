@@ -10,6 +10,9 @@
         <img src="img/logo1.webp" alt="Logo Projektu" width="300">
     </p>
     <h4 align="center">Every USER should have a Cyber Weapon to defend himself.</h4>
+    <h5 align="center">The project has a new version.</h5>
+    <h4 align="center"><a href="https://github.com/LittleAtariXE/Draconus-2">Draconus 2</a></h4>
+    <br/>
     <p align="center">This project serves as a comprehensive toolkit designed to introduce fundamental concepts in ethical hacking and malware creation. It offers tools and functionalities for creating shellcodes, basic malware, code obfuscation, and code packing into single lines, providing an engaging way to explore malware techniques responsibly.</p>
     <h2>Features and Advantages</h2>
     <ul>
